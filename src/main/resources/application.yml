@@ -1,0 +1,71 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: linxi-backend
+
+  # SQLite 数据源配置（开发环境）
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:${user.dir}/data/linxi.db
+    # SQLite 不需要连接池用户名密码
+
+  # 初始化数据库
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+      continue-on-error: true
+
+  # 文件上传
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  # Jackson 日期格式
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+# MyBatis Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.linxi.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT 配置
+jwt:
+  secret: linxi-hotel-daily-report-system-2026-secret-key
+  expiration: 7200000  # 2小时（毫秒）
+  header: Authorization
+  token-prefix: "Bearer "
+
+# 系统配置
+system:
+  # 登录失败锁定
+  login:
+    max-fail-count: 5
+    lock-minutes: 10
+
+# Knife4j API文档
+knife4j:
+  enable: true
+  setting:
+    language: zh-CN
+
+# 日志
+logging:
+  level:
+    com.linxi: debug
+    org.springframework.security: info

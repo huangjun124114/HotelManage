@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linxi.mapper.DailyReportValueMapper">
+
+    <insert id="batchSaveOrUpdate" parameterType="java.util.List">
+        INSERT INTO daily_report_value (
+            id, report_id, field_id, field_code, field_name, field_type,
+            value_text, value_number, value_date, value_json, sort_no,
+            create_time, update_time
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.id},
+                #{item.reportId},
+                #{item.fieldId},
+                #{item.fieldCode},
+                #{item.fieldName},
+                #{item.fieldType},
+                #{item.valueText},
+                #{item.valueNumber},
+                #{item.valueDate},
+                #{item.valueJson},
+                #{item.sortNo},
+                #{item.createTime},
+                #{item.updateTime}
+            )
+        </foreach>
+        ON CONFLICT(report_id, field_code) DO UPDATE SET
+            field_name = excluded.field_name,
+            field_type = excluded.field_type,
+            value_text = excluded.value_text,
+            value_number = excluded.value_number,
+            value_date = excluded.value_date,
+            value_json = excluded.value_json,
+            sort_no = excluded.sort_no,
+            update_time = excluded.update_time
+    </insert>
+
+</mapper>
