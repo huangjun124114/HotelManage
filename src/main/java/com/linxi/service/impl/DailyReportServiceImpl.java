@@ -180,6 +180,9 @@ public class DailyReportServiceImpl implements DailyReportService {
         }
 
         Map<String, Object> result = new HashMap<>();
+        // 填充门店信息到report对象
+        report.setStoreName(store.getStoreName());
+        report.setStoreCode(store.getStoreCode());
         result.put("report", report);
         result.put("fields", fields);
         result.put("values", valueMap);
@@ -498,7 +501,42 @@ public class DailyReportServiceImpl implements DailyReportService {
                 .le(query.getEndDate() != null, DailyReport::getReportDate, query.getEndDate())
                 .eq(query.getStatus() != null, DailyReport::getStatus, query.getStatus())
                 .orderByDesc(DailyReport::getReportDate);
-        return dailyReportMapper.selectPage(page, wrapper);
+        Page<DailyReport> result = dailyReportMapper.selectPage(page, wrapper);
+
+        // 填充门店关联信息
+        fillStoreInfo(result.getRecords());
+
+        return result;
+    }
+
+    /**
+     * 填充日报的门店关联信息（门店名称、门店编码）
+     */
+    private void fillStoreInfo(List<DailyReport> reports) {
+        if (reports == null || reports.isEmpty()) {
+            return;
+        }
+        // 获取所有门店ID
+        List<Long> storeIds = reports.stream()
+                .map(DailyReport::getStoreId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 查询门店信息
+        LambdaQueryWrapper<Store> storeWrapper = new LambdaQueryWrapper<>();
+        storeWrapper.in(Store::getId, storeIds);
+        List<Store> stores = storeMapper.selectList(storeWrapper);
+        Map<Long, Store> storeMap = stores.stream()
+                .collect(Collectors.toMap(Store::getId, s -> s, (a, b) -> a));
+
+        // 填充门店信息
+        for (DailyReport report : reports) {
+            Store store = storeMap.get(report.getStoreId());
+            if (store != null) {
+                report.setStoreName(store.getStoreName());
+                report.setStoreCode(store.getStoreCode());
+            }
+        }
     }
 
     @Override

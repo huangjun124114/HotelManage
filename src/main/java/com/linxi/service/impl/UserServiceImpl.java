@@ -8,9 +8,11 @@ import com.linxi.dto.UserQueryDTO;
 import com.linxi.entity.SysUser;
 import com.linxi.entity.SysUserRole;
 import com.linxi.entity.SysUserStore;
+import com.linxi.entity.Store;
 import com.linxi.mapper.SysUserMapper;
 import com.linxi.mapper.SysUserRoleMapper;
 import com.linxi.mapper.SysUserStoreMapper;
+import com.linxi.mapper.StoreMapper;
 import com.linxi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,8 @@ import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,6 +38,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private SysUserStoreMapper sysUserStoreMapper;
+
+    @Autowired
+    private StoreMapper storeMapper;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -61,9 +68,62 @@ public class UserServiceImpl implements UserService {
                 .orderByDesc(SysUser::getCreateTime);
 
         Page<SysUser> result = sysUserMapper.selectPage(page, wrapper);
+
+        // 填充门店关联信息
+        fillStoreInfo(result.getRecords());
+
         // 隐藏密码
         result.getRecords().forEach(u -> u.setPassword(null));
         return result;
+    }
+
+    /**
+     * 填充用户的门店关联信息（门店名称、门店编码）
+     */
+    private void fillStoreInfo(List<SysUser> users) {
+        if (users == null || users.isEmpty()) {
+            return;
+        }
+        // 获取所有用户ID
+        List<Long> userIds = users.stream().map(SysUser::getId).collect(Collectors.toList());
+
+        // 查询这些用户的门店关联关系
+        LambdaQueryWrapper<SysUserStore> storeWrapper = new LambdaQueryWrapper<>();
+        storeWrapper.in(SysUserStore::getUserId, userIds);
+        List<SysUserStore> userStores = sysUserStoreMapper.selectList(storeWrapper);
+
+        if (userStores.isEmpty()) {
+            return;
+        }
+
+        // 获取所有关联的门店ID
+        List<Long> storeIds = userStores.stream()
+                .map(SysUserStore::getStoreId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 查询门店信息，构建ID到门店的映射
+        LambdaQueryWrapper<Store> storeQueryWrapper = new LambdaQueryWrapper<>();
+        storeQueryWrapper.in(Store::getId, storeIds);
+        List<Store> stores = storeMapper.selectList(storeQueryWrapper);
+        Map<Long, Store> storeMap = stores.stream()
+                .collect(Collectors.toMap(Store::getId, s -> s, (a, b) -> a));
+
+        // 为每个用户设置门店信息（取第一个关联的门店）
+        Map<Long, SysUserStore> userStoreMap = userStores.stream()
+                .collect(Collectors.toMap(SysUserStore::getUserId, us -> us, (a, b) -> a));
+
+        for (SysUser user : users) {
+            SysUserStore userStore = userStoreMap.get(user.getId());
+            if (userStore != null) {
+                Store store = storeMap.get(userStore.getStoreId());
+                if (store != null) {
+                    user.setStoreId(store.getId());
+                    user.setStoreName(store.getStoreName());
+                    user.setStoreCode(store.getStoreCode());
+                }
+            }
+        }
     }
 
     @Override

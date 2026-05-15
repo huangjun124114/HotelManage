@@ -29,4 +29,11 @@ public class DailyReport {
     private Long createBy;
     private String updateTime;
     private Long updateBy;
+
+    // 关联字段（非数据库字段，用于展示）
+    @TableField(exist = false)
+    private String storeName;
+
+    @TableField(exist = false)
+    private String storeCode;
 }
