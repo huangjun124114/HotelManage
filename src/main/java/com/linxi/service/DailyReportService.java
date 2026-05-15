@@ -55,4 +55,9 @@ public interface DailyReportService {
      * 获取模板字段列表
      */
     List<DailyReportField> getTemplateFields(Long templateId);
+
+    /**
+     * 获取未填报统计
+     */
+    List<Map<String, Object>> getUnfilledStats(String startDate, String endDate);
 }

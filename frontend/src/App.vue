@@ -1,21 +1,43 @@
 <template>
-  <router-view />
+  <div id="app-root">
+    <router-view v-if="ready" />
+    <div v-else class="app-loading">加载中...</div>
+  </div>
 </template>
 
 <script setup>
+import { ref, onErrorCaptured, onMounted } from 'vue'
+
+const ready = ref(false)
+
+onErrorCaptured((err, instance, info) => {
+  console.error('App error:', err, info)
+  return false
+})
+
+onMounted(() => {
+  // 清除可能的坏数据
+  try {
+    const token = localStorage.getItem('token')
+    if (token && token.length < 10) {
+      localStorage.clear()
+    }
+  } catch(e) {}
+  ready.value = true
+})
 </script>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+#app-root {
+  width: 100%;
+  height: 100vh;
 }
-
-html, body, #app {
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-    'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial,
-    sans-serif;
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 18px;
+  color: #666;
 }
 </style>

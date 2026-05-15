@@ -110,11 +110,23 @@ async function handleLogout() {
   router.push('/login')
 }
 
+// 将后端菜单格式转换为前端格式
+function mapMenu(item) {
+  return {
+    id: item.id,
+    name: item.menuName || item.name,
+    path: item.path,
+    icon: item.icon || '',
+    children: item.children ? item.children.map(mapMenu) : []
+  }
+}
+
 // 加载菜单
 async function loadMenus() {
   try {
     const res = await getUserMenus()
-    menuList.value = res.data || []
+    const data = res.data || []
+    menuList.value = data.map(mapMenu)
   } catch (e) {
     // 如果获取菜单失败，使用默认菜单
     menuList.value = getDefaultMenus()

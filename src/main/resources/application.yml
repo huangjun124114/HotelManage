@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   application:
@@ -17,6 +17,7 @@ spring:
       mode: always
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
+      encoding: utf-8
       continue-on-error: true
 
   # 文件上传
@@ -58,11 +59,11 @@ system:
     max-fail-count: 5
     lock-minutes: 10
 
-# Knife4j API文档
-knife4j:
-  enable: true
-  setting:
-    language: zh-CN
+# Knife4j API文档 - 暂时禁用
+#knife4j:
+#  enable: true
+#  setting:
+#    language: zh-CN
 
 # 日志
 logging:

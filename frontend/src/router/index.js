@@ -154,7 +154,7 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫
+// 路由守卫 - 增强版：防止坏token导致死循环
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
 
@@ -164,7 +164,7 @@ router.beforeEach((to, from, next) => {
   }
 
   if (to.meta.requireAuth === false) {
-    // 登录页：已登录则跳转首页
+    // 登录页：已登录且有token才跳转首页
     if (token && to.path === '/login') {
       next('/home')
     } else {
@@ -173,6 +173,9 @@ router.beforeEach((to, from, next) => {
   } else if (token) {
     next()
   } else {
+    // 未登录访问需认证页面 → 清除残留数据后跳登录
+    localStorage.removeItem('token')
+    localStorage.removeItem('userInfo')
     next('/login')
   }
 })

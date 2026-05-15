@@ -27,6 +27,6 @@ public class MenuController {
     @GetMapping("/user")
     public Result<List<SysMenu>> userMenus() {
         // 从SecurityContext获取当前用户ID
-        return Result.success(new java.util.ArrayList<>());
+        return Result.success(menuService.getMenuTree());
     }
 }

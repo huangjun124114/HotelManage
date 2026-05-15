@@ -15,9 +15,9 @@ INSERT OR IGNORE INTO sys_role (id, role_code, role_name, role_type, status) VAL
 -- 2. 系统用户（密码均为 BCrypt 加密 "123456"）
 INSERT OR IGNORE INTO sys_user (id, username, real_name, password, phone, user_type, status)
 VALUES
-(1, 'admin', '系统管理员', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5Eh', '13800000001', 1, 1),
-(2, 'ceo', '张总', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5Eh', '13800000002', 1, 1),
-(3, 'store1', '深圳湾店长', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5Eh', '13800000003', 2, 1);
+(1, 'admin', '系统管理员', '$2b$12$u5sKXcYws70o4ghphg7r4OLqb8WJ5xIzgyZRS3O.M6NpGnyGNCf/K', '13800000001', 1, 1),
+(2, 'ceo', '张总', '$2b$12$u5sKXcYws70o4ghphg7r4OLqb8WJ5xIzgyZRS3O.M6NpGnyGNCf/K', '13800000002', 1, 1),
+(3, 'store1', '深圳湾店长', '$2b$12$u5sKXcYws70o4ghphg7r4OLqb8WJ5xIzgyZRS3O.M6NpGnyGNCf/K', '13800000003', 2, 1);
 
 -- 3. 用户角色关系
 INSERT OR IGNORE INTO sys_user_role (user_id, role_id) VALUES

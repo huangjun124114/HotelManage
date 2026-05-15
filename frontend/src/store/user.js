@@ -9,9 +9,9 @@ export const useUserStore = defineStore('user', () => {
   async function login(username, password) {
     const res = await loginApi({ username, password })
     token.value = res.data.token
-    userInfo.value = res.data.userInfo
+    userInfo.value = res.data
     localStorage.setItem('token', res.data.token)
-    localStorage.setItem('userInfo', JSON.stringify(res.data.userInfo))
+    localStorage.setItem('userInfo', JSON.stringify(res.data))
   }
 
   async function logout() {

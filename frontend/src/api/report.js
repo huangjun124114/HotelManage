@@ -4,8 +4,8 @@ export function getToday(params) {
   return request({ url: '/daily-reports/today', method: 'get', params })
 }
 
-export function getDetail(id) {
-  return request({ url: `/daily-reports/${id}`, method: 'get' })
+export function getDetail(storeId, reportDate) {
+  return request({ url: '/daily-reports/detail', method: 'get', params: { storeId, reportDate } })
 }
 
 export function saveDraft(data) {
@@ -17,19 +17,19 @@ export function submit(data) {
 }
 
 export function lock(id) {
-  return request({ url: `/daily-reports/${id}/lock`, method: 'put' })
+  return request({ url: `/daily-reports/${id}/lock`, method: 'post' })
 }
 
 export function unlock(id) {
-  return request({ url: `/daily-reports/${id}/unlock`, method: 'put' })
+  return request({ url: `/daily-reports/${id}/unlock`, method: 'post' })
 }
 
 export function reject(id, reason) {
-  return request({ url: `/daily-reports/${id}/reject`, method: 'put', data: { reason } })
+  return request({ url: `/daily-reports/${id}/reject`, method: 'post', data: { reason } })
 }
 
 export function queryList(params) {
-  return request({ url: '/daily-reports', method: 'get', params })
+  return request({ url: '/daily-reports/query', method: 'get', params })
 }
 
 export function getTemplateFields(templateId) {

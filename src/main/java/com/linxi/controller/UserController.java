@@ -40,37 +40,37 @@ public class UserController {
     @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN')")
     public Result<Void> save(@RequestBody SysUser user) {
         userService.save(user);
-        return Result.success("保存成功");
+        return Result.success();
     }
 
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable Long id, @RequestBody SysUser user) {
         user.setId(id);
         userService.update(user);
-        return Result.success("更新成功");
+        return Result.success();
     }
 
     @PutMapping("/{id}/reset-password")
     public Result<Void> resetPassword(@PathVariable Long id) {
         userService.resetPassword(id);
-        return Result.success("密码已重置为123456");
+        return Result.success();
     }
 
     @PutMapping("/{id}/status")
     public Result<Void> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
         userService.updateStatus(id, status);
-        return Result.success("状态更新成功");
+        return Result.success();
     }
 
     @PutMapping("/{id}/roles")
     public Result<Void> assignRoles(@PathVariable Long id, @RequestBody List<Long> roleIds) {
         userService.assignRoles(id, roleIds);
-        return Result.success("角色分配成功");
+        return Result.success();
     }
 
     @PutMapping("/{id}/stores")
     public Result<Void> assignStores(@PathVariable Long id, @RequestBody List<Long> storeIds) {
         userService.assignStores(id, storeIds);
-        return Result.success("门店分配成功");
+        return Result.success();
     }
 }

@@ -40,19 +40,19 @@ public class RoleController {
     @PostMapping
     public Result<Void> save(@RequestBody SysRole role) {
         roleService.save(role);
-        return Result.success("保存成功");
+        return Result.success();
     }
 
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable Long id, @RequestBody SysRole role) {
         role.setId(id);
         roleService.update(role);
-        return Result.success("更新成功");
+        return Result.success();
     }
 
     @PutMapping("/{id}/menus")
     public Result<Void> saveMenus(@PathVariable Long id, @RequestBody List<Long> menuIds) {
         roleService.saveRoleMenus(id, menuIds);
-        return Result.success("菜单保存成功");
+        return Result.success();
     }
 }

@@ -5,8 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,13 +31,26 @@ public class JwtTokenUtil {
     private String tokenPrefix;
 
     /**
-     * 生成Token
+     * 生成Token（不带角色权限）
      */
     public String generateToken(Long userId, String username, String realName) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("username", username);
         claims.put("realName", realName);
+        return generateToken(claims);
+    }
+
+    /**
+     * 生成Token（带角色权限）
+     */
+    public String generateToken(Long userId, String username, String realName, java.util.List<String> roles, java.util.List<String> permissions) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("username", username);
+        claims.put("realName", realName);
+        claims.put("roles", roles);
+        claims.put("permissions", permissions);
         return generateToken(claims);
     }
 
@@ -74,6 +89,36 @@ public class JwtTokenUtil {
             return (String) claims.get("username");
         }
         return null;
+    }
+
+    /**
+     * 从Token中获取角色列表
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> getRolesFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        if (claims != null) {
+            Object roles = claims.get("roles");
+            if (roles instanceof List) {
+                return (List<String>) roles;
+            }
+        }
+        return new ArrayList<>();
+    }
+
+    /**
+     * 从Token中获取权限列表
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> getPermissionsFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        if (claims != null) {
+            Object permissions = claims.get("permissions");
+            if (permissions instanceof List) {
+                return (List<String>) permissions;
+            }
+        }
+        return new ArrayList<>();
     }
 
     /**

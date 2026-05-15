@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.linxi.entity.SysUser;
 import com.linxi.mapper.SysMenuMapper;
 import com.linxi.mapper.SysRoleMapper;
+import com.linxi.mapper.SysRoleMenuMapper;
 import com.linxi.mapper.SysUserMapper;
 import com.linxi.mapper.SysUserRoleMapper;
 import lombok.extern.slf4j.Slf4j;

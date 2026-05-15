@@ -15,8 +15,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 /**
  * JWT认证过滤器
@@ -63,9 +67,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null && jwtTokenUtil.validateToken(token)) {
             String username = jwtTokenUtil.getUsernameFromToken(token);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // 从JWT token获取角色和权限
+                List<String> roles = jwtTokenUtil.getRolesFromToken(token);
+                List<String> permissions = jwtTokenUtil.getPermissionsFromToken(token);
+
+                // 构建GrantedAuthority列表
+                List<GrantedAuthority> authorities = new ArrayList<>();
+                for (String role : roles) {
+                    authorities.add(new SimpleGrantedAuthority(role));
+                    // 为每个角色也添加基础USER角色
+                    if (role.startsWith("ROLE_")) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+                        break; // 只需要添加一次
+                    }
+                }
+                for (String permission : permissions) {
+                    authorities.add(new SimpleGrantedAuthority(permission));
+                }
+
+                // 创建Authentication对象，使用JWT中的用户信息
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }

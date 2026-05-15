@@ -44,19 +44,19 @@ public class StoreController {
     @PostMapping
     public Result<Void> save(@RequestBody Store store) {
         storeService.save(store);
-        return Result.success("保存成功");
+        return Result.success();
     }
 
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable Long id, @RequestBody Store store) {
         store.setId(id);
         storeService.update(store);
-        return Result.success("更新成功");
+        return Result.success();
     }
 
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         storeService.delete(id);
-        return Result.success("删除成功");
+        return Result.success();
     }
 }

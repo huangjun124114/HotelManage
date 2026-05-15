@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import router from '@/router'
 
 const request = axios.create({
   baseURL: '/api',
@@ -25,11 +24,12 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response) => {
     const res = response.data
-    if (res.code === 200) {
-      return res
+    // 如果code不是200，当作错误处理
+    if (res.code && res.code !== 200) {
+      ElMessage.error(res.message || '请求失败')
+      return Promise.reject(new Error(res.message || '请求失败'))
     }
-    ElMessage.error(res.message || '请求失败')
-    return Promise.reject(new Error(res.message || '请求失败'))
+    return res
   },
   (error) => {
     if (error.response) {
@@ -38,10 +38,13 @@ request.interceptors.response.use(
         localStorage.removeItem('token')
         localStorage.removeItem('userInfo')
         ElMessage.error('登录已过期，请重新登录')
-        router.push('/login')
+        // 延迟跳转，避免循环
+        setTimeout(() => {
+          window.location.href = '/login'
+        }, 100)
       } else if (status === 403) {
         ElMessage.error('没有访问权限')
-      } else if (status === 500) {
+      } else if (status >= 500) {
         ElMessage.error('服务器内部错误')
       } else {
         ElMessage.error(error.response.data?.message || '请求失败')

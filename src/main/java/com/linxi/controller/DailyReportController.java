@@ -40,14 +40,14 @@ public class DailyReportController {
     @PostMapping("/draft")
     public Result<Void> saveDraft(@RequestBody DailyReportSaveDTO dto) {
         dailyReportService.saveDraft(dto);
-        return Result.success("草稿保存成功");
+        return Result.success();
     }
 
     @PostMapping("/submit")
     @PreAuthorize("hasAnyAuthority('report:fill', 'ROLE_STORE_MANAGER', 'ROLE_STORE_STAFF')")
     public Result<Void> submit(@RequestBody DailyReportSaveDTO dto) {
         dailyReportService.submit(dto);
-        return Result.success("日报提交成功");
+        return Result.success();
     }
 
     @GetMapping("/query")
@@ -63,25 +63,32 @@ public class DailyReportController {
     @PreAuthorize("hasAnyAuthority('report:audit')")
     public Result<Void> lock(@PathVariable Long id) {
         dailyReportService.lock(id);
-        return Result.success("锁定成功");
+        return Result.success();
     }
 
     @PostMapping("/{id}/unlock")
     @PreAuthorize("hasAnyAuthority('report:audit')")
     public Result<Void> unlock(@PathVariable Long id) {
         dailyReportService.unlock(id);
-        return Result.success("解锁成功");
+        return Result.success();
     }
 
     @PostMapping("/{id}/reject")
     @PreAuthorize("hasAnyAuthority('report:audit')")
     public Result<Void> reject(@PathVariable Long id, @RequestBody Map<String, String> body) {
         dailyReportService.reject(id, body.get("reason"));
-        return Result.success("退回成功");
+        return Result.success();
     }
 
     @GetMapping("/template/{templateId}/fields")
     public Result<List<DailyReportField>> getFields(@PathVariable Long templateId) {
         return Result.success(dailyReportService.getTemplateFields(templateId));
+    }
+
+    @GetMapping("/unfilled")
+    public Result<List<Map<String, Object>>> getUnfilledStats(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        return Result.success(dailyReportService.getUnfilledStats(startDate, endDate));
     }
 }

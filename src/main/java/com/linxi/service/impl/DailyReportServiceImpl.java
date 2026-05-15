@@ -528,4 +528,30 @@ public class DailyReportServiceImpl implements DailyReportService {
             return null;
         }
     }
+
+    @Override
+    public List<Map<String, Object>> getUnfilledStats(String startDate, String endDate) {
+        // 获取所有门店
+        List<Store> stores = storeMapper.selectList(null);
+        // 获取已填报的日期范围
+        LambdaQueryWrapper<DailyReport> wrapper = new LambdaQueryWrapper<>();
+        if (startDate != null) {
+            wrapper.ge(DailyReport::getReportDate, startDate);
+        }
+        if (endDate != null) {
+            wrapper.le(DailyReport::getReportDate, endDate);
+        }
+        List<DailyReport> filledReports = dailyReportMapper.selectList(wrapper);
+        // 计算未填报
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (Store store : stores) {
+            Map<String, Object> item = new java.util.HashMap<>();
+            item.put("storeId", store.getId());
+            item.put("storeName", store.getStoreName());
+            item.put("filled", filledReports.stream().filter(r -> r.getStoreId().equals(store.getId())).count());
+            item.put("status", "已填报");
+            result.add(item);
+        }
+        return result;
+    }
 }
