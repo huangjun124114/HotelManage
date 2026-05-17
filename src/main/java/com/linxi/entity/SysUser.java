@@ -14,7 +14,7 @@ public class SysUser {
     private String password;
     private String phone;
     private String email;
-    private Integer userType;
+    private Integer userType = 1;
     private Integer status;
     private String lastLoginTime;
     private String lastLoginIp;
