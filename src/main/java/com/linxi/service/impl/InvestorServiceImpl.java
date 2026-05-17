@@ -99,6 +99,20 @@ public class InvestorServiceImpl implements InvestorService {
         if (existing == null) {
             throw new BusinessException("投资人不存在");
         }
+
+        // 检查phone唯一性（仅当phone非空且与原值不同时）
+        if (investor.getPhone() != null && !investor.getPhone().isEmpty()
+                && !investor.getPhone().equals(existing.getPhone())) {
+            Investor existPhone = investorMapper.selectOne(
+                    new LambdaQueryWrapper<Investor>()
+                            .eq(Investor::getPhone, investor.getPhone())
+                            .ne(Investor::getId, investor.getId())
+            );
+            if (existPhone != null) {
+                throw new BusinessException("投资人手机号已存在");
+            }
+        }
+
         investor.setUpdateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         // 不允许通过此接口修改createTime和createBy
         investor.setCreateTime(null);

@@ -48,7 +48,7 @@ mybatis-plus:
 # JWT 配置
 jwt:
   secret: linxi-hotel-daily-report-system-2026-secret-key
-  expiration: 7200000  # 2小时（毫秒）
+  expiration: 604800000  # 7天（毫秒）
   header: Authorization
   token-prefix: "Bearer "
 

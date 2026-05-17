@@ -160,6 +160,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean update(SysUser user) {
+        if (user.getId() == null) {
+            throw new BusinessException("用户ID不能为空");
+        }
+        SysUser existing = sysUserMapper.selectById(user.getId());
+        if (existing == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 检查phone唯一性（仅当phone非空且与原值不同时）
+        if (user.getPhone() != null && !user.getPhone().isEmpty()
+                && !user.getPhone().equals(existing.getPhone())) {
+            SysUser existPhone = sysUserMapper.selectOne(
+                    new LambdaQueryWrapper<SysUser>()
+                            .eq(SysUser::getPhone, user.getPhone())
+                            .ne(SysUser::getId, user.getId())
+            );
+            if (existPhone != null) {
+                throw new BusinessException("手机号已存在");
+            }
+        }
+
         user.setUpdateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         // 不更新密码
         user.setPassword(null);

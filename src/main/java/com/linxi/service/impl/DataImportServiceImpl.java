@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -159,7 +161,7 @@ public class DataImportServiceImpl implements DataImportService {
                 if (report == null) {
                     report = new DailyReport();
                     report.setStoreId(store.getId());
-                    report.setReportDate(reportDate);
+                    report.setReportDate(LocalDate.parse(reportDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                     report.setReportMonth(reportDate.substring(0, 7));
                     report.setTemplateId(templateId);
                     report.setStatus(1);

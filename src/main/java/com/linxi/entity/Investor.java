@@ -3,6 +3,8 @@ package com.linxi.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @TableName("investor")
 public class Investor {
@@ -21,4 +23,8 @@ public class Investor {
     private Long createBy;
     private String updateTime;
     private Long updateBy;
+
+    // 非数据库字段，存储关联的门店列表
+    @TableField(exist = false)
+    private List<InvestorStore> storeList;
 }
