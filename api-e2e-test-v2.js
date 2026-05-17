@@ -107,7 +107,7 @@ async function main() {
       username: 'test_e2e_' + Date.now(),
       password: 'test123',
       realName: 'E2E测试用户',
-      phone: '13800138000',
+      phone: '138' + Date.now(),  // 使用时间戳确保唯一
       status: 1
     };
     const resp = await api('/api/users', 'POST', newUser, token);
@@ -194,7 +194,7 @@ async function main() {
   await runTest('投资人创建', async () => {
     const newInvestor = {
       investorName: 'E2E测试投资人_' + Date.now(),
-      phone: '13900139000',
+      phone: '139' + Date.now(),  // 使用时间戳确保唯一
       status: 1
     };
     const resp = await api('/api/investors', 'POST', newInvestor, token);
@@ -227,7 +227,7 @@ async function main() {
   });
 
   await runTest('月度报表', async () => {
-    const resp = await api('/api/reports/monthly?startDate=2026-05-01&endDate=2026-05-17', 'GET', null, token);
+    const resp = await api('/api/reports/monthly?month=2026-05', 'GET', null, token);
     if (resp.status !== 200 || resp.data.code !== 200) throw new Error(`失败: ${JSON.stringify(resp.data)}`);
     log(`  月度报表获取成功`);
   });
@@ -245,7 +245,7 @@ async function main() {
   });
 
   await runTest('门店排名报表', async () => {
-    const resp = await api('/api/reports/store-ranking?startDate=2026-05-01&endDate=2026-05-17', 'GET', null, token);
+    const resp = await api('/api/reports/store-ranking?date=2026-05-17', 'GET', null, token);
     if (resp.status !== 200 || resp.data.code !== 200) throw new Error(`失败: ${JSON.stringify(resp.data)}`);
     log(`  门店排名获取成功`);
   });
