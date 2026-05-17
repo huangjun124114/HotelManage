@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
     update_by INTEGER
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uk_username ON sys_user(username);
-CREATE UNIQUE INDEX IF NOT EXISTS uk_phone ON sys_user(phone);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_phone ON sys_user(phone) WHERE phone IS NOT NULL;
 
 -- 4. 系统角色表
 CREATE TABLE IF NOT EXISTS sys_role (
@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS investor (
     update_time TEXT DEFAULT (datetime('now','localtime')),
     update_by INTEGER
 );
-CREATE UNIQUE INDEX IF NOT EXISTS uk_investor_phone ON investor(phone);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_investor_phone ON investor(phone) WHERE phone IS NOT NULL;
 
 -- 10. 投资者门店授权表
 CREATE TABLE IF NOT EXISTS investor_store (

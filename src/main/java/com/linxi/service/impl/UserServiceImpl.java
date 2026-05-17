@@ -136,11 +136,24 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException("用户名已存在");
         }
 
+        // 检查phone唯一性（仅当phone非空时）
+        if (user.getPhone() != null && !user.getPhone().isEmpty()) {
+            SysUser existPhone = sysUserMapper.selectOne(
+                    new LambdaQueryWrapper<SysUser>().eq(SysUser::getPhone, user.getPhone())
+            );
+            if (existPhone != null) {
+                throw new BusinessException("手机号已存在");
+            }
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCreateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         user.setUpdateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         if (user.getStatus() == null) {
             user.setStatus(1);
+        }
+        if (user.getUserType() == null) {
+            user.setUserType(1);
         }
         return sysUserMapper.insert(user) > 0;
     }

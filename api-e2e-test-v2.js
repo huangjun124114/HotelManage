@@ -5,7 +5,7 @@
 
 const http = require('http');
 
-const API_URL = 'http://localhost:8082';
+const API_URL = 'http://localhost:8081';
 
 const results = {
   passed: [],

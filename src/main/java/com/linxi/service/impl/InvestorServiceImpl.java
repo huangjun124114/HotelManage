@@ -67,6 +67,17 @@ public class InvestorServiceImpl implements InvestorService {
         if (investor.getInvestorName() == null || investor.getInvestorName().isEmpty()) {
             throw new BusinessException("投资人名称不能为空");
         }
+
+        // 检查phone唯一性（仅当phone非空时）
+        if (investor.getPhone() != null && !investor.getPhone().isEmpty()) {
+            Investor existPhone = investorMapper.selectOne(
+                    new LambdaQueryWrapper<Investor>().eq(Investor::getPhone, investor.getPhone())
+            );
+            if (existPhone != null) {
+                throw new BusinessException("投资人手机号已存在");
+            }
+        }
+
         investor.setCreateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         investor.setUpdateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         if (investor.getStatus() == null) {
