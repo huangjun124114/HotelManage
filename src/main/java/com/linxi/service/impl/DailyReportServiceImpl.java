@@ -49,6 +49,9 @@ public class DailyReportServiceImpl implements DailyReportService {
     @Autowired
     private DailyExtensionService dailyExtensionService;
 
+    @Autowired
+    private SysUserMapper sysUserMapper;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> getTodayReport(Long storeId, String reportDate) {
@@ -596,6 +599,32 @@ public class DailyReportServiceImpl implements DailyReportService {
             .map(DailyReport::getStoreId)
             .collect(Collectors.toSet());
 
+        // 5. 批量查询所有门店的最近填报日期（一次查询，避免N+1）
+        Map<Long, String> lastReportDateMap = new HashMap<>();
+        List<DailyReport> allSubmitted = dailyReportMapper.selectList(
+            new LambdaQueryWrapper<DailyReport>()
+                .in(DailyReport::getStatus, Arrays.asList(1, 2))
+                .orderByDesc(DailyReport::getReportDate)
+        );
+        for (DailyReport r : allSubmitted) {
+            lastReportDateMap.putIfAbsent(r.getStoreId(), r.getReportDate().toString());
+        }
+
+        // 6. 批量查询店长信息
+        Set<Long> managerIds = stores.stream()
+            .map(Store::getManagerUserId)
+            .filter(id -> id != null)
+            .collect(Collectors.toSet());
+        Map<Long, SysUser> managerMap = new HashMap<>();
+        if (!managerIds.isEmpty()) {
+            List<SysUser> managers = sysUserMapper.selectList(
+                new LambdaQueryWrapper<SysUser>().in(SysUser::getId, managerIds)
+            );
+            for (SysUser m : managers) {
+                managerMap.put(m.getId(), m);
+            }
+        }
+
         List<Map<String, Object>> result = new ArrayList<>();
         for (Store store : stores) {
             if (!filledStoreIds.contains(store.getId())) {
@@ -604,6 +633,15 @@ public class DailyReportServiceImpl implements DailyReportService {
                 item.put("storeName", store.getStoreName());
                 item.put("city", store.getCity());
                 item.put("region", store.getRegionName());
+                item.put("lastReportDate", lastReportDateMap.getOrDefault(store.getId(), "-"));
+                // 填充店长信息
+                if (store.getManagerUserId() != null) {
+                    SysUser manager = managerMap.get(store.getManagerUserId());
+                    if (manager != null) {
+                        item.put("managerName", manager.getRealName());
+                        item.put("managerPhone", manager.getPhone());
+                    }
+                }
                 result.add(item);
             }
         }

@@ -29,4 +29,8 @@ public class Investor {
     // 非数据库字段，存储关联的门店列表
     @TableField(exist = false)
     private List<InvestorStore> storeList;
+
+    // 非数据库字段，新增投资人时自动生成的登录密码（返回给前端展示）
+    @TableField(exist = false)
+    private String generatedPassword;
 }

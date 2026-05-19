@@ -20,5 +20,6 @@ public class MessageNotifyLog {
     private Integer sendStatus;
     private String failReason;
     private String sendTime;
+    private Integer isRead;
     private String createTime;
 }

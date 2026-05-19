@@ -147,6 +147,7 @@ CREATE TABLE IF NOT EXISTS investor_store (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     investor_id INTEGER NOT NULL,
     store_id INTEGER NOT NULL,
+    invest_amount REAL,
     investment_ratio REAL,
     auth_start_date TEXT,
     auth_end_date TEXT,
@@ -331,6 +332,7 @@ CREATE TABLE IF NOT EXISTS message_notify_log (
     send_status INTEGER DEFAULT 0,
     fail_reason VARCHAR(1000),
     send_time TEXT,
+    is_read INTEGER DEFAULT 0,
     create_time TEXT DEFAULT (datetime('now','localtime'))
 );
 

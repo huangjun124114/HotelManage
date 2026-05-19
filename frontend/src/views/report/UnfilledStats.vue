@@ -39,6 +39,7 @@
         <el-table-column prop="storeName" label="门店名称" min-width="150" />
         <el-table-column prop="city" label="城市" width="100" />
         <el-table-column prop="region" label="区域" width="100" />
+        <el-table-column prop="lastReportDate" label="最近填报日期" width="130" />
         <el-table-column prop="managerName" label="店长" width="100" />
         <el-table-column prop="managerPhone" label="联系电话" width="130" />
         <el-table-column label="操作" width="100">
@@ -56,6 +57,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import StatCard from '@/components/StatCard.vue'
 import { getUnfilledList } from '@/api/report'
+import { notifyStore, notifyUnfilled } from '@/api/message'
 
 const loading = ref(false)
 const notifyLoading = ref(false)
@@ -75,18 +77,41 @@ async function loadData() {
   finally { loading.value = false }
 }
 
-function handleNotify(row) {
-  ElMessage.success(`已向${row.storeName}发送提醒`)
+async function handleNotify(row) {
+  try {
+    const res = await notifyStore({
+      storeId: row.storeId,
+      title: '日报填报提醒',
+      content: `${row.storeName} ${selectedDate.value} 的日报尚未填报，请尽快完成填报。`
+    })
+    const sent = res.data?.sentCount ?? 0
+    if (sent > 0) {
+      ElMessage.success(`已向${row.storeName}发送站内提醒`)
+    } else {
+      ElMessage.warning(`${row.storeName}暂无关联用户，无法发送提醒`)
+    }
+  } catch (e) {
+    ElMessage.error('发送提醒失败')
+  }
 }
 
 async function handleNotifyAll() {
-  await ElMessageBox.confirm('确认向所有未填报门店发送提醒？', '提示', { type: 'warning' })
+  await ElMessageBox.confirm('确认向所有未填报门店发送站内提醒？', '提示', { type: 'warning' })
   notifyLoading.value = true
   try {
-    // 调用提醒接口
-    ElMessage.success('已发送提醒')
-  } catch (e) { /* ignore */ }
-  finally { notifyLoading.value = false }
+    const stores = tableData.value.map(s => ({ storeId: s.storeId }))
+    const res = await notifyUnfilled({
+      stores,
+      title: '日报填报提醒',
+      content: `您有 ${selectedDate.value} 的日报尚未填报，请尽快完成填报。`
+    })
+    const sent = res.data?.sentCount ?? 0
+    ElMessage.success(`已发送 ${sent} 条站内提醒`)
+  } catch (e) {
+    if (e !== 'cancel') {
+      ElMessage.error('发送提醒失败')
+    }
+  } finally { notifyLoading.value = false }
 }
 
 onMounted(() => loadData())

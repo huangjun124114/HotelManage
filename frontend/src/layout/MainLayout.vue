@@ -52,6 +52,7 @@
           <span class="system-title">林夕置业经营日报系统</span>
         </div>
         <div class="header-right">
+          <MessageBell />
           <el-dropdown trigger="click">
             <span class="user-info">
               <el-icon><UserFilled /></el-icon>
@@ -83,6 +84,7 @@ import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { getUserMenus } from '@/api/menu'
+import MessageBell from '@/components/MessageBell.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -253,6 +255,7 @@ loadMenus()
 .header-right {
   display: flex;
   align-items: center;
+  gap: 16px;
 }
 
 .user-info {
