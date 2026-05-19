@@ -13,8 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -50,6 +50,17 @@ public class StoreServiceImpl implements StoreService {
         wrapper.eq(Store::getStatus, 1)
                 .orderByAsc(Store::getStoreCode);
         return storeMapper.selectList(wrapper);
+    }
+
+    @Override
+    public List<Map<String, Object>> getOptions() {
+        List<Store> stores = listAll();
+        return stores.stream().map(store -> {
+            Map<String, Object> option = new LinkedHashMap<>();
+            option.put("label", store.getStoreName());
+            option.put("value", store.getId());
+            return option;
+        }).collect(Collectors.toList());
     }
 
     @Override

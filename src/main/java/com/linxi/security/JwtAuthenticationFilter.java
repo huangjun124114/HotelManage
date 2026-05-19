@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -59,11 +58,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 从Header获取Token
         String authHeader = request.getHeader(jwtTokenUtil.getHeader());
         if (authHeader == null || !authHeader.startsWith(jwtTokenUtil.getTokenPrefix())) {
+            // 没有token，继续过滤器链（Spring Security会处理）
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = jwtTokenUtil.getTokenFromHeader(authHeader);
+
+        // token存在但验证失败（过期或无效），返回401
+        if (token != null && !jwtTokenUtil.validateToken(token)) {
+            log.warn("Token验证失败，返回401: {}", requestPath);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":401,\"message\":\"登录已过期，请重新登录\"}");
+            return;
+        }
+
+        // token验证通过，设置认证信息
         if (token != null && jwtTokenUtil.validateToken(token)) {
             String username = jwtTokenUtil.getUsernameFromToken(token);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

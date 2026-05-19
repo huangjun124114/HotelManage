@@ -34,7 +34,7 @@
   </PageLayout>
 
   <!-- 新增/编辑弹窗 -->
-  <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑角色' : '新增角色'" width="500px" @close="resetForm">
+  <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑角色' : '新增角色'" width="500px" close-on-click-modal="false" @close="resetForm">
     <el-form ref="formRef" :model="form" :rules="formRules" label-width="80px">
       <el-form-item label="角色编码" prop="code">
         <el-input v-model="form.code" placeholder="请输入编码" />
@@ -56,7 +56,7 @@
   </el-dialog>
 
   <!-- 菜单分配弹窗 -->
-  <el-dialog v-model="menuDialogVisible" title="分配菜单" width="400px">
+  <el-dialog v-model="menuDialogVisible" title="分配菜单" width="400px" close-on-click-modal="false">
     <el-tree
       ref="menuTreeRef"
       :data="menuTree"

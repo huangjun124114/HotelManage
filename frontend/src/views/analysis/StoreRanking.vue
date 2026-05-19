@@ -86,7 +86,7 @@ function initBarChart() {
 async function loadData() {
   loading.value = true
   try {
-    const res = await getStoreRanking({ date: selectedDate.value, type: rankType.value })
+    const res = await getStoreRanking({ date: selectedDate.value, metric: rankType.value })
     rankingData.value = res.data || []
     nextTick(() => initBarChart())
   } catch (e) { /* ignore */ }

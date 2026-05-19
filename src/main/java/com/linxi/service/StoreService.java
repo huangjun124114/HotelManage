@@ -5,6 +5,7 @@ import com.linxi.dto.StoreQueryDTO;
 import com.linxi.entity.Store;
 
 import java.util.List;
+import java.util.Map;
 
 public interface StoreService {
 
@@ -13,6 +14,8 @@ public interface StoreService {
     Page<Store> page(StoreQueryDTO query);
 
     List<Store> listAll();
+
+    List<Map<String, Object>> getOptions();
 
     boolean save(Store store);
 

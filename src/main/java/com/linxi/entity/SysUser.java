@@ -14,7 +14,7 @@ public class SysUser {
     private String password;
     private String phone;
     private String email;
-    private Integer userType;
+    private Integer userType = 1;
     private Integer status;
     private String lastLoginTime;
     private String lastLoginIp;
@@ -26,4 +26,14 @@ public class SysUser {
     private Long createBy;
     private String updateTime;
     private Long updateBy;
+
+    // 关联字段（非数据库字段，用于展示）
+    @TableField(exist = false)
+    private Long storeId;
+
+    @TableField(exist = false)
+    private String storeName;
+
+    @TableField(exist = false)
+    private String storeCode;
 }

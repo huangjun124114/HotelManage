@@ -8,9 +8,11 @@ import com.linxi.dto.UserQueryDTO;
 import com.linxi.entity.SysUser;
 import com.linxi.entity.SysUserRole;
 import com.linxi.entity.SysUserStore;
+import com.linxi.entity.Store;
 import com.linxi.mapper.SysUserMapper;
 import com.linxi.mapper.SysUserRoleMapper;
 import com.linxi.mapper.SysUserStoreMapper;
+import com.linxi.mapper.StoreMapper;
 import com.linxi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,8 @@ import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,6 +38,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private SysUserStoreMapper sysUserStoreMapper;
+
+    @Autowired
+    private StoreMapper storeMapper;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -61,9 +68,62 @@ public class UserServiceImpl implements UserService {
                 .orderByDesc(SysUser::getCreateTime);
 
         Page<SysUser> result = sysUserMapper.selectPage(page, wrapper);
+
+        // 填充门店关联信息
+        fillStoreInfo(result.getRecords());
+
         // 隐藏密码
         result.getRecords().forEach(u -> u.setPassword(null));
         return result;
+    }
+
+    /**
+     * 填充用户的门店关联信息（门店名称、门店编码）
+     */
+    private void fillStoreInfo(List<SysUser> users) {
+        if (users == null || users.isEmpty()) {
+            return;
+        }
+        // 获取所有用户ID
+        List<Long> userIds = users.stream().map(SysUser::getId).collect(Collectors.toList());
+
+        // 查询这些用户的门店关联关系
+        LambdaQueryWrapper<SysUserStore> storeWrapper = new LambdaQueryWrapper<>();
+        storeWrapper.in(SysUserStore::getUserId, userIds);
+        List<SysUserStore> userStores = sysUserStoreMapper.selectList(storeWrapper);
+
+        if (userStores.isEmpty()) {
+            return;
+        }
+
+        // 获取所有关联的门店ID
+        List<Long> storeIds = userStores.stream()
+                .map(SysUserStore::getStoreId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 查询门店信息，构建ID到门店的映射
+        LambdaQueryWrapper<Store> storeQueryWrapper = new LambdaQueryWrapper<>();
+        storeQueryWrapper.in(Store::getId, storeIds);
+        List<Store> stores = storeMapper.selectList(storeQueryWrapper);
+        Map<Long, Store> storeMap = stores.stream()
+                .collect(Collectors.toMap(Store::getId, s -> s, (a, b) -> a));
+
+        // 为每个用户设置门店信息（取第一个关联的门店）
+        Map<Long, SysUserStore> userStoreMap = userStores.stream()
+                .collect(Collectors.toMap(SysUserStore::getUserId, us -> us, (a, b) -> a));
+
+        for (SysUser user : users) {
+            SysUserStore userStore = userStoreMap.get(user.getId());
+            if (userStore != null) {
+                Store store = storeMap.get(userStore.getStoreId());
+                if (store != null) {
+                    user.setStoreId(store.getId());
+                    user.setStoreName(store.getStoreName());
+                    user.setStoreCode(store.getStoreCode());
+                }
+            }
+        }
     }
 
     @Override
@@ -76,17 +136,51 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException("用户名已存在");
         }
 
+        // 检查phone唯一性（仅当phone非空时）
+        if (user.getPhone() != null && !user.getPhone().isEmpty()) {
+            SysUser existPhone = sysUserMapper.selectOne(
+                    new LambdaQueryWrapper<SysUser>().eq(SysUser::getPhone, user.getPhone())
+            );
+            if (existPhone != null) {
+                throw new BusinessException("手机号已存在");
+            }
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setCreateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         user.setUpdateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         if (user.getStatus() == null) {
             user.setStatus(1);
         }
+        if (user.getUserType() == null) {
+            user.setUserType(1);
+        }
         return sysUserMapper.insert(user) > 0;
     }
 
     @Override
     public boolean update(SysUser user) {
+        if (user.getId() == null) {
+            throw new BusinessException("用户ID不能为空");
+        }
+        SysUser existing = sysUserMapper.selectById(user.getId());
+        if (existing == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 检查phone唯一性（仅当phone非空且与原值不同时）
+        if (user.getPhone() != null && !user.getPhone().isEmpty()
+                && !user.getPhone().equals(existing.getPhone())) {
+            SysUser existPhone = sysUserMapper.selectOne(
+                    new LambdaQueryWrapper<SysUser>()
+                            .eq(SysUser::getPhone, user.getPhone())
+                            .ne(SysUser::getId, user.getId())
+            );
+            if (existPhone != null) {
+                throw new BusinessException("手机号已存在");
+            }
+        }
+
         user.setUpdateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         // 不更新密码
         user.setPassword(null);
@@ -94,7 +188,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean delete(Long id) {
+        SysUser user = sysUserMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        // 先清理子表关联记录
+        sysUserRoleMapper.delete(
+                new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, id)
+        );
+        sysUserStoreMapper.delete(
+                new LambdaQueryWrapper<SysUserStore>().eq(SysUserStore::getUserId, id)
+        );
+        // 逻辑删除用户
         return sysUserMapper.deleteById(id) > 0;
     }
 

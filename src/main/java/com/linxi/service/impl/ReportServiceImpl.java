@@ -309,32 +309,35 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<Map<String, Object>> storeRanking(String date, String metric) {
-        LambdaQueryWrapper<DailyReportSummary> wrapper = new LambdaQueryWrapper<DailyReportSummary>()
-                .eq(DailyReportSummary::getReportDate, date);
+        // 查询新表 daily_report（不再用已废弃的 daily_report_summary）
+        LambdaQueryWrapper<DailyReport> wrapper = new LambdaQueryWrapper<DailyReport>()
+                .eq(DailyReport::getReportDate, date);
 
-        List<DailyReportSummary> summaries = summaryMapper.selectList(wrapper);
+        List<DailyReport> reports = reportMapper.selectList(wrapper);
 
         List<Store> stores = storeMapper.selectList(new LambdaQueryWrapper<Store>().eq(Store::getStatus, 1));
         Map<Long, String> storeNameMap = stores.stream()
                 .collect(Collectors.toMap(Store::getId, Store::getStoreName, (a, b) -> a));
 
-        List<Map<String, Object>> result = summaries.stream()
-                .map(s -> {
+        List<Map<String, Object>> result = reports.stream()
+                .map(r -> {
                     Map<String, Object> item = new HashMap<>();
-                    item.put("storeId", s.getStoreId());
-                    item.put("storeName", storeNameMap.getOrDefault(s.getStoreId(), ""));
+                    item.put("storeId", r.getStoreId());
+                    item.put("storeName", r.getStoreName() != null ? r.getStoreName() : storeNameMap.getOrDefault(r.getStoreId(), ""));
 
                     BigDecimal value = BigDecimal.ZERO;
                     if ("revenue".equals(metric)) {
-                        value = s.getTotalRevenue() != null ? s.getTotalRevenue() : BigDecimal.ZERO;
-                    } else if ("occupancyRate".equals(metric)) {
-                        value = s.getOccupancyRate() != null ? s.getOccupancyRate() : BigDecimal.ZERO;
+                        value = r.getTotalRevenue() != null ? r.getTotalRevenue() : BigDecimal.ZERO;
+                    } else if ("occupancyRate".equals(metric) || "occupancy".equals(metric)) {
+                        value = r.getOccupancyRate() != null ? r.getOccupancyRate() : BigDecimal.ZERO;
                     } else if ("adr".equals(metric)) {
-                        value = s.getAdr() != null ? s.getAdr() : BigDecimal.ZERO;
+                        value = r.getAdr() != null ? r.getAdr() : BigDecimal.ZERO;
                     } else if ("revpar".equals(metric)) {
-                        value = s.getRevpar() != null ? s.getRevpar() : BigDecimal.ZERO;
-                    } else { // default: revenue
-                        value = s.getTotalRevenue() != null ? s.getTotalRevenue() : BigDecimal.ZERO;
+                        value = r.getRevpar() != null ? r.getRevpar() : BigDecimal.ZERO;
+                    } else if ("rooms".equals(metric)) {
+                        value = r.getRoomNights() != null ? r.getRoomNights() : BigDecimal.ZERO;
+                    } else {
+                        value = r.getTotalRevenue() != null ? r.getTotalRevenue() : BigDecimal.ZERO;
                     }
                     item.put("value", value);
                     return item;

@@ -31,11 +31,11 @@
 
     <template #table>
       <el-table :data="tableData" border stripe v-loading="loading" style="width:100%">
-        <el-table-column prop="operator" label="操作人" width="100" />
-        <el-table-column prop="module" label="操作模块" width="120" />
-        <el-table-column prop="action" label="操作类型" width="100" />
-        <el-table-column prop="description" label="操作描述" min-width="200" />
-        <el-table-column prop="ip" label="IP地址" width="140" />
+        <el-table-column prop="username" label="操作人" width="100" />
+        <el-table-column prop="moduleName" label="操作模块" width="120" />
+        <el-table-column prop="operationType" label="操作类型" width="100" />
+        <el-table-column prop="requestUrl" label="操作描述" min-width="200" />
+        <el-table-column prop="ipAddress" label="IP地址" width="140" />
         <el-table-column prop="createTime" label="操作时间" width="170" />
       </el-table>
     </template>

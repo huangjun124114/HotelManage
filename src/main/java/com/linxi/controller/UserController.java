@@ -62,6 +62,13 @@ public class UserController {
         return Result.success();
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN')")
+    public Result<Void> delete(@PathVariable Long id) {
+        userService.delete(id);
+        return Result.success();
+    }
+
     @PutMapping("/{id}/roles")
     public Result<Void> assignRoles(@PathVariable Long id, @RequestBody List<Long> roleIds) {
         userService.assignRoles(id, roleIds);

@@ -57,7 +57,7 @@
   </PageLayout>
 
   <!-- 退回弹窗 -->
-  <el-dialog v-model="rejectVisible" title="退回日报" width="450px">
+  <el-dialog v-model="rejectVisible" title="退回日报" width="450px" close-on-click-modal="false">
     <el-form>
       <el-form-item label="退回原因">
         <el-input v-model="rejectReason" type="textarea" rows="3" placeholder="请输入退回原因" />
@@ -113,7 +113,7 @@ function handleSizeChange(val) { size.value = val; loadData() }
 function handlePageChange(val) { page.value = val; loadData() }
 
 async function handleView(row) {
-  await getDetail(row.id)
+  await getDetail({ storeId: row.storeId, reportDate: row.reportDate })
   // 可打开详情弹窗
 }
 

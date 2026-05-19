@@ -66,7 +66,7 @@ const stats = reactive({ total: 0, filled: 0, unfilled: 0 })
 async function loadData() {
   loading.value = true
   try {
-    const res = await getUnfilledList({ date: selectedDate.value })
+    const res = await getUnfilledList({ startDate: selectedDate.value, endDate: selectedDate.value })
     tableData.value = res.data?.stores || []
     stats.total = res.data?.total ?? 0
     stats.filled = res.data?.filled ?? 0

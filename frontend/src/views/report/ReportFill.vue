@@ -76,14 +76,14 @@
               >
                 <!-- 只读/计算字段 -->
                 <el-input
-                  v-if="field.readonly === 1"
+                  v-if="field.readonlyFlag === 1 || field.readonly === 1"
                   :model-value="computedValues[field.fieldName] ?? '-'"
                   disabled
                   style="background:#f5f5f5"
                 />
                 <!-- 数字类型 -->
                 <el-input-number
-                  v-else-if="field.fieldType === 1"
+                  v-else-if="field.fieldType === 'number' || field.fieldType === 1"
                   v-model="formData[field.fieldName]"
                   :min="0"
                   :precision="2"
@@ -145,21 +145,21 @@ const computedValues = computed(() => {
   const d = formData
 
   // 总营收 = 日租房房费 + 钟点房费 + 杂费
-  const roomFee = Number(d.dailyRoomFee || 0)
-  const hourFee = Number(d.hourRoomFee || 0)
-  const miscFee = Number(d.miscFee || 0)
-  vals.totalRevenue = (roomFee + hourFee + miscFee).toFixed(2)
+  const roomFee = Number(d.daily_room_fee || 0)
+  const hourFee = Number(d.hourly_room_fee || 0)
+  const miscFee = Number(d.other_fee || 0)
+  vals.total_revenue = (roomFee + hourFee + miscFee).toFixed(2)
 
   // 出租率 = 间夜数 / 自有房量
-  const rooms = Number(d.rooms || d.roomNights || 0)
-  const ownRooms = Number(d.ownRoomCount || 1)
-  vals.occupancy = ownRooms > 0 ? (rooms / ownRooms * 100).toFixed(2) : '0.00'
+  const rooms = Number(d.room_nights || 0)
+  const ownRooms = Number(d.own_room_count || 1)
+  vals.occupancy_rate = ownRooms > 0 ? (rooms / ownRooms * 100).toFixed(2) : '0.00'
 
   // ADR = 日租房房费 / 间夜数
   vals.adr = rooms > 0 ? (roomFee / rooms).toFixed(2) : '0.00'
 
   // RevPAR = 总营收 / 自有房量
-  vals.revpar = ownRooms > 0 ? (Number(vals.totalRevenue) / ownRooms).toFixed(2) : '0.00'
+  vals.revpar = ownRooms > 0 ? (Number(vals.total_revenue) / ownRooms).toFixed(2) : '0.00'
 
   return vals
 })
@@ -218,10 +218,10 @@ function initFormData() {
   Object.keys(formRules).forEach(k => delete formRules[k])
 
   for (const f of fields.value) {
-    if (f.readonly !== 1) {
-      formData[f.fieldName] = f.defaultValue ?? (f.fieldType === 1 ? 0 : '')
+    if (f.readonlyFlag !== 1 && f.readonly !== 1) {
+      formData[f.fieldName] = f.defaultValue ?? (f.fieldType === 'number' || f.fieldType === 1 ? 0 : '')
     }
-    if (f.required === 1 && f.readonly !== 1) {
+    if (f.required === 1 && f.readonlyFlag !== 1 && f.readonly !== 1) {
       formRules[f.fieldName] = [
         { required: true, message: `请输入${f.label}`, trigger: 'blur' }
       ]
@@ -235,22 +235,40 @@ async function loadTodayReport() {
   if (!selectedStoreId.value || !reportDate.value) return
   pageLoading.value = true
   try {
-    const res = await getToday({ storeId: selectedStoreId.value, date: reportDate.value })
+    const res = await getToday({ storeId: selectedStoreId.value, reportDate: reportDate.value })
     if (res.data) {
-      reportId.value = res.data.id
-      // 填充已有数据
-      Object.keys(res.data).forEach(k => {
-        if (k !== 'id' && k !== 'createTime' && k !== 'updateTime') {
-          formData[k] = res.data[k]
-        }
-      })
-      formData._touch = Date.now()
+      // 后端返回 { report: {...}, fields: [...], values: {...} }
+      const reportData = res.data.report || res.data
+      reportId.value = reportData.id
+
+      // 加载模板字段
+      if (res.data.fields) {
+        fields.value = res.data.fields
+      }
+
+      // 用 values 回填表单
+      if (res.data.values) {
+        initFormData()
+        Object.keys(res.data.values).forEach(k => {
+          if (formData.hasOwnProperty(k)) {
+            formData[k] = res.data.values[k]
+          }
+        })
+        formData._touch = Date.now()
+      } else if (reportData.values) {
+        initFormData()
+        Object.keys(reportData.values).forEach(k => {
+          if (formData.hasOwnProperty(k)) {
+            formData[k] = reportData.values[k]
+          }
+        })
+        formData._touch = Date.now()
+      }
     } else {
       reportId.value = null
       if (fields.value.length > 0) {
         initFormData()
       } else {
-        // 先加载模板再加载数据
         loadTemplateFields().then(() => {
           initFormData()
         })
@@ -268,7 +286,7 @@ async function handleSaveDraft() {
   saveLoading.value = true
   try {
     const data = {
-      id: reportId.value,
+      reportId: reportId.value,
       storeId: selectedStoreId.value,
       reportDate: reportDate.value,
       templateId: selectedTemplateId.value,
@@ -289,7 +307,7 @@ async function handleSubmit() {
   }
 
   // 校验必填字段
-  const requiredFields = fields.value.filter(f => f.required === 1 && f.readonly !== 1)
+  const requiredFields = fields.value.filter(f => f.required === 1 && f.readonlyFlag !== 1 && f.readonly !== 1)
   for (const f of requiredFields) {
     const val = formData[f.fieldName]
     if (val === '' || val == null || val === undefined) {
@@ -306,7 +324,7 @@ async function handleSubmit() {
   submitLoading.value = true
   try {
     const data = {
-      id: reportId.value,
+      reportId: reportId.value,
       storeId: selectedStoreId.value,
       reportDate: reportDate.value,
       templateId: selectedTemplateId.value,

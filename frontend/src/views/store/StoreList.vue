@@ -11,13 +11,13 @@
   >
     <template #search>
       <el-form-item label="门店名称">
-        <el-input v-model="searchForm.name" placeholder="请输入" clearable style="width:200px" />
+        <el-input v-model="searchForm.storeName" placeholder="请输入" clearable style="width:200px" />
       </el-form-item>
       <el-form-item label="城市">
         <el-input v-model="searchForm.city" placeholder="请输入" clearable style="width:150px" />
       </el-form-item>
       <el-form-item label="区域">
-        <el-input v-model="searchForm.region" placeholder="请输入" clearable style="width:150px" />
+        <el-input v-model="searchForm.regionName" placeholder="请输入" clearable style="width:150px" />
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="searchForm.status" placeholder="全部" clearable style="width:120px">
@@ -34,12 +34,12 @@
 
     <template #table>
       <el-table :data="tableData" border stripe v-loading="loading" style="width:100%">
-        <el-table-column prop="code" label="门店编码" width="120" />
-        <el-table-column prop="name" label="门店名称" min-width="150" />
+        <el-table-column prop="storeCode" label="门店编码" width="120" />
+        <el-table-column prop="storeName" label="门店名称" min-width="150" />
         <el-table-column prop="shortName" label="简称" width="100" />
         <el-table-column prop="city" label="城市" width="100" />
-        <el-table-column prop="region" label="区域" width="100" />
-        <el-table-column prop="roomCount" label="房量" width="80" align="right" />
+        <el-table-column prop="regionName" label="区域" width="100" />
+        <el-table-column prop="ownRoomCount" label="房量" width="80" align="right" />
         <el-table-column prop="managerName" label="店长" width="100" />
         <el-table-column label="状态" width="80" align="center">
           <template #default="{ row }">
@@ -64,14 +64,15 @@
     v-model="dialogVisible"
     :title="isEdit ? '编辑门店' : '新增门店'"
     width="600px"
+    close-on-click-modal="false"
     @close="resetForm"
   >
     <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-      <el-form-item label="门店编码" prop="code">
-        <el-input v-model="form.code" :disabled="isEdit" placeholder="请输入门店编码" />
+      <el-form-item label="门店编码" prop="storeCode">
+        <el-input v-model="form.storeCode" :disabled="isEdit" placeholder="请输入门店编码" />
       </el-form-item>
-      <el-form-item label="门店名称" prop="name">
-        <el-input v-model="form.name" placeholder="请输入门店名称" />
+      <el-form-item label="门店名称" prop="storeName">
+        <el-input v-model="form.storeName" placeholder="请输入门店名称" />
       </el-form-item>
       <el-form-item label="简称" prop="shortName">
         <el-input v-model="form.shortName" placeholder="请输入简称" />
@@ -79,14 +80,14 @@
       <el-form-item label="城市" prop="city">
         <el-input v-model="form.city" placeholder="请输入城市" />
       </el-form-item>
-      <el-form-item label="区域" prop="region">
-        <el-input v-model="form.region" placeholder="请输入区域" />
+      <el-form-item label="区域" prop="regionName">
+        <el-input v-model="form.regionName" placeholder="请输入区域" />
       </el-form-item>
       <el-form-item label="详细地址" prop="address">
         <el-input v-model="form.address" placeholder="请输入详细地址" />
       </el-form-item>
-      <el-form-item label="房量" prop="roomCount">
-        <el-input-number v-model="form.roomCount" :min="0" :max="9999" />
+      <el-form-item label="房量" prop="ownRoomCount">
+        <el-input-number v-model="form.ownRoomCount" :min="0" :max="9999" />
       </el-form-item>
       <el-form-item label="联系人" prop="contactName">
         <el-input v-model="form.contactName" placeholder="请输入联系人" />
@@ -121,20 +122,20 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref(null)
 
-const searchForm = reactive({ name: '', city: '', region: '', status: null })
+const searchForm = reactive({ storeName: '', city: '', regionName: '', status: null })
 const page = ref(1)
 const size = ref(20)
 const total = ref(0)
 const tableData = ref([])
 
 const form = reactive({
-  id: null, code: '', name: '', shortName: '', city: '',
-  region: '', address: '', roomCount: 0, contactName: '', contactPhone: '', status: 1
+  id: null, storeCode: '', storeName: '', shortName: '', city: '',
+  regionName: '', address: '', ownRoomCount: 0, contactName: '', contactPhone: '', status: 1
 })
 
 const formRules = {
-  code: [{ required: true, message: '请输入门店编码', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入门店名称', trigger: 'blur' }],
+  storeCode: [{ required: true, message: '请输入门店编码', trigger: 'blur' }],
+  storeName: [{ required: true, message: '请输入门店名称', trigger: 'blur' }],
   shortName: [{ required: true, message: '请输入简称', trigger: 'blur' }],
   city: [{ required: true, message: '请输入城市', trigger: 'blur' }]
 }
@@ -151,7 +152,7 @@ async function loadData() {
 
 function handleSearch() { page.value = 1; loadData() }
 function handleReset() {
-  searchForm.name = ''; searchForm.city = ''; searchForm.region = ''; searchForm.status = null
+  searchForm.storeName = ''; searchForm.city = ''; searchForm.regionName = ''; searchForm.status = null
   page.value = 1; loadData()
 }
 function handleSizeChange(val) { size.value = val; loadData() }
@@ -171,8 +172,8 @@ function handleEdit(row) {
 
 function resetForm() {
   Object.assign(form, {
-    id: null, code: '', name: '', shortName: '', city: '',
-    region: '', address: '', roomCount: 0, contactName: '', contactPhone: '', status: 1
+    id: null, storeCode: '', storeName: '', shortName: '', city: '',
+    regionName: '', address: '', ownRoomCount: 0, contactName: '', contactPhone: '', status: 1
   })
   formRef.value?.resetFields()
 }

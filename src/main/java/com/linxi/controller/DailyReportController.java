@@ -1,5 +1,6 @@
 package com.linxi.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.linxi.common.PageResult;
 import com.linxi.common.Result;
@@ -7,12 +8,15 @@ import com.linxi.dto.DailyReportQueryDTO;
 import com.linxi.dto.DailyReportSaveDTO;
 import com.linxi.entity.DailyReport;
 import com.linxi.entity.DailyReportField;
+import com.linxi.entity.Store;
+import com.linxi.mapper.StoreMapper;
 import com.linxi.service.DailyReportService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,15 +28,25 @@ public class DailyReportController {
     @Autowired
     private DailyReportService dailyReportService;
 
+    @Autowired
+    private StoreMapper storeMapper;
+
     @GetMapping("/today")
-    public Result<Map<String, Object>> today(@RequestParam Long storeId) {
-        Map<String, Object> result = dailyReportService.getTodayReport(storeId);
+    public Result<Map<String, Object>> today(@RequestParam Long storeId, @RequestParam(required = false) String reportDate) {
+        Map<String, Object> result = dailyReportService.getTodayReport(storeId, reportDate);
         return Result.success(result);
     }
 
     @GetMapping("/detail")
     public Result<Map<String, Object>> detail(@RequestParam(required = false) Long storeId,
                                                @RequestParam String reportDate) {
+        Map<String, Object> result = dailyReportService.getDetail(storeId, reportDate);
+        return Result.success(result);
+    }
+
+    @GetMapping("/draft")
+    public Result<Map<String, Object>> draft(@RequestParam Long storeId,
+                                              @RequestParam String reportDate) {
         Map<String, Object> result = dailyReportService.getDetail(storeId, reportDate);
         return Result.success(result);
     }
@@ -86,9 +100,18 @@ public class DailyReportController {
     }
 
     @GetMapping("/unfilled")
-    public Result<List<Map<String, Object>>> getUnfilledStats(
+    public Result<Map<String, Object>> getUnfilledStats(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
-        return Result.success(dailyReportService.getUnfilledStats(startDate, endDate));
+        List<Map<String, Object>> stores = dailyReportService.getUnfilledStats(startDate, endDate);
+        Map<String, Object> result = new HashMap<>();
+        int total = storeMapper.selectCount(
+            new LambdaQueryWrapper<Store>().eq(Store::getStatus, 1)
+        ).intValue();
+        result.put("total", total);
+        result.put("filled", total - stores.size());
+        result.put("unfilled", stores.size());
+        result.put("stores", stores);
+        return Result.success(result);
     }
 }

@@ -1,7 +1,9 @@
 package com.linxi.dto;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Data
@@ -25,4 +27,15 @@ public class DailyReportSaveDTO {
      * 平台评价数据：key为platformCode，value为评分等
      */
     private Map<String, Object> platformData;
+
+    @JsonAnySetter
+    public void setAnyField(String key, Object value) {
+        if (values == null) values = new HashMap<>();
+        if (!"storeId".equals(key) && !"reportDate".equals(key)
+            && !"templateId".equals(key) && !"reportId".equals(key)
+            && !"values".equals(key) && !"channelData".equals(key)
+            && !"platformData".equals(key) && !"_touch".equals(key)) {
+            values.put(key, value);
+        }
+    }
 }

@@ -77,7 +77,7 @@
   </PageLayout>
 
   <!-- 新增/编辑弹窗 -->
-  <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑用户' : '新增用户'" width="550px" @close="resetForm">
+  <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑用户' : '新增用户'" width="550px" close-on-click-modal="false" @close="resetForm">
     <el-form ref="formRef" :model="form" :rules="formRules" label-width="80px">
       <el-form-item label="账号" prop="username">
         <el-input v-model="form.username" placeholder="请输入账号" :disabled="isEdit" />
@@ -116,7 +116,7 @@
   </el-dialog>
 
   <!-- 重置密码弹窗 -->
-  <el-dialog v-model="pwdDialogVisible" title="重置密码" width="400px">
+  <el-dialog v-model="pwdDialogVisible" title="重置密码" width="400px" close-on-click-modal="false">
     <el-form ref="pwdFormRef" :model="pwdForm" :rules="pwdRules" label-width="80px">
       <el-form-item label="新密码" prop="password">
         <el-input v-model="pwdForm.password" type="password" show-password placeholder="请输入新密码" />

@@ -4,8 +4,8 @@ export function getToday(params) {
   return request({ url: '/daily-reports/today', method: 'get', params })
 }
 
-export function getDetail(storeId, reportDate) {
-  return request({ url: '/daily-reports/detail', method: 'get', params: { storeId, reportDate } })
+export function getDetail(params) {
+  return request({ url: '/daily-reports/detail', method: 'get', params })
 }
 
 export function saveDraft(data) {

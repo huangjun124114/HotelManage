@@ -32,16 +32,18 @@ const routes = [
         meta: { title: '门店用户', requireAuth: true }
       },
       {
+        path: 'report/manage',
+        name: 'ReportManage',
+        component: () => import('@/views/report/ReportManage.vue'),
+        meta: { title: '日报管理', requireAuth: true }
+      },
+      {
         path: 'report/fill',
-        name: 'ReportFill',
-        component: () => import('@/views/report/ReportFill.vue'),
-        meta: { title: '日报填报', requireAuth: true }
+        redirect: '/report/manage'
       },
       {
         path: 'report/query',
-        name: 'ReportQuery',
-        component: () => import('@/views/report/ReportQuery.vue'),
-        meta: { title: '日报查询', requireAuth: true }
+        redirect: '/report/manage'
       },
       {
         path: 'report/audit',

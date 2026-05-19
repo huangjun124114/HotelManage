@@ -38,7 +38,7 @@
     <el-empty v-else description="请选择投资人" />
 
     <!-- 新增投资关系弹窗 -->
-    <el-dialog v-model="dialogVisible" title="添加投资关系" width="500px" @close="resetForm">
+    <el-dialog v-model="dialogVisible" title="添加投资关系" width="500px" close-on-click-modal="false" @close="resetForm">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="80px">
         <el-form-item label="门店" prop="storeId">
           <el-select v-model="form.storeId" placeholder="请选择门店" style="width:100%">

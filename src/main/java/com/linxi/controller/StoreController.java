@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -34,6 +35,11 @@ public class StoreController {
     @GetMapping("/list")
     public Result<List<Store>> listAll() {
         return Result.success(storeService.listAll());
+    }
+
+    @GetMapping("/options")
+    public Result<List<Map<String, Object>>> getOptions() {
+        return Result.success(storeService.getOptions());
     }
 
     @GetMapping("/{id}")

@@ -54,7 +54,7 @@
     </template>
   </PageLayout>
 
-  <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑投资人' : '新增投资人'" width="500px" @close="resetForm">
+  <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑投资人' : '新增投资人'" width="500px" close-on-click-modal="false" @close="resetForm">
     <el-form ref="formRef" :model="form" :rules="formRules" label-width="80px">
       <el-form-item label="姓名" prop="name">
         <el-input v-model="form.name" placeholder="请输入姓名" />

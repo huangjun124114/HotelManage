@@ -265,20 +265,20 @@ public class AuthServiceImpl implements AuthService {
                         adminPerms.add("system:user");
                         adminPerms.add("system:role");
                         adminPerms.add("system:menu");
-                        adminPerms.add("report:fill");
+                        adminPerms.add("report:manage");
                         adminPerms.add("report:audit");
-                        adminPerms.add("report:view");
+                        adminPerms.add("report:unfilled");
                         return adminPerms;
                     case 2: // 门店经理
                         List<String> managerPerms = new ArrayList<>();
-                        managerPerms.add("report:fill");
+                        managerPerms.add("report:manage");
                         managerPerms.add("report:audit");
-                        managerPerms.add("report:view");
+                        managerPerms.add("report:unfilled");
                         return managerPerms;
                     case 3: // 门店员工
                         List<String> staffPerms = new ArrayList<>();
-                        staffPerms.add("report:fill");
-                        staffPerms.add("report:view");
+                        staffPerms.add("report:manage");
+                        staffPerms.add("report:unfilled");
                         return staffPerms;
                 }
             }
