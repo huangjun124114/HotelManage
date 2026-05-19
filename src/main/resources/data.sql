@@ -78,6 +78,10 @@ SELECT 2, id FROM sys_menu WHERE id IN (1,10,11,12,20,21,23,24,30,31,32,33,34,35
 INSERT OR IGNORE INTO sys_role_menu (role_id, menu_id)
 SELECT 4, id FROM sys_menu WHERE id IN (1,20,21,30,32,33,34,35,36);
 
+-- 给投资者分配只读菜单（首页、门店列表、日报管理、报表中心、投资者管理）
+INSERT OR IGNORE INTO sys_role_menu (role_id, menu_id)
+SELECT 6, id FROM sys_menu WHERE id IN (1,10,11,20,21,30,31,32,33,34,35,36,40,41,42);
+
 -- 6. 示例门店（9家，均在深圳市，门店编码按拼音首字母定义）
 INSERT OR IGNORE INTO store (id, store_code, store_name, short_name, city, region_name, address, own_room_count, status)
 VALUES

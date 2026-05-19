@@ -13,6 +13,7 @@ public class InvestorStore {
     private Long id;
     private Long investorId;
     private Long storeId;
+    private BigDecimal investAmount;
     private BigDecimal investmentRatio;
     private String authStartDate;
     private String authEndDate;
@@ -23,4 +24,8 @@ public class InvestorStore {
     private Integer status;
     private String createTime;
     private String updateTime;
+
+    // 非数据库字段，用于展示门店名称
+    @TableField(exist = false)
+    private String storeName;
 }

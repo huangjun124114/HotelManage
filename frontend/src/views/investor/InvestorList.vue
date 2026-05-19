@@ -11,7 +11,7 @@
   >
     <template #search>
       <el-form-item label="姓名">
-        <el-input v-model="searchForm.name" placeholder="请输入" clearable style="width:150px" />
+        <el-input v-model="searchForm.investorName" placeholder="请输入" clearable style="width:150px" />
       </el-form-item>
       <el-form-item label="手机号">
         <el-input v-model="searchForm.phone" placeholder="请输入" clearable style="width:150px" />
@@ -78,7 +78,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import PageLayout from '@/components/PageLayout.vue'
 import request from '@/utils/request'
@@ -88,7 +88,7 @@ const submitLoading = ref(false)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref(null)
-const searchForm = reactive({ name: '', phone: '', status: null })
+const searchForm = reactive({ investorName: '', phone: '', status: null })
 const page = ref(1)
 const size = ref(20)
 const total = ref(0)
@@ -113,7 +113,7 @@ async function loadData() {
 
 function handleSearch() { page.value = 1; loadData() }
 function handleReset() {
-  searchForm.name = ''; searchForm.phone = ''; searchForm.status = null
+  searchForm.investorName = ''; searchForm.phone = ''; searchForm.status = null
   page.value = 1; loadData()
 }
 function handleSizeChange(val) { size.value = val; loadData() }
@@ -129,14 +129,32 @@ async function handleSubmit() {
   try {
     if (isEdit.value) {
       await request({ url: `/investors/${form.id}`, method: 'put', data: { ...form } })
+      ElMessage.success('修改成功')
+      dialogVisible.value = false
+      loadData()
     } else {
-      await request({ url: '/investors', method: 'post', data: { ...form } })
+      const res = await request({ url: '/investors', method: 'post', data: { ...form } })
+      ElMessage.success('新增成功')
+      dialogVisible.value = false
+      loadData()
+      // 展示自动创建的账户信息
+      const data = res.data
+      if (data && data.password) {
+        ElNotification({
+          title: '投资人账户已创建',
+          message: `用户名：${data.username}  初始密码：${data.password}`,
+          type: 'success',
+          duration: 0,
+          showClose: true
+        })
+      }
     }
-    ElMessage.success(isEdit.value ? '修改成功' : '新增成功')
-    dialogVisible.value = false
-    loadData()
-  } catch (e) { /* ignore */ }
-  finally { submitLoading.value = false }
+  } catch (e) {
+    const msg = e?.response?.data?.message || e?.message || '操作失败'
+    ElMessage.error(msg)
+  } finally {
+    submitLoading.value = false
+  }
 }
 
 onMounted(() => loadData())

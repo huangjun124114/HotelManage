@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -63,12 +64,17 @@ public class InvestorController {
     }
 
     /**
-     * 新增投资人
+     * 新增投资人（自动创建系统账户）
      */
     @PostMapping
-    public Result<Void> save(@RequestBody Investor investor) {
+    public Result<Map<String, Object>> save(@RequestBody Investor investor) {
         investorService.save(investor);
-        return Result.success();
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("id", investor.getId());
+        result.put("userId", investor.getUserId());
+        result.put("username", investor.getPhone());
+        result.put("password", investor.getGeneratedPassword());
+        return Result.success(result);
     }
 
     /**

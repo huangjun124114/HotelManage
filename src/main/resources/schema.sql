@@ -147,6 +147,7 @@ CREATE TABLE IF NOT EXISTS investor_store (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     investor_id INTEGER NOT NULL,
     store_id INTEGER NOT NULL,
+    invest_amount REAL,
     investment_ratio REAL,
     auth_start_date TEXT,
     auth_end_date TEXT,
