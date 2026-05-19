@@ -78,6 +78,10 @@ public class ReportServiceImpl implements ReportService {
                 .map(s -> s.getTotalRevenue() != null ? s.getTotalRevenue() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        BigDecimal totalRooms = summaries.stream()
+                .map(s -> s.getRoomNights() != null ? s.getRoomNights() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         BigDecimal avgOccupancy = summaries.isEmpty() ? BigDecimal.ZERO
                 : summaries.stream()
                 .map(s -> s.getOccupancyRate() != null ? s.getOccupancyRate() : BigDecimal.ZERO)
@@ -95,6 +99,8 @@ public class ReportServiceImpl implements ReportService {
                 .map(s -> s.getRevpar() != null ? s.getRevpar() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .divide(new BigDecimal(summaries.size()), 2, RoundingMode.HALF_UP);
+
+        int unfilledCount = totalStores - filledCount;
 
         // 门店排名Top10（按总营收）
         Map<Long, Store> storeMap = allStores.stream()
@@ -142,15 +148,71 @@ public class ReportServiceImpl implements ReportService {
             trend7Days.add(trend);
         }
 
+        // 未填报门店列表
+        Set<Long> filledStoreIds = summaries.stream().map(DailyReportSummary::getStoreId).collect(Collectors.toSet());
+        List<Map<String, Object>> unfilledStores = allStores.stream()
+                .filter(s -> !filledStoreIds.contains(s.getId()))
+                .map(s -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("storeName", s.getStoreName());
+                    item.put("city", s.getCity());
+                    item.put("managerName", "");
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        // 前端期望的排名格式（营收排名 + 出租率排名）
+        List<Map<String, Object>> revenueRanking = top10.stream().map(item -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("storeName", item.get("storeName"));
+            m.put("revenue", item.get("revenue"));
+            return m;
+        }).collect(Collectors.toList());
+
+        List<Map<String, Object>> occupancyRanking = top10.stream()
+                .sorted((a, b) -> {
+                    BigDecimal oa = (BigDecimal) a.getOrDefault("occupancyRate", BigDecimal.ZERO);
+                    BigDecimal ob = (BigDecimal) b.getOrDefault("occupancyRate", BigDecimal.ZERO);
+                    return ob.compareTo(oa);
+                })
+                .map(item -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("storeName", item.get("storeName"));
+                    BigDecimal occ = (BigDecimal) item.getOrDefault("occupancyRate", BigDecimal.ZERO);
+                    m.put("occupancy", occ.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP));
+                    return m;
+                })
+                .collect(Collectors.toList());
+
+        // 前端期望的趋势格式（平铺数组）
+        List<String> dateLabels = new ArrayList<>();
+        List<BigDecimal> revenueTrend = new ArrayList<>();
+        List<BigDecimal> occupancyTrend = new ArrayList<>();
+        for (Map<String, Object> t : trend7Days) {
+            dateLabels.add((String) t.get("date"));
+            revenueTrend.add((BigDecimal) t.get("revenue"));
+            BigDecimal occ = (BigDecimal) t.getOrDefault("occupancyRate", BigDecimal.ZERO);
+            occupancyTrend.add(occ.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP));
+        }
+
         result.put("totalStores", totalStores);
         result.put("filledCount", filledCount);
-        result.put("fillRate", fillRate);
+        result.put("unfilledCount", unfilledCount);
         result.put("totalRevenue", totalRevenue);
-        result.put("avgOccupancyRate", avgOccupancy);
+        result.put("totalRooms", totalRooms);
+        result.put("avgOccupancy", avgOccupancy.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP));
         result.put("avgAdr", avgAdr);
         result.put("avgRevpar", avgRevpar);
+        result.put("fillRate", fillRate);
         result.put("top10", top10);
         result.put("trend7Days", trend7Days);
+        // 前端Home.vue期望的字段
+        result.put("revenueRanking", revenueRanking);
+        result.put("occupancyRanking", occupancyRanking);
+        result.put("dateLabels", dateLabels);
+        result.put("revenueTrend", revenueTrend);
+        result.put("occupancyTrend", occupancyTrend);
+        result.put("unfilledStores", unfilledStores);
         return result;
     }
 
