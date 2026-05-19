@@ -80,7 +80,7 @@
   </PageLayout>
 
   <!-- 详情弹窗 -->
-  <el-dialog v-model="detailVisible" title="日报详情" width="800px">
+  <el-dialog v-model="detailVisible" title="日报详情" width="800px" close-on-click-modal="false">
     <el-descriptions v-if="detailData" :column="3" border>
       <el-descriptions-item label="门店">{{ detailData.storeName }}</el-descriptions-item>
       <el-descriptions-item label="日期">{{ detailData.reportDate }}</el-descriptions-item>
@@ -96,7 +96,7 @@
   </el-dialog>
 
   <!-- 退回弹窗 -->
-  <el-dialog v-model="rejectVisible" title="退回日报" width="450px">
+  <el-dialog v-model="rejectVisible" title="退回日报" width="450px" close-on-click-modal="false">
     <el-form>
       <el-form-item label="退回原因">
         <el-input v-model="rejectReason" type="textarea" rows="3" placeholder="请输入退回原因" />
@@ -161,7 +161,7 @@ function handleSizeChange(val) { size.value = val; loadData() }
 function handlePageChange(val) { page.value = val; loadData() }
 
 async function handleView(row) {
-  const res = await getDetail(row.id)
+  const res = await getDetail({ storeId: row.storeId, reportDate: row.reportDate })
   detailData.value = res.data
   detailVisible.value = true
 }

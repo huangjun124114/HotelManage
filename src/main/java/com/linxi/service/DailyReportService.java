@@ -14,7 +14,7 @@ public interface DailyReportService {
     /**
      * 获取今日日报，如不存在则根据模板自动创建草稿
      */
-    Map<String, Object> getTodayReport(Long storeId);
+    Map<String, Object> getTodayReport(Long storeId, String reportDate);
 
     /**
      * 获取日报详情（含字段值）

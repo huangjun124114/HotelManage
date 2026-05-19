@@ -38,10 +38,9 @@ VALUES
 
 -- 日报管理
 (20, 0, '日报管理', 'report', 1, '/report', NULL, 'report:view', 3),
-(21, 20, '日报填报', 'report:fill', 2, '/report/fill', 'views/report/ReportFill.vue', 'report:fill', 1),
-(22, 20, '日报查询', 'report:query', 2, '/report/query', 'views/report/ReportQuery.vue', 'report:query', 2),
-(23, 20, '日报审核', 'report:audit', 2, '/report/audit', 'views/report/ReportAudit.vue', 'report:audit', 3),
-(24, 20, '未填报统计', 'report:unfilled', 2, '/report/unfilled', 'views/report/UnfilledStats.vue', 'report:unfilled', 4),
+(21, 20, '日报管理', 'report:manage', 2, '/report/manage', 'views/report/ReportManage.vue', 'report:manage', 1),
+(23, 20, '日报审核', 'report:audit', 2, '/report/audit', 'views/report/ReportAudit.vue', 'report:audit', 2),
+(24, 20, '未填报统计', 'report:unfilled', 2, '/report/unfilled', 'views/report/UnfilledStats.vue', 'report:unfilled', 3),
 
 -- 报表中心
 (30, 0, '报表中心', 'analysis', 1, '/analysis', NULL, 'analysis:view', 4),
@@ -73,11 +72,11 @@ SELECT 1, id FROM sys_menu;
 
 -- 给CEO分配核心菜单（去掉系统管理部分敏感菜单）
 INSERT OR IGNORE INTO sys_role_menu (role_id, menu_id)
-SELECT 2, id FROM sys_menu WHERE id IN (1,10,11,12,20,21,22,23,24,30,31,32,33,34,35,36,40,41,42);
+SELECT 2, id FROM sys_menu WHERE id IN (1,10,11,12,20,21,23,24,30,31,32,33,34,35,36,40,41,42);
 
 -- 给店长分配门店相关菜单
 INSERT OR IGNORE INTO sys_role_menu (role_id, menu_id)
-SELECT 4, id FROM sys_menu WHERE id IN (1,20,21,22,30,32,33,34,35,36);
+SELECT 4, id FROM sys_menu WHERE id IN (1,20,21,30,32,33,34,35,36);
 
 -- 6. 示例门店（9家，均在深圳市，门店编码按拼音首字母定义）
 INSERT OR IGNORE INTO store (id, store_code, store_name, short_name, city, region_name, address, own_room_count, status)

@@ -51,14 +51,78 @@ public class DailyReportServiceImpl implements DailyReportService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> getTodayReport(Long storeId) {
-        String today = DateUtil.today();
-        return getOrCreateDraft(storeId, today);
+    public Map<String, Object> getTodayReport(Long storeId, String reportDate) {
+        String date = (reportDate != null && !reportDate.isEmpty()) ? reportDate : DateUtil.today();
+        return getOrCreateDraft(storeId, date);
     }
 
     @Override
     public Map<String, Object> getDetail(Long storeId, String reportDate) {
-        return getOrCreateDraft(storeId, reportDate);
+        return getReportDetail(storeId, reportDate);
+    }
+
+    private Map<String, Object> getReportDetail(Long storeId, String reportDate) {
+        Store store = storeMapper.selectById(storeId);
+        if (store == null) {
+            throw new BusinessException("门店不存在");
+        }
+
+        // 查找该门店适用的模板
+        DailyReportTemplate template = getTemplateByStore(storeId);
+        if (template == null) {
+            throw new BusinessException("该门店未配置日报模板");
+        }
+
+        // 查询是否已有日报（编辑场景，不自动创建）
+        DailyReport report = dailyReportMapper.selectOne(
+                new LambdaQueryWrapper<DailyReport>()
+                        .eq(DailyReport::getStoreId, storeId)
+                        .eq(DailyReport::getReportDate, LocalDate.parse(reportDate))
+        );
+
+        if (report == null) {
+            throw new BusinessException("日报不存在");
+        }
+
+        // 补充门店信息
+        report.setStoreName(store.getStoreName());
+        report.setStoreCode(store.getStoreCode());
+
+        // 查询字段配置
+        List<DailyReportField> fields = dailyReportFieldMapper.selectList(
+                new LambdaQueryWrapper<DailyReportField>()
+                        .eq(DailyReportField::getTemplateId, template.getId())
+                        .eq(DailyReportField::getStatus, 1)
+                        .orderByAsc(DailyReportField::getSortNo)
+        );
+
+        // 构建值Map - 先从report对象获取（列式存储）
+        Map<String, Object> valueMap = buildValueMapFromReport(report);
+
+        // 补充渠道评分数据
+        Map<String, Object> channelMap = buildValueMapFromChannel(report.getId());
+        valueMap.putAll(channelMap);
+
+        // 补充弹性域数据
+        Map<String, Object> extensionMap = buildValueMapFromExtension(report.getId());
+        valueMap.putAll(extensionMap);
+
+        // 填充默认值
+        for (DailyReportField field : fields) {
+            if (!valueMap.containsKey(field.getFieldCode()) && field.getDefaultValue() != null) {
+                valueMap.put(field.getFieldCode(), field.getDefaultValue());
+            }
+            // 预填门店自有房量
+            if ("own_room_count".equals(field.getFieldCode()) && !valueMap.containsKey("own_room_count")) {
+                valueMap.put("own_room_count", store.getOwnRoomCount() != null ? store.getOwnRoomCount() : 0);
+            }
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("report", report);
+        result.put("fields", fields);
+        result.put("values", valueMap);
+        return result;
     }
 
     private Map<String, Object> getOrCreateDraft(Long storeId, String reportDate) {
@@ -254,14 +318,18 @@ public class DailyReportServiceImpl implements DailyReportService {
     @Transactional(rollbackFor = Exception.class)
     public boolean saveDraft(DailyReportSaveDTO dto) {
         DailyReport report = getOrCreateReportFromDTO(dto);
-        updateReportFields(report, dto.getValues());
-        report.setStatus(0);
+        Map<String, Object> values = normalizeKeys(dto.getValues());
+        updateReportFields(report, values);
+        // 已退回的日报保存草稿后状态保持为已退回(3)，其余情况设为草稿(0)
+        if (report.getStatus() == null || report.getStatus() != 3) {
+            report.setStatus(0);
+        }
         report.setUpdateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         dailyReportMapper.updateById(report);
 
         // 保存渠道和弹性域数据
-        dailyChannelService.saveOrUpdate(report.getId(), dto.getStoreId(), dto.getReportDate(), dto.getValues());
-        dailyExtensionService.saveOrUpdate(report.getId(), dto.getStoreId(), dto.getReportDate(), dto.getValues());
+        dailyChannelService.saveOrUpdate(report.getId(), dto.getStoreId(), dto.getReportDate(), values);
+        dailyExtensionService.saveOrUpdate(report.getId(), dto.getStoreId(), dto.getReportDate(), values);
 
         return true;
     }
@@ -274,7 +342,7 @@ public class DailyReportServiceImpl implements DailyReportService {
 
         // 校验必填字段
         List<DailyReportField> fields = getTemplateFields(report.getTemplateId());
-        Map<String, Object> values = dto.getValues() != null ? dto.getValues() : new HashMap<>();
+        Map<String, Object> values = normalizeKeys(dto.getValues() != null ? dto.getValues() : new HashMap<>());
         for (DailyReportField field : fields) {
             if (field.getRequired() != null && field.getRequired() == 1) {
                 Object val = values.get(field.getFieldCode());
@@ -355,6 +423,20 @@ public class DailyReportServiceImpl implements DailyReportService {
             }
         }
         return report;
+    }
+
+    /**
+     * 驼峰转下划线，统一key格式
+     */
+    private Map<String, Object> normalizeKeys(Map<String, Object> values) {
+        if (values == null) return null;
+        Map<String, Object> normalized = new HashMap<>();
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
+            String key = entry.getKey();
+            String snakeKey = key.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
+            normalized.put(snakeKey, entry.getValue());
+        }
+        return normalized;
     }
 
     /**
@@ -492,9 +574,39 @@ public class DailyReportServiceImpl implements DailyReportService {
 
     @Override
     public List<Map<String, Object>> getUnfilledStats(String startDate, String endDate) {
-        // 返回未填报统计
+        // 1. 获取所有活跃门店
+        List<Store> stores = storeMapper.selectList(
+            new LambdaQueryWrapper<Store>().eq(Store::getStatus, 1)
+        );
+
+        // 2. 如果没有传日期，默认查今天
+        if (startDate == null || startDate.isEmpty()) startDate = DateUtil.today();
+        if (endDate == null || endDate.isEmpty()) endDate = startDate;
+
+        // 3. 查询日期范围内已填报的门店
+        List<DailyReport> reports = dailyReportMapper.selectList(
+            new LambdaQueryWrapper<DailyReport>()
+                .ge(DailyReport::getReportDate, LocalDate.parse(startDate))
+                .le(DailyReport::getReportDate, LocalDate.parse(endDate))
+                .in(DailyReport::getStatus, Arrays.asList(1, 2))
+        );
+
+        // 4. 找出未填报的门店
+        Set<Long> filledStoreIds = reports.stream()
+            .map(DailyReport::getStoreId)
+            .collect(Collectors.toSet());
+
         List<Map<String, Object>> result = new ArrayList<>();
-        // TODO: 实现未填报统计逻辑
+        for (Store store : stores) {
+            if (!filledStoreIds.contains(store.getId())) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("storeId", store.getId());
+                item.put("storeName", store.getStoreName());
+                item.put("city", store.getCity());
+                item.put("region", store.getRegionName());
+                result.add(item);
+            }
+        }
         return result;
     }
 }

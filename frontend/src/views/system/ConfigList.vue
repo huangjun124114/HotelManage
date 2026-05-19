@@ -19,7 +19,7 @@
     </template>
   </PageLayout>
 
-  <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑配置' : '新增配置'" width="500px" @close="resetForm">
+  <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑配置' : '新增配置'" width="500px" close-on-click-modal="false" @close="resetForm">
     <el-form ref="formRef" :model="form" :rules="formRules" label-width="80px">
       <el-form-item label="配置键" prop="configKey">
         <el-input v-model="form.configKey" placeholder="请输入配置键" />

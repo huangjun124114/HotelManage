@@ -1,6 +1,7 @@
 package com.linxi.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -11,6 +12,7 @@ public class Investor {
 
     @TableId(type = IdType.AUTO)
     private Long id;
+    @JsonProperty("name")
     private String investorName;
     private String phone;
     private String email;

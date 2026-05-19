@@ -188,7 +188,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean delete(Long id) {
+        SysUser user = sysUserMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        // 先清理子表关联记录
+        sysUserRoleMapper.delete(
+                new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, id)
+        );
+        sysUserStoreMapper.delete(
+                new LambdaQueryWrapper<SysUserStore>().eq(SysUserStore::getUserId, id)
+        );
+        // 逻辑删除用户
         return sysUserMapper.deleteById(id) > 0;
     }
 

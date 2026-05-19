@@ -144,8 +144,7 @@ function getDefaultMenus() {
     },
     {
       id: 3, name: '日报管理', path: '/report', icon: 'Document', children: [
-        { id: 31, name: '日报填报', path: '/report/fill' },
-        { id: 32, name: '日报查询', path: '/report/query' },
+        { id: 31, name: '日报管理', path: '/report/manage' },
         { id: 33, name: '日报审核', path: '/report/audit' },
         { id: 34, name: '未填报统计', path: '/report/unfilled' }
       ]
