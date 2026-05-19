@@ -3,8 +3,10 @@ target/
 dist/
 
 # Database
-data/
+data/backup/
+!data/linxi.db
 *.db
+!linxi.db
 
 # Logs
 *.log
