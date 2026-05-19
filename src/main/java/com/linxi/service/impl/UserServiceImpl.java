@@ -9,10 +9,12 @@ import com.linxi.entity.SysUser;
 import com.linxi.entity.SysUserRole;
 import com.linxi.entity.SysUserStore;
 import com.linxi.entity.Store;
+import com.linxi.entity.SysRole;
 import com.linxi.mapper.SysUserMapper;
 import com.linxi.mapper.SysUserRoleMapper;
 import com.linxi.mapper.SysUserStoreMapper;
 import com.linxi.mapper.StoreMapper;
+import com.linxi.mapper.SysRoleMapper;
 import com.linxi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,6 +43,9 @@ public class UserServiceImpl implements UserService {
     private StoreMapper storeMapper;
 
     @Autowired
+    private SysRoleMapper sysRoleMapper;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
@@ -53,6 +56,10 @@ public class UserServiceImpl implements UserService {
         }
         // 隐藏密码
         user.setPassword(null);
+        // 填充门店/角色信息
+        List<SysUser> singleList = new ArrayList<>();
+        singleList.add(user);
+        fillStoreInfo(singleList);
         return user;
     }
 
@@ -78,55 +85,90 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * 填充用户的门店关联信息（门店名称、门店编码）
+     * 填充用户的多门店关联信息和角色信息
      */
     private void fillStoreInfo(List<SysUser> users) {
         if (users == null || users.isEmpty()) {
             return;
         }
-        // 获取所有用户ID
         List<Long> userIds = users.stream().map(SysUser::getId).collect(Collectors.toList());
 
-        // 查询这些用户的门店关联关系
+        // ===== 门店信息 =====
         LambdaQueryWrapper<SysUserStore> storeWrapper = new LambdaQueryWrapper<>();
         storeWrapper.in(SysUserStore::getUserId, userIds);
         List<SysUserStore> userStores = sysUserStoreMapper.selectList(storeWrapper);
 
-        if (userStores.isEmpty()) {
-            return;
-        }
-
         // 获取所有关联的门店ID
         List<Long> storeIds = userStores.stream()
-                .map(SysUserStore::getStoreId)
-                .distinct()
-                .collect(Collectors.toList());
+                .map(SysUserStore::getStoreId).distinct().collect(Collectors.toList());
 
-        // 查询门店信息，构建ID到门店的映射
-        LambdaQueryWrapper<Store> storeQueryWrapper = new LambdaQueryWrapper<>();
-        storeQueryWrapper.in(Store::getId, storeIds);
-        List<Store> stores = storeMapper.selectList(storeQueryWrapper);
-        Map<Long, Store> storeMap = stores.stream()
-                .collect(Collectors.toMap(Store::getId, s -> s, (a, b) -> a));
+        Map<Long, Store> storeMap = new HashMap<>();
+        if (!storeIds.isEmpty()) {
+            List<Store> stores = storeMapper.selectList(
+                    new LambdaQueryWrapper<Store>().in(Store::getId, storeIds));
+            storeMap = stores.stream().collect(Collectors.toMap(Store::getId, s -> s, (a, b) -> a));
+        }
 
-        // 为每个用户设置门店信息（取第一个关联的门店）
-        Map<Long, SysUserStore> userStoreMap = userStores.stream()
-                .collect(Collectors.toMap(SysUserStore::getUserId, us -> us, (a, b) -> a));
+        // 用户→门店列表映射
+        Map<Long, List<SysUserStore>> userStoreListMap = userStores.stream()
+                .collect(Collectors.groupingBy(SysUserStore::getUserId));
 
+        // ===== 角色信息 =====
+        LambdaQueryWrapper<SysUserRole> roleWrapper = new LambdaQueryWrapper<>();
+        roleWrapper.in(SysUserRole::getUserId, userIds);
+        List<SysUserRole> userRoles = sysUserRoleMapper.selectList(roleWrapper);
+
+        List<Long> roleIds = userRoles.stream()
+                .map(SysUserRole::getRoleId).distinct().collect(Collectors.toList());
+
+        Map<Long, SysRole> roleMap = new HashMap<>();
+        if (!roleIds.isEmpty()) {
+            List<SysRole> roles = sysRoleMapper.selectBatchIds(roleIds);
+            roleMap = roles.stream().collect(Collectors.toMap(SysRole::getId, r -> r, (a, b) -> a));
+        }
+
+        Map<Long, List<SysUserRole>> userRoleListMap = userRoles.stream()
+                .collect(Collectors.groupingBy(SysUserRole::getUserId));
+
+        // 填充每个用户
         for (SysUser user : users) {
-            SysUserStore userStore = userStoreMap.get(user.getId());
-            if (userStore != null) {
-                Store store = storeMap.get(userStore.getStoreId());
+            // 门店信息
+            List<SysUserStore> usList = userStoreListMap.getOrDefault(user.getId(), Collections.emptyList());
+            List<Long> uStoreIds = new ArrayList<>();
+            List<String> uStoreNames = new ArrayList<>();
+            for (SysUserStore us : usList) {
+                Store store = storeMap.get(us.getStoreId());
                 if (store != null) {
-                    user.setStoreId(store.getId());
-                    user.setStoreName(store.getStoreName());
-                    user.setStoreCode(store.getStoreCode());
+                    uStoreIds.add(store.getId());
+                    uStoreNames.add(store.getStoreName());
                 }
             }
+            user.setStoreIds(uStoreIds);
+            user.setStoreNames(uStoreNames);
+            // 兼容旧字段：取第一个门店
+            if (!uStoreIds.isEmpty()) {
+                user.setStoreId(uStoreIds.get(0));
+                user.setStoreName(uStoreNames.get(0));
+            }
+
+            // 角色信息
+            List<SysUserRole> urList = userRoleListMap.getOrDefault(user.getId(), Collections.emptyList());
+            List<Long> uRoleIds = new ArrayList<>();
+            List<String> uRoleNames = new ArrayList<>();
+            for (SysUserRole ur : urList) {
+                SysRole role = roleMap.get(ur.getRoleId());
+                if (role != null) {
+                    uRoleIds.add(role.getId());
+                    uRoleNames.add(role.getRoleName());
+                }
+            }
+            user.setRoleIds(uRoleIds);
+            user.setRoleNames(uRoleNames);
         }
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean save(SysUser user) {
         // 检查用户名是否存在
         SysUser exist = sysUserMapper.selectOne(
@@ -146,7 +188,11 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // 保存门店和角色ID，插入后使用
+        List<Long> storeIds = user.getStoreIds();
+        List<Long> roleIds = user.getRoleIds();
+
+        user.setPassword(passwordEncoder.encode(user.getPassword() != null ? user.getPassword() : "123456"));
         user.setCreateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         user.setUpdateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         if (user.getStatus() == null) {
@@ -155,10 +201,36 @@ public class UserServiceImpl implements UserService {
         if (user.getUserType() == null) {
             user.setUserType(1);
         }
-        return sysUserMapper.insert(user) > 0;
+        boolean result = sysUserMapper.insert(user) > 0;
+
+        // 保存门店关联
+        if (storeIds != null && !storeIds.isEmpty()) {
+            for (Long storeId : storeIds) {
+                SysUserStore userStore = new SysUserStore();
+                userStore.setUserId(user.getId());
+                userStore.setStoreId(storeId);
+                userStore.setPermissionType(1);
+                userStore.setCreateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
+                sysUserStoreMapper.insert(userStore);
+            }
+        }
+
+        // 保存角色关联
+        if (roleIds != null && !roleIds.isEmpty()) {
+            for (Long roleId : roleIds) {
+                SysUserRole userRole = new SysUserRole();
+                userRole.setUserId(user.getId());
+                userRole.setRoleId(roleId);
+                userRole.setCreateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
+                sysUserRoleMapper.insert(userRole);
+            }
+        }
+
+        return result;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean update(SysUser user) {
         if (user.getId() == null) {
             throw new BusinessException("用户ID不能为空");
@@ -181,10 +253,26 @@ public class UserServiceImpl implements UserService {
             }
         }
 
+        // 保存门店和角色ID
+        List<Long> storeIds = user.getStoreIds();
+        List<Long> roleIds = user.getRoleIds();
+
         user.setUpdateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
         // 不更新密码
         user.setPassword(null);
-        return sysUserMapper.updateById(user) > 0;
+        boolean result = sysUserMapper.updateById(user) > 0;
+
+        // 更新门店关联
+        if (storeIds != null) {
+            assignStores(user.getId(), storeIds);
+        }
+
+        // 更新角色关联
+        if (roleIds != null) {
+            assignRoles(user.getId(), roleIds);
+        }
+
+        return result;
     }
 
     @Override

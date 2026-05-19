@@ -14,8 +14,8 @@
 
     <template #table>
       <el-table :data="tableData" border stripe v-loading="loading" style="width:100%">
-        <el-table-column prop="code" label="角色编码" width="150" />
-        <el-table-column prop="name" label="角色名称" min-width="150" />
+        <el-table-column prop="roleCode" label="角色编码" width="180" />
+        <el-table-column prop="roleName" label="角色名称" min-width="150" />
         <el-table-column label="状态" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
@@ -36,11 +36,11 @@
   <!-- 新增/编辑弹窗 -->
   <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑角色' : '新增角色'" width="500px" close-on-click-modal="false" @close="resetForm">
     <el-form ref="formRef" :model="form" :rules="formRules" label-width="80px">
-      <el-form-item label="角色编码" prop="code">
-        <el-input v-model="form.code" placeholder="请输入编码" />
+      <el-form-item label="角色编码" prop="roleCode">
+        <el-input v-model="form.roleCode" placeholder="请输入编码" />
       </el-form-item>
-      <el-form-item label="角色名称" prop="name">
-        <el-input v-model="form.name" placeholder="请输入名称" />
+      <el-form-item label="角色名称" prop="roleName">
+        <el-input v-model="form.roleName" placeholder="请输入名称" />
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-radio-group v-model="form.status">
@@ -63,7 +63,7 @@
       show-checkbox
       node-key="id"
       :default-checked-keys="checkedMenuIds"
-      :props="{ children: 'children', label: 'name' }"
+      :props="{ children: 'children', label: 'menuName' }"
       default-expand-all
     />
     <template #footer>
@@ -98,11 +98,11 @@ const menuTree = ref([])
 const checkedMenuIds = ref([])
 const currentRoleId = ref(null)
 
-const form = reactive({ id: null, code: '', name: '', status: 1 })
+const form = reactive({ id: null, roleCode: '', roleName: '', status: 1 })
 
 const formRules = {
-  code: [{ required: true, message: '请输入编码', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入名称', trigger: 'blur' }]
+  roleCode: [{ required: true, message: '请输入编码', trigger: 'blur' }],
+  roleName: [{ required: true, message: '请输入名称', trigger: 'blur' }]
 }
 
 async function loadData() {
@@ -136,7 +136,7 @@ function handleEdit(row) {
 }
 
 function resetForm() {
-  Object.assign(form, { id: null, code: '', name: '', status: 1 })
+  Object.assign(form, { id: null, roleCode: '', roleName: '', status: 1 })
   formRef.value?.resetFields()
 }
 
@@ -160,8 +160,28 @@ async function handleSubmit() {
 
 async function handleAssignMenu(row) {
   currentRoleId.value = row.id
+  // 先加载菜单树
+  await loadMenuTree()
+  // 获取角色已分配的菜单
   const res = await getRoleMenus(row.id)
-  checkedMenuIds.value = res.data || []
+  const menus = res.data || []
+  // 提取叶子节点ID（只有叶子节点需要被勾选，父节点会自动半选）
+  const allMenuIds = new Set(menus.map(m => m.id))
+  // 找出叶子节点：没有子菜单的节点
+  const leafIds = []
+  function findLeaves(nodes) {
+    for (const node of nodes) {
+      if (node.children && node.children.length > 0) {
+        findLeaves(node.children)
+      } else {
+        if (allMenuIds.has(node.id)) {
+          leafIds.push(node.id)
+        }
+      }
+    }
+  }
+  findLeaves(menuTree.value)
+  checkedMenuIds.value = leafIds
   menuDialogVisible.value = true
 }
 

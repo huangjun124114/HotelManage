@@ -36,3 +36,6 @@ api_test.py
 
 # Test scripts (keep e2e-test-v2.js and api-e2e-test-v2.js)
 api-e2e-test.js
+data/linxi.db.bak.*
+linxi.db
+中间产物/

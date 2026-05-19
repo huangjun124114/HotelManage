@@ -1,6 +1,7 @@
 package com.linxi.controller;
 
 import com.linxi.common.Result;
+import com.linxi.annotation.OperationLog;
 import com.linxi.dto.LoginDTO;
 import com.linxi.dto.LoginResultDTO;
 import com.linxi.service.AuthService;
@@ -22,6 +23,7 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
+    @OperationLog(module = "认证管理", type = "LOGIN", description = "用户登录")
     public Result<LoginResultDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
         LoginResultDTO result = authService.login(loginDTO);
         return Result.success("登录成功", result);

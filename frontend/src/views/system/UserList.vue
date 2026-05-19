@@ -100,12 +100,12 @@
       </el-form-item>
       <el-form-item label="所属门店" prop="storeIds">
         <el-select v-model="form.storeIds" multiple placeholder="请选择门店" style="width:100%">
-          <el-option v-for="s in storeOptions" :key="s.id" :label="s.name" :value="s.id" />
+          <el-option v-for="s in storeOptions" :key="s.value" :label="s.label" :value="s.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="角色" prop="roleIds">
         <el-select v-model="form.roleIds" multiple placeholder="请选择角色" style="width:100%">
-          <el-option v-for="r in roleOptions" :key="r.id" :label="r.name" :value="r.id" />
+          <el-option v-for="r in roleOptions" :key="r.id" :label="r.roleName" :value="r.id" />
         </el-select>
       </el-form-item>
     </el-form>

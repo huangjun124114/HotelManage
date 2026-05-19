@@ -3,6 +3,7 @@ package com.linxi.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.linxi.common.PageResult;
 import com.linxi.common.Result;
+import com.linxi.annotation.OperationLog;
 import com.linxi.entity.SysMenu;
 import com.linxi.entity.SysRole;
 import com.linxi.service.RoleService;
@@ -38,19 +39,27 @@ public class RoleController {
     }
 
     @PostMapping
+    @OperationLog(module = "角色管理", type = "CREATE", description = "新增角色")
     public Result<Void> save(@RequestBody SysRole role) {
         roleService.save(role);
         return Result.success();
     }
 
     @PutMapping("/{id}")
+    @OperationLog(module = "角色管理", type = "UPDATE", description = "编辑角色")
     public Result<Void> update(@PathVariable Long id, @RequestBody SysRole role) {
         role.setId(id);
         roleService.update(role);
         return Result.success();
     }
 
+    @GetMapping("/{id}/menus")
+    public Result<List<SysMenu>> getRoleMenus(@PathVariable Long id) {
+        return Result.success(roleService.getRoleMenus(id));
+    }
+
     @PutMapping("/{id}/menus")
+    @OperationLog(module = "角色管理", type = "UPDATE", description = "分配角色菜单")
     public Result<Void> saveMenus(@PathVariable Long id, @RequestBody List<Long> menuIds) {
         roleService.saveRoleMenus(id, menuIds);
         return Result.success();
