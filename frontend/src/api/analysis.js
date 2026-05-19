@@ -4,6 +4,10 @@ export function getDashboard(params) {
   return request({ url: '/reports/dashboard', method: 'get', params })
 }
 
+export function getTrendCompare(params) {
+  return request({ url: '/reports/trend-compare', method: 'get', params })
+}
+
 export function getMonthly(params) {
   return request({ url: '/reports/monthly', method: 'get', params })
 }

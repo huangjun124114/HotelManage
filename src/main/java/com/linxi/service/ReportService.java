@@ -8,7 +8,12 @@ public interface ReportService {
     /**
      * 总部看板
      */
-    Map<String, Object> dashboard(String date, String region, Long storeId);
+    Map<String, Object> dashboard(String date, String region, Long storeId, List<Long> storeIds);
+
+    /**
+     * 趋势同比对比
+     */
+    Map<String, Object> trendCompare(String date, String period, String metric, List<Long> storeIds);
 
     /**
      * 月报汇总

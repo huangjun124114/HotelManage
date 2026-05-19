@@ -31,8 +31,14 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     private StoreMapper storeMapper;
 
+    @Autowired
+    private DimDateMapper dimDateMapper;
+
+    @Autowired
+    private SysUserMapper sysUserMapper;
+
     @Override
-    public Map<String, Object> dashboard(String date, String region, Long storeId) {
+    public Map<String, Object> dashboard(String date, String region, Long storeId, List<Long> storeIds) {
         Map<String, Object> result = new HashMap<>();
 
         if (date == null || date.isEmpty()) {
@@ -50,20 +56,26 @@ public class ReportServiceImpl implements ReportService {
                 new LambdaQueryWrapper<Store>().eq(Store::getStatus, 1)
         );
 
-        if (storeId != null) {
-            summaries = summaries.stream()
-                    .filter(s -> s.getStoreId().equals(storeId))
-                    .collect(Collectors.toList());
-            allStores = allStores.stream()
-                    .filter(s -> s.getId().equals(storeId))
-                    .collect(Collectors.toList());
+        // 门店过滤：优先storeIds多选，其次storeId单选，再次region
+        Set<Long> filterStoreIds = null;
+        if (storeIds != null && !storeIds.isEmpty()) {
+            filterStoreIds = new HashSet<>(storeIds);
+        } else if (storeId != null) {
+            filterStoreIds = Collections.singleton(storeId);
         } else if (region != null && !region.isEmpty()) {
             allStores = allStores.stream()
                     .filter(s -> region.equals(s.getRegionName()))
                     .collect(Collectors.toList());
-            List<Long> storeIds = allStores.stream().map(Store::getId).collect(Collectors.toList());
+            filterStoreIds = allStores.stream().map(Store::getId).collect(Collectors.toSet());
+        }
+
+        if (filterStoreIds != null) {
+            final Set<Long> finalFilter = filterStoreIds;
             summaries = summaries.stream()
-                    .filter(s -> storeIds.contains(s.getStoreId()))
+                    .filter(s -> finalFilter.contains(s.getStoreId()))
+                    .collect(Collectors.toList());
+            allStores = allStores.stream()
+                    .filter(s -> finalFilter.contains(s.getId()))
                     .collect(Collectors.toList());
         }
 
@@ -82,23 +94,21 @@ public class ReportServiceImpl implements ReportService {
                 .map(s -> s.getRoomNights() != null ? s.getRoomNights() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal avgOccupancy = summaries.isEmpty() ? BigDecimal.ZERO
-                : summaries.stream()
-                .map(s -> s.getOccupancyRate() != null ? s.getOccupancyRate() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(new BigDecimal(summaries.size()), 4, RoundingMode.HALF_UP);
+        // 均出租率：加权平均（按各自房量加权）= 总间夜 / 总可用房量
+        BigDecimal totalOwnRooms = summaries.stream()
+                .map(s -> s.getOwnRoomCount() != null ? s.getOwnRoomCount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal avgOccupancy = (totalOwnRooms.compareTo(BigDecimal.ZERO) > 0)
+                ? totalRooms.divide(totalOwnRooms, 4, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
 
-        BigDecimal avgAdr = summaries.isEmpty() ? BigDecimal.ZERO
-                : summaries.stream()
-                .map(s -> s.getAdr() != null ? s.getAdr() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(new BigDecimal(summaries.size()), 2, RoundingMode.HALF_UP);
+        // 均ADR：加权平均 = 总营收 / 总间夜
+        BigDecimal avgADR = (totalRooms.compareTo(BigDecimal.ZERO) > 0)
+                ? totalRevenue.divide(totalRooms, 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
 
-        BigDecimal avgRevpar = summaries.isEmpty() ? BigDecimal.ZERO
-                : summaries.stream()
-                .map(s -> s.getRevpar() != null ? s.getRevpar() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(new BigDecimal(summaries.size()), 2, RoundingMode.HALF_UP);
+        // 均RevPAR：加权平均 = 均出租率 * 均ADR
+        BigDecimal avgRevPAR = avgOccupancy.multiply(avgADR).setScale(2, RoundingMode.HALF_UP);
 
         int unfilledCount = totalStores - filledCount;
 
@@ -124,44 +134,86 @@ public class ReportServiceImpl implements ReportService {
                 })
                 .collect(Collectors.toList());
 
-        // 最近7日趋势
-        List<Map<String, Object>> trend7Days = new ArrayList<>();
-        for (int i = 6; i >= 0; i--) {
-            String trendDate = LocalDate.parse(date).minusDays(i).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            List<DailyReportSummary> daySummaries = summaryMapper.selectList(
-                    new LambdaQueryWrapper<DailyReportSummary>().eq(DailyReportSummary::getReportDate, trendDate)
-            );
+        // 最近7日趋势 - 批量查询优化，消除N+1
+        String startDate = LocalDate.parse(date).minusDays(6).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        List<DailyReportSummary> trendSummaries = summaryMapper.selectList(
+                new LambdaQueryWrapper<DailyReportSummary>()
+                        .ge(DailyReportSummary::getReportDate, startDate)
+                        .le(DailyReportSummary::getReportDate, date)
+        );
+        // 按门店过滤
+        if (filterStoreIds != null) {
+            final Set<Long> finalFilter = filterStoreIds;
+            trendSummaries = trendSummaries.stream()
+                    .filter(s -> finalFilter.contains(s.getStoreId()))
+                    .collect(Collectors.toList());
+        }
+        // 按日期分组
+        Map<String, List<DailyReportSummary>> trendGrouped = trendSummaries.stream()
+                .collect(Collectors.groupingBy(DailyReportSummary::getReportDate, LinkedHashMap::new, Collectors.toList()));
 
-            BigDecimal dayRevenue = daySummaries.stream()
+        // 确保每天都有数据点（补空）
+        List<String> dateLabels = new ArrayList<>();
+        List<BigDecimal> revenueTrend = new ArrayList<>();
+        List<BigDecimal> occupancyTrend = new ArrayList<>();
+        for (int i = 6; i >= 0; i--) {
+            String d = LocalDate.parse(date).minusDays(i).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            dateLabels.add(d);
+            List<DailyReportSummary> dayList = trendGrouped.getOrDefault(d, Collections.emptyList());
+            BigDecimal dayRevenue = dayList.stream()
                     .map(s -> s.getTotalRevenue() != null ? s.getTotalRevenue() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal dayOcc = daySummaries.isEmpty() ? BigDecimal.ZERO
-                    : daySummaries.stream()
-                    .map(s -> s.getOccupancyRate() != null ? s.getOccupancyRate() : BigDecimal.ZERO)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add)
-                    .divide(new BigDecimal(Math.max(daySummaries.size(), 1)), 4, RoundingMode.HALF_UP);
-
-            Map<String, Object> trend = new HashMap<>();
-            trend.put("date", trendDate);
-            trend.put("revenue", dayRevenue);
-            trend.put("occupancyRate", dayOcc);
-            trend7Days.add(trend);
+            revenueTrend.add(dayRevenue);
+            BigDecimal dayRooms = dayList.stream()
+                    .map(s -> s.getRoomNights() != null ? s.getRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal dayOwnRooms = dayList.stream()
+                    .map(s -> s.getOwnRoomCount() != null ? s.getOwnRoomCount() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal dayOcc = (dayOwnRooms.compareTo(BigDecimal.ZERO) > 0)
+                    ? dayRooms.divide(dayOwnRooms, 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+            occupancyTrend.add(dayOcc);
         }
 
-        // 未填报门店列表
+        // 未填报门店列表 - 补充店长姓名和电话
         Set<Long> filledStoreIds = summaries.stream().map(DailyReportSummary::getStoreId).collect(Collectors.toSet());
+        // 批量查询店长信息
+        Set<Long> managerIds = allStores.stream()
+                .map(Store::getManagerUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, SysUser> managerMap = new HashMap<>();
+        if (!managerIds.isEmpty()) {
+            List<SysUser> managers = sysUserMapper.selectList(
+                    new LambdaQueryWrapper<SysUser>().in(SysUser::getId, managerIds)
+            );
+            for (SysUser u : managers) {
+                managerMap.put(u.getId(), u);
+            }
+        }
         List<Map<String, Object>> unfilledStores = allStores.stream()
                 .filter(s -> !filledStoreIds.contains(s.getId()))
                 .map(s -> {
                     Map<String, Object> item = new HashMap<>();
                     item.put("storeName", s.getStoreName());
                     item.put("city", s.getCity());
-                    item.put("managerName", "");
+                    String managerName = "";
+                    String phone = "";
+                    if (s.getManagerUserId() != null) {
+                        SysUser manager = managerMap.get(s.getManagerUserId());
+                        if (manager != null) {
+                            managerName = manager.getRealName() != null ? manager.getRealName() : "";
+                            phone = manager.getPhone() != null ? manager.getPhone() : "";
+                        }
+                    }
+                    item.put("managerName", managerName);
+                    item.put("phone", phone);
                     return item;
                 })
                 .collect(Collectors.toList());
 
-        // 前端期望的排名格式（营收排名 + 出租率排名）
+        // 前端期望的排名格式
         List<Map<String, Object>> revenueRanking = top10.stream().map(item -> {
             Map<String, Object> m = new HashMap<>();
             m.put("storeName", item.get("storeName"));
@@ -184,29 +236,26 @@ public class ReportServiceImpl implements ReportService {
                 })
                 .collect(Collectors.toList());
 
-        // 前端期望的趋势格式（平铺数组）
-        List<String> dateLabels = new ArrayList<>();
-        List<BigDecimal> revenueTrend = new ArrayList<>();
-        List<BigDecimal> occupancyTrend = new ArrayList<>();
-        for (Map<String, Object> t : trend7Days) {
-            dateLabels.add((String) t.get("date"));
-            revenueTrend.add((BigDecimal) t.get("revenue"));
-            BigDecimal occ = (BigDecimal) t.getOrDefault("occupancyRate", BigDecimal.ZERO);
-            occupancyTrend.add(occ.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP));
-        }
-
+        // 返回结果 - 同时包含前端期望的字段名
         result.put("totalStores", totalStores);
         result.put("filledCount", filledCount);
         result.put("unfilledCount", unfilledCount);
+        // 前端Dashboard.vue期望的字段名（兼容映射）
+        result.put("shouldFill", totalStores);
+        result.put("filled", filledCount);
+        result.put("unfilled", unfilledCount);
+
         result.put("totalRevenue", totalRevenue);
         result.put("totalRooms", totalRooms);
         result.put("avgOccupancy", avgOccupancy.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP));
-        result.put("avgAdr", avgAdr);
-        result.put("avgRevpar", avgRevpar);
+        result.put("avgAdr", avgADR);
+        result.put("avgRevpar", avgRevPAR);
+        // 前端期望的字段名（兼容映射）
+        result.put("avgADR", avgADR);
+        result.put("avgRevPAR", avgRevPAR);
+
         result.put("fillRate", fillRate);
         result.put("top10", top10);
-        result.put("trend7Days", trend7Days);
-        // 前端Home.vue期望的字段
         result.put("revenueRanking", revenueRanking);
         result.put("occupancyRanking", occupancyRanking);
         result.put("dateLabels", dateLabels);
@@ -214,6 +263,300 @@ public class ReportServiceImpl implements ReportService {
         result.put("occupancyTrend", occupancyTrend);
         result.put("unfilledStores", unfilledStores);
         return result;
+    }
+
+    @Override
+    public Map<String, Object> trendCompare(String date, String period, String metric, List<Long> storeIds) {
+        Map<String, Object> result = new HashMap<>();
+
+        if (date == null || date.isEmpty()) {
+            date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        }
+        if (period == null || period.isEmpty()) {
+            period = "day";
+        }
+        if (metric == null || metric.isEmpty()) {
+            metric = "revenue";
+        }
+
+        // 获取基准日期的dim_date信息
+        DimDate baseDim = dimDateMapper.selectById(date);
+        if (baseDim == null) {
+            result.put("labels", Collections.emptyList());
+            result.put("current", Collections.emptyList());
+            result.put("lastYear", Collections.emptyList());
+            return result;
+        }
+
+        List<String> labels = new ArrayList<>();
+        List<BigDecimal> currentValues = new ArrayList<>();
+        List<BigDecimal> lastYearValues = new ArrayList<>();
+
+        switch (period) {
+            case "week":
+                buildWeekTrend(baseDim, storeIds, metric, labels, currentValues, lastYearValues);
+                break;
+            case "month":
+                buildMonthTrend(baseDim, storeIds, metric, labels, currentValues, lastYearValues);
+                break;
+            case "day":
+            default:
+                buildDayTrend(date, storeIds, metric, labels, currentValues, lastYearValues);
+                break;
+        }
+
+        result.put("period", period);
+        result.put("metric", metric);
+        result.put("labels", labels);
+        result.put("current", currentValues);
+        result.put("lastYear", lastYearValues);
+        return result;
+    }
+
+    /**
+     * 天趋势：基准日往前12天 + 去年同期
+     */
+    private void buildDayTrend(String date, List<Long> storeIds, String metric,
+                               List<String> labels, List<BigDecimal> currentValues, List<BigDecimal> lastYearValues) {
+        LocalDate baseDate = LocalDate.parse(date);
+        String currentStart = baseDate.minusDays(11).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String currentEnd = date;
+        String lastYearStart = baseDate.minusYears(1).minusDays(11).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String lastYearEnd = baseDate.minusYears(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+        // 批量查询当期+去年同期
+        Map<String, List<DailyReportSummary>> currentGrouped = queryAndGroup(currentStart, currentEnd, storeIds);
+        Map<String, List<DailyReportSummary>> lastYearGrouped = queryAndGroup(lastYearStart, lastYearEnd, storeIds);
+
+        for (int i = 11; i >= 0; i--) {
+            LocalDate d = baseDate.minusDays(i);
+            String ds = d.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String label = d.getMonthValue() + "/" + d.getDayOfMonth();
+            labels.add(label);
+            currentValues.add(calcMetric(currentGrouped.getOrDefault(ds, Collections.emptyList()), metric));
+
+            LocalDate ld = d.minusYears(1);
+            String lds = ld.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            lastYearValues.add(calcMetric(lastYearGrouped.getOrDefault(lds, Collections.emptyList()), metric));
+        }
+    }
+
+    /**
+     * 周趋势：基准日所在周往前12周 + 去年同期（同ISO周号）
+     */
+    private void buildWeekTrend(DimDate baseDim, List<Long> storeIds, String metric,
+                                List<String> labels, List<BigDecimal> currentValues, List<BigDecimal> lastYearValues) {
+        // 获取基准日所在周的year_week
+        String baseYearWeek = baseDim.getYearWeek();
+        int baseIsoYear = Integer.parseInt(baseYearWeek.substring(0, 4));
+        int baseIsoWeek = Integer.parseInt(baseYearWeek.substring(6));
+
+        // 查出最近12周的year_week列表
+        List<String> currentYearWeeks = new ArrayList<>();
+        for (int i = 11; i >= 0; i--) {
+            int targetWeek = baseIsoWeek - i;
+            int targetYear = baseIsoYear;
+            while (targetWeek <= 0) {
+                targetYear--;
+                // 上一年最后一周通常是52或53
+                targetWeek += getMaxIsoWeek(targetYear);
+            }
+            currentYearWeeks.add(String.format("%d-W%02d", targetYear, targetWeek));
+        }
+
+        // 去年同期：年份-1，周号相同
+        List<String> lastYearYearWeeks = new ArrayList<>();
+        for (String yw : currentYearWeeks) {
+            int yr = Integer.parseInt(yw.substring(0, 4)) - 1;
+            int wk = Integer.parseInt(yw.substring(6));
+            lastYearYearWeeks.add(String.format("%d-W%02d", yr, wk));
+        }
+
+        // 批量查dim_date获取每个year_week对应的日期范围
+        Set<String> allYearWeeks = new HashSet<>();
+        allYearWeeks.addAll(currentYearWeeks);
+        allYearWeeks.addAll(lastYearYearWeeks);
+
+        List<DimDate> dimDates = dimDateMapper.selectList(
+                new LambdaQueryWrapper<DimDate>().in(DimDate::getYearWeek, allYearWeeks)
+        );
+        Map<String, List<DimDate>> dimByYearWeek = dimDates.stream()
+                .collect(Collectors.groupingBy(DimDate::getYearWeek));
+
+        // 查daily_report_summary，按日期范围批量查询
+        // 收集所有需要的日期
+        Set<String> allDates = dimDates.stream().map(DimDate::getDateKey).collect(Collectors.toSet());
+        Map<String, List<DailyReportSummary>> reportByDate = batchQueryReports(allDates, storeIds);
+
+        // 按周汇总
+        for (int i = 0; i < currentYearWeeks.size(); i++) {
+            String yw = currentYearWeeks.get(i);
+            String lyw = lastYearYearWeeks.get(i);
+
+            // 标签：周起始日期
+            List<DimDate> weekDims = dimByYearWeek.getOrDefault(yw, Collections.emptyList());
+            String label = weekDims.isEmpty() ? yw :
+                    weekDims.stream().map(DimDate::getDateKey).min(String::compareTo)
+                            .map(d -> d.substring(5)).orElse(yw);
+            labels.add(label);
+
+            currentValues.add(calcWeeklyMetric(weekDims, reportByDate, metric));
+            lastYearValues.add(calcWeeklyMetric(dimByYearWeek.getOrDefault(lyw, Collections.emptyList()), reportByDate, metric));
+        }
+    }
+
+    /**
+     * 月趋势：基准日所在月往前12月 + 去年同期
+     */
+    private void buildMonthTrend(DimDate baseDim, List<Long> storeIds, String metric,
+                                 List<String> labels, List<BigDecimal> currentValues, List<BigDecimal> lastYearValues) {
+        int baseYear = baseDim.getTheYear();
+        int baseMonth = baseDim.getTheMonth();
+
+        List<String> currentYearMonths = new ArrayList<>();
+        List<String> lastYearYearMonths = new ArrayList<>();
+
+        for (int i = 11; i >= 0; i--) {
+            int m = baseMonth - i;
+            int y = baseYear;
+            while (m <= 0) {
+                y--;
+                m += 12;
+            }
+            currentYearMonths.add(String.format("%d-%02d", y, m));
+            lastYearYearMonths.add(String.format("%d-%02d", y - 1, m));
+        }
+
+        // 查dim_date获取每个月的日期范围
+        Set<String> allYearMonths = new HashSet<>();
+        allYearMonths.addAll(currentYearMonths);
+        allYearMonths.addAll(lastYearYearMonths);
+
+        List<DimDate> dimDates = dimDateMapper.selectList(
+                new LambdaQueryWrapper<DimDate>().in(DimDate::getYearMonth, allYearMonths)
+        );
+        Map<String, List<DimDate>> dimByYearMonth = dimDates.stream()
+                .collect(Collectors.groupingBy(DimDate::getYearMonth));
+
+        // 查daily_report_summary
+        Set<String> allDates = dimDates.stream().map(DimDate::getDateKey).collect(Collectors.toSet());
+        Map<String, List<DailyReportSummary>> reportByDate = batchQueryReports(allDates, storeIds);
+
+        // 按月汇总
+        for (int i = 0; i < currentYearMonths.size(); i++) {
+            String ym = currentYearMonths.get(i);
+            String lym = lastYearYearMonths.get(i);
+
+            labels.add(ym);
+            currentValues.add(calcPeriodMetric(dimByYearMonth.getOrDefault(ym, Collections.emptyList()), reportByDate, metric));
+            lastYearValues.add(calcPeriodMetric(dimByYearMonth.getOrDefault(lym, Collections.emptyList()), reportByDate, metric));
+        }
+    }
+
+    // ========== 辅助方法 ==========
+
+    /**
+     * 批量查询日报数据并按日期分组
+     */
+    private Map<String, List<DailyReportSummary>> queryAndGroup(String startDate, String endDate, List<Long> storeIds) {
+        LambdaQueryWrapper<DailyReportSummary> wrapper = new LambdaQueryWrapper<DailyReportSummary>()
+                .ge(DailyReportSummary::getReportDate, startDate)
+                .le(DailyReportSummary::getReportDate, endDate);
+        if (storeIds != null && !storeIds.isEmpty()) {
+            wrapper.in(DailyReportSummary::getStoreId, storeIds);
+        }
+        List<DailyReportSummary> summaries = summaryMapper.selectList(wrapper);
+        return summaries.stream()
+                .collect(Collectors.groupingBy(DailyReportSummary::getReportDate, LinkedHashMap::new, Collectors.toList()));
+    }
+
+    /**
+     * 按日期集合批量查询，返回按日期分组
+     */
+    private Map<String, List<DailyReportSummary>> batchQueryReports(Set<String> dates, List<Long> storeIds) {
+        if (dates.isEmpty()) return new HashMap<>();
+        LambdaQueryWrapper<DailyReportSummary> wrapper = new LambdaQueryWrapper<DailyReportSummary>()
+                .in(DailyReportSummary::getReportDate, dates);
+        if (storeIds != null && !storeIds.isEmpty()) {
+            wrapper.in(DailyReportSummary::getStoreId, storeIds);
+        }
+        List<DailyReportSummary> summaries = summaryMapper.selectList(wrapper);
+        return summaries.stream()
+                .collect(Collectors.groupingBy(DailyReportSummary::getReportDate));
+    }
+
+    /**
+     * 计算单日/单周期的指标值（加权平均）
+     */
+    private BigDecimal calcMetric(List<DailyReportSummary> summaries, String metric) {
+        if (summaries == null || summaries.isEmpty()) return BigDecimal.ZERO;
+
+        switch (metric) {
+            case "revenue":
+                return summaries.stream()
+                        .map(s -> s.getTotalRevenue() != null ? s.getTotalRevenue() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+            case "occupancy":
+                // 加权平均出租率 = 总间夜 / 总可用房量
+                BigDecimal totalRooms = summaries.stream()
+                        .map(s -> s.getRoomNights() != null ? s.getRoomNights() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal totalOwnRooms = summaries.stream()
+                        .map(s -> s.getOwnRoomCount() != null ? s.getOwnRoomCount() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                return (totalOwnRooms.compareTo(BigDecimal.ZERO) > 0)
+                        ? totalRooms.divide(totalOwnRooms, 4, RoundingMode.HALF_UP)
+                                .multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO;
+            case "adr":
+                // 加权ADR = 总营收 / 总间夜
+                BigDecimal rev = summaries.stream()
+                        .map(s -> s.getTotalRevenue() != null ? s.getTotalRevenue() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal rn = summaries.stream()
+                        .map(s -> s.getRoomNights() != null ? s.getRoomNights() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                return (rn.compareTo(BigDecimal.ZERO) > 0)
+                        ? rev.divide(rn, 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+            case "revpar":
+                // RevPAR = 加权出租率 * 加权ADR
+                BigDecimal occ = calcMetric(summaries, "occupancy").divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+                BigDecimal adr = calcMetric(summaries, "adr");
+                return occ.multiply(adr).setScale(2, RoundingMode.HALF_UP);
+            default:
+                return BigDecimal.ZERO;
+        }
+    }
+
+    /**
+     * 计算周级别指标
+     */
+    private BigDecimal calcWeeklyMetric(List<DimDate> weekDims, Map<String, List<DailyReportSummary>> reportByDate, String metric) {
+        List<DailyReportSummary> weekSummaries = new ArrayList<>();
+        for (DimDate dim : weekDims) {
+            weekSummaries.addAll(reportByDate.getOrDefault(dim.getDateKey(), Collections.emptyList()));
+        }
+        return calcMetric(weekSummaries, metric);
+    }
+
+    /**
+     * 计算月级别指标
+     */
+    private BigDecimal calcPeriodMetric(List<DimDate> periodDims, Map<String, List<DailyReportSummary>> reportByDate, String metric) {
+        List<DailyReportSummary> periodSummaries = new ArrayList<>();
+        for (DimDate dim : periodDims) {
+            periodSummaries.addAll(reportByDate.getOrDefault(dim.getDateKey(), Collections.emptyList()));
+        }
+        return calcMetric(periodSummaries, metric);
+    }
+
+    /**
+     * 获取指定年份的最大ISO周号（52或53）
+     */
+    private int getMaxIsoWeek(int year) {
+        // 12月28日一定在该年最后一周
+        LocalDate dec28 = LocalDate.of(year, 12, 28);
+        return dec28.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR);
     }
 
     @Override
