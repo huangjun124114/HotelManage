@@ -138,6 +138,8 @@ async function loadData() {
 onMounted(async () => {
   const res = await getStoreOptions()
   storeOptions.value = res.data || []
+  // Auto-load trend data on mount with default date range
+  await loadData()
 })
 </script>
 
