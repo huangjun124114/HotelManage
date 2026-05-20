@@ -3,7 +3,7 @@
     <!-- 筛选栏 -->
     <el-card shadow="never" class="filter-card">
       <el-row :gutter="16" align="middle">
-        <el-col :xs="24" :sm="8" :md="6">
+        <el-col :xs="24" :sm="10" :md="8">
           <span class="filter-label">基准日期</span>
           <el-date-picker
             v-model="selectedDate"
@@ -14,15 +14,7 @@
             style="width: 100%"
           />
         </el-col>
-        <el-col :xs="24" :sm="10" :md="8">
-          <span class="filter-label">快捷日期</span>
-          <el-radio-group v-model="quickDate" size="small" @change="onQuickDateChange">
-            <el-radio-button label="today">今天</el-radio-button>
-            <el-radio-button label="week">本周</el-radio-button>
-            <el-radio-button label="month">本月</el-radio-button>
-          </el-radio-group>
-        </el-col>
-        <el-col :xs="24" :sm="16" :md="8">
+        <el-col :xs="24" :sm="14" :md="14">
           <span class="filter-label">门店</span>
           <el-select
             v-model="selectedStores"
@@ -177,7 +169,16 @@
     <el-row :gutter="16" class="table-row">
       <el-col :xs="24" :lg="12">
         <el-card>
-          <template #header>门店营收排名</template>
+          <template #header>
+            <div class="chart-header">
+              <span>门店营收排名</span>
+              <el-radio-group v-model="rankingPeriod.revenue" size="small" @change="() => loadRanking('revenue')">
+                <el-radio-button label="day">天</el-radio-button>
+                <el-radio-button label="week">周</el-radio-button>
+                <el-radio-button label="month">月</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
           <el-table :data="data.revenueRanking || []" size="small">
             <el-table-column type="index" label="#" width="50" />
             <el-table-column prop="storeName" label="门店" />
@@ -189,7 +190,16 @@
       </el-col>
       <el-col :xs="24" :lg="12">
         <el-card>
-          <template #header>门店出租率排名</template>
+          <template #header>
+            <div class="chart-header">
+              <span>门店出租率排名</span>
+              <el-radio-group v-model="rankingPeriod.occupancy" size="small" @change="() => loadRanking('occupancy')">
+                <el-radio-button label="day">天</el-radio-button>
+                <el-radio-button label="week">周</el-radio-button>
+                <el-radio-button label="month">月</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
           <el-table :data="data.occupancyRanking || []" size="small">
             <el-table-column type="index" label="#" width="50" />
             <el-table-column prop="storeName" label="门店" />
@@ -216,7 +226,7 @@
 <script setup>
 import { ref, reactive, onMounted, nextTick, onUnmounted } from 'vue'
 import StatCard from '@/components/StatCard.vue'
-import { getDashboard, getTrendCompare } from '@/api/analysis'
+import { getDashboard, getTrendCompare, getStoreRanking } from '@/api/analysis'
 import { getStoreOptions } from '@/api/store'
 import * as echarts from 'echarts'
 
@@ -224,28 +234,12 @@ const loading = ref(false)
 const selectedDate = ref(new Date().toISOString().slice(0, 10))
 const selectedStores = ref([])
 const storeOptions = ref([])
-const quickDate = ref('today')
 
-// 快捷日期切换
-function onQuickDateChange(val) {
-  const now = new Date()
-  const y = now.getFullYear()
-  const m = now.getMonth()
-  const d = now.getDate()
-  const dayOfWeek = now.getDay() || 7 // 周一=1, 周日=7
-
-  if (val === 'today') {
-    selectedDate.value = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-  } else if (val === 'week') {
-    // 本周一
-    const monday = new Date(now)
-    monday.setDate(d - dayOfWeek + 1)
-    selectedDate.value = monday.toISOString().slice(0, 10)
-  } else if (val === 'month') {
-    // 本月1号
-    selectedDate.value = `${y}-${String(m + 1).padStart(2, '0')}-01`
-  }
-}
+// 排名表周期状态
+const rankingPeriod = reactive({
+  revenue: 'day',
+  occupancy: 'day'
+})
 
 // 6个趋势图各自的周期状态
 const periodState = reactive({
@@ -319,9 +313,12 @@ async function loadData() {
     data.avgOccupancy = d.avgOccupancy ?? 0
     data.avgADR = d.avgADR ?? ''
     data.avgRevPAR = d.avgRevPAR ?? ''
-    data.revenueRanking = d.revenueRanking || []
-    data.occupancyRanking = d.occupancyRanking || []
     data.unfilledStores = d.unfilledStores || []
+    // 加载排名（默认day周期）
+    await Promise.all([
+      loadRanking('revenue'),
+      loadRanking('occupancy')
+    ])
     // 加载全部6个趋势图
     await Promise.all([
       loadTrend('revenue'),
@@ -347,6 +344,35 @@ async function loadTrend(metric) {
     const res = await getTrendCompare(params)
     const d = res.data || {}
     renderTrendChart(metric, d)
+  } catch (e) { /* ignore */ }
+}
+
+// 加载排名数据（营收/出租率）
+async function loadRanking(metric) {
+  try {
+    const period = rankingPeriod[metric]
+    const params = {
+      date: selectedDate.value,
+      period: period,
+      metric: metric
+    }
+    const ids = buildStoreIdsParam()
+    if (ids) params.storeIds = ids
+    const res = await getStoreRanking(params)
+    const list = (res.data || []).slice(0, 10) // Top10
+
+    if (metric === 'revenue') {
+      data.revenueRanking = list.map(item => ({
+        storeName: item.storeName,
+        revenue: item.value
+      }))
+    } else if (metric === 'occupancy') {
+      data.occupancyRanking = list.map(item => ({
+        storeName: item.storeName,
+        // storeRanking 返回的是0~1小数，转换为百分比数值
+        occupancy: item.value != null ? (Number(item.value) * 100).toFixed(2) : '0.00'
+      }))
+    }
   } catch (e) { /* ignore */ }
 }
 
