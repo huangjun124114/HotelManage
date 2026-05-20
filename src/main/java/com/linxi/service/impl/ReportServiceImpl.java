@@ -811,7 +811,25 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public List<Map<String, Object>> storeRanking(String startDate, String endDate, String metric) {
+    public List<Map<String, Object>> storeRanking(String date, String period, String metric) {
+        // 根据period计算实际日期范围
+        String startDate, endDate;
+        LocalDate d = LocalDate.parse(date);
+        if ("week".equals(period)) {
+            // 获取本周周一到周日
+            int dayOfWeek = d.getDayOfWeek().getValue(); // 1=Monday, 7=Sunday
+            startDate = d.minusDays(dayOfWeek - 1).toString();
+            endDate = d.plusDays(7 - dayOfWeek).toString();
+        } else if ("month".equals(period)) {
+            // 获取当月第一天和最后一天
+            startDate = d.withDayOfMonth(1).toString();
+            endDate = d.withDayOfMonth(d.lengthOfMonth()).toString();
+        } else {
+            // day: 当天
+            startDate = date;
+            endDate = date;
+        }
+
         // 评分排名走独立SQL查询（数据在EAV表）
         if ("score".equals(metric)) {
             List<Map<String, Object>> rawList = valueMapper.selectScoreRanking(startDate, endDate);

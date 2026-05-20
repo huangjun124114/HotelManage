@@ -68,10 +68,10 @@ public class ReportController {
     }
 
     @GetMapping("/store-ranking")
-    public Result<List<Map<String, Object>>> storeRanking(@RequestParam String startDate,
-                                                            @RequestParam String endDate,
+    public Result<List<Map<String, Object>>> storeRanking(@RequestParam String date,
+                                                            @RequestParam(defaultValue = "day") String period,
                                                             @RequestParam(defaultValue = "revenue") String metric) {
-        return Result.success(reportService.storeRanking(startDate, endDate, metric));
+        return Result.success(reportService.storeRanking(date, period, metric));
     }
 
     /**

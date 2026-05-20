@@ -37,6 +37,9 @@ public interface ReportService {
 
     /**
      * 门店排名
+     * @param date 基准日期（用于计算天/周/月范围）
+     * @param period 时间维度：day=当天, week=当周, month=当月
+     * @param metric 指标类型
      */
-    List<Map<String, Object>> storeRanking(String startDate, String endDate, String metric);
+    List<Map<String, Object>> storeRanking(String date, String period, String metric);
 }
