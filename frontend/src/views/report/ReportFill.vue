@@ -49,30 +49,35 @@
       </el-form-item>
     </el-card>
 
-    <!-- 动态表单 -->
+    <!-- 动态表单（四列紧凑 + 可折叠） -->
     <div v-if="fields.length > 0">
       <el-card
         v-for="group in groupedFields"
         :key="group.name"
         shadow="never"
-        class="field-group-card"
+        class="field-group-card compact-card"
       >
         <template #header>
-          <span class="group-title">{{ group.name }}</span>
+          <div class="card-header" @click="toggleGroup(group.name)">
+            <span class="group-title">{{ group.name }}</span>
+            <el-icon class="collapse-icon" :class="{ 'is-collapsed': collapsedGroups[group.name] }">
+              <ArrowDown />
+            </el-icon>
+          </div>
         </template>
-        <el-form ref="formRef" :model="formData" :rules="formRules" label-width="140px">
-          <el-row :gutter="16">
+        <el-form ref="formRef" :model="formData" :rules="formRules" label-width="110px" v-show="!collapsedGroups[group.name]">
+          <el-row :gutter="12">
             <el-col
               v-for="field in group.fields"
               :key="field.fieldName"
               :xs="24"
               :sm="12"
-              :lg="8"
+              :md="6"
             >
               <el-form-item
                 :label="field.label"
                 :prop="field.fieldName"
-                :required="field.required === 1"
+                :required="field.required === 1 && field.readonlyFlag !== 1 && field.readonly !== 1"
               >
                 <!-- 只读/计算字段 -->
                 <el-input
@@ -112,6 +117,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
 import { getStoreOptions } from '@/api/store'
 import { getToday, getTemplateFields, saveDraft, submit } from '@/api/report'
@@ -132,9 +138,28 @@ const reportId = ref(null)
 const formData = reactive({})
 const formRules = reactive({})
 
-// 渠道字段列表
-const channelFields = ['xiecheng', 'tongcheng', 'qunaer', 'zhixing', 'waiwang',
-  'meituan_hotel', 'feizhu', 'douyin', 'xiaozhu', 'tujia', 'meituan_bnb', 'jiali']
+// 分组折叠状态
+const collapsedGroups = reactive({})
+function toggleGroup(name) {
+  collapsedGroups[name] = !collapsedGroups[name]
+}
+
+// 渠道间夜字段编码（与数据库 daily_report_field 一致）
+const CHANNEL_ROOM_NIGHTS_KEYS = [
+  'walkin_room_nights',              // 散客
+  'ctrip_room_nights',               // 携程
+  'ly_room_nights',                  // 同程艺龙
+  'qunar_room_nights',               // 去哪儿
+  'zhixing_room_nights',             // 智行
+  'external_room_nights',            // 外网
+  'meituan_hotel_room_nights',       // 美团酒店
+  'fliggy_room_nights',              // 飞猪
+  'douyin_room_nights',              // 抖音
+  'xiaozhu_room_nights',             // 小猪
+  'tujia_room_nights',               // 途家
+  'meituan_homestay_room_nights',    // 美团民宿
+  'jiali_room_nights',               // 红色加力/加力
+]
 
 // 是否可以选择门店（店长只能选自己门店）
 const canSelectStore = computed(() => userStore.userInfo?.userType !== 2)
@@ -144,21 +169,30 @@ const computedValues = computed(() => {
   const vals = {}
   const d = formData
 
-  // 总营收 = 日租房房费 + 钟点房费 + 杂费
+  // 间夜数 = 各渠道房间数之和 + 钟点房数量
+  const channelSum = CHANNEL_ROOM_NIGHTS_KEYS.reduce((sum, key) => sum + Number(d[key] || 0), 0)
+  const hourlyRoomCount = Number(d.hourly_room_count || 0)
+  vals.room_nights = channelSum + hourlyRoomCount
+
+  const rooms = vals.room_nights
+  const ownRooms = Number(d.own_room_count || 0)
+
+  // 出租率 = 间夜数 / 自有房量 * 100
+  vals.occupancy_rate = ownRooms > 0 ? (rooms / ownRooms * 100).toFixed(2) : '0.00'
+
+  // 当日总房费 = 日租房房费 + 钟点房费
   const roomFee = Number(d.daily_room_fee || 0)
   const hourFee = Number(d.hourly_room_fee || 0)
   const miscFee = Number(d.other_fee || 0)
-  vals.total_revenue = (roomFee + hourFee + miscFee).toFixed(2)
+  const totalRoomFee = roomFee + hourFee
 
-  // 出租率 = 间夜数 / 自有房量
-  const rooms = Number(d.room_nights || 0)
-  const ownRooms = Number(d.own_room_count || 1)
-  vals.occupancy_rate = ownRooms > 0 ? (rooms / ownRooms * 100).toFixed(2) : '0.00'
+  // ADR = 当日总房费 / 间夜数
+  vals.adr = rooms > 0 ? (totalRoomFee / rooms).toFixed(2) : '0.00'
 
-  // ADR = 日租房房费 / 间夜数
-  vals.adr = rooms > 0 ? (roomFee / rooms).toFixed(2) : '0.00'
+  // 当日总营收 = 当日总房费 + 杂费
+  vals.total_revenue = (totalRoomFee + miscFee).toFixed(2)
 
-  // RevPAR = 总营收 / 自有房量
+  // RevPAR = 当日总营收 / 自有房量
   vals.revpar = ownRooms > 0 ? (Number(vals.total_revenue) / ownRooms).toFixed(2) : '0.00'
 
   return vals
@@ -349,7 +383,7 @@ onMounted(() => {
 .report-fill {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .top-card {
@@ -370,8 +404,49 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
+.compact-card :deep(.el-card__header) {
+  padding: 8px 12px;
+}
+
+.compact-card :deep(.el-card__body) {
+  padding: 8px 12px;
+}
+
+.compact-card :deep(.el-form-item) {
+  margin-bottom: 4px;
+}
+
+.compact-card :deep(.el-form-item__label) {
+  font-size: 13px;
+  padding-right: 4px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.card-header:hover {
+  background: #f5f7fa;
+  margin: -8px -12px;
+  padding: 8px 12px;
+  border-radius: 4px 4px 0 0;
+}
+
+.collapse-icon {
+  transition: transform 0.3s;
+  color: #909399;
+}
+
+.collapse-icon.is-collapsed {
+  transform: rotate(-90deg);
+}
+
 .group-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #333;
 }
@@ -379,7 +454,7 @@ onMounted(() => {
 @media (max-width: 768px) {
   .action-col {
     justify-content: flex-start;
-    margin-top: 12px;
+    margin-top: 8px;
   }
 }
 </style>

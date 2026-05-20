@@ -39,3 +39,11 @@ api-e2e-test.js
 data/linxi.db.bak.*
 linxi.db
 中间产物/
+
+# E2E test temp files
+*.png
+frontend/test-*.cjs
+test-*.cjs
+e2e-tests/debug-*
+e2e-tests/*-report.json
+e2e-tests/*-result.json
