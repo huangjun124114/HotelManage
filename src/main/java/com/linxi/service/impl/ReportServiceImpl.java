@@ -292,16 +292,25 @@ public class ReportServiceImpl implements ReportService {
         List<BigDecimal> currentValues = new ArrayList<>();
         List<BigDecimal> lastYearValues = new ArrayList<>();
 
+        // 填报率需要知道总门店数
+        int totalActiveStores = storeMapper.selectList(
+                new LambdaQueryWrapper<Store>().eq(Store::getStatus, 1)
+        ).size();
+        // 门店多选时，只统计选中门店
+        if (storeIds != null && !storeIds.isEmpty()) {
+            totalActiveStores = storeIds.size();
+        }
+
         switch (period) {
             case "week":
-                buildWeekTrend(baseDim, storeIds, metric, labels, currentValues, lastYearValues);
+                buildWeekTrend(baseDim, storeIds, metric, labels, currentValues, lastYearValues, totalActiveStores);
                 break;
             case "month":
-                buildMonthTrend(baseDim, storeIds, metric, labels, currentValues, lastYearValues);
+                buildMonthTrend(baseDim, storeIds, metric, labels, currentValues, lastYearValues, totalActiveStores);
                 break;
             case "day":
             default:
-                buildDayTrend(date, storeIds, metric, labels, currentValues, lastYearValues);
+                buildDayTrend(date, storeIds, metric, labels, currentValues, lastYearValues, totalActiveStores);
                 break;
         }
 
@@ -317,7 +326,8 @@ public class ReportServiceImpl implements ReportService {
      * 天趋势：基准日往前12天 + 去年同期
      */
     private void buildDayTrend(String date, List<Long> storeIds, String metric,
-                               List<String> labels, List<BigDecimal> currentValues, List<BigDecimal> lastYearValues) {
+                               List<String> labels, List<BigDecimal> currentValues, List<BigDecimal> lastYearValues,
+                               int totalActiveStores) {
         LocalDate baseDate = LocalDate.parse(date);
         String currentStart = baseDate.minusDays(11).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         String currentEnd = date;
@@ -333,11 +343,11 @@ public class ReportServiceImpl implements ReportService {
             String ds = d.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             String label = d.getMonthValue() + "/" + d.getDayOfMonth();
             labels.add(label);
-            currentValues.add(calcMetric(currentGrouped.getOrDefault(ds, Collections.emptyList()), metric));
+            currentValues.add(calcMetricOrFillRate(currentGrouped.getOrDefault(ds, Collections.emptyList()), metric, 1, totalActiveStores));
 
             LocalDate ld = d.minusYears(1);
             String lds = ld.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            lastYearValues.add(calcMetric(lastYearGrouped.getOrDefault(lds, Collections.emptyList()), metric));
+            lastYearValues.add(calcMetricOrFillRate(lastYearGrouped.getOrDefault(lds, Collections.emptyList()), metric, 1, totalActiveStores));
         }
     }
 
@@ -345,7 +355,8 @@ public class ReportServiceImpl implements ReportService {
      * 周趋势：基准日所在周往前12周 + 去年同期（同ISO周号）
      */
     private void buildWeekTrend(DimDate baseDim, List<Long> storeIds, String metric,
-                                List<String> labels, List<BigDecimal> currentValues, List<BigDecimal> lastYearValues) {
+                                List<String> labels, List<BigDecimal> currentValues, List<BigDecimal> lastYearValues,
+                                int totalActiveStores) {
         // 获取基准日所在周的year_week
         String baseYearWeek = baseDim.getYearWeek();
         int baseIsoYear = Integer.parseInt(baseYearWeek.substring(0, 4));
@@ -400,8 +411,8 @@ public class ReportServiceImpl implements ReportService {
                             .map(d -> d.substring(5)).orElse(yw);
             labels.add(label);
 
-            currentValues.add(calcWeeklyMetric(weekDims, reportByDate, metric));
-            lastYearValues.add(calcWeeklyMetric(dimByYearWeek.getOrDefault(lyw, Collections.emptyList()), reportByDate, metric));
+            currentValues.add(calcWeeklyMetric(weekDims, reportByDate, metric, totalActiveStores));
+            lastYearValues.add(calcWeeklyMetric(dimByYearWeek.getOrDefault(lyw, Collections.emptyList()), reportByDate, metric, totalActiveStores));
         }
     }
 
@@ -409,7 +420,8 @@ public class ReportServiceImpl implements ReportService {
      * 月趋势：基准日所在月往前12月 + 去年同期
      */
     private void buildMonthTrend(DimDate baseDim, List<Long> storeIds, String metric,
-                                 List<String> labels, List<BigDecimal> currentValues, List<BigDecimal> lastYearValues) {
+                                 List<String> labels, List<BigDecimal> currentValues, List<BigDecimal> lastYearValues,
+                                 int totalActiveStores) {
         int baseYear = baseDim.getTheYear();
         int baseMonth = baseDim.getTheMonth();
 
@@ -448,8 +460,8 @@ public class ReportServiceImpl implements ReportService {
             String lym = lastYearYearMonths.get(i);
 
             labels.add(ym);
-            currentValues.add(calcPeriodMetric(dimByYearMonth.getOrDefault(ym, Collections.emptyList()), reportByDate, metric));
-            lastYearValues.add(calcPeriodMetric(dimByYearMonth.getOrDefault(lym, Collections.emptyList()), reportByDate, metric));
+            currentValues.add(calcPeriodMetric(dimByYearMonth.getOrDefault(ym, Collections.emptyList()), reportByDate, metric, totalActiveStores));
+            lastYearValues.add(calcPeriodMetric(dimByYearMonth.getOrDefault(lym, Collections.emptyList()), reportByDate, metric, totalActiveStores));
         }
     }
 
@@ -518,6 +530,10 @@ public class ReportServiceImpl implements ReportService {
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
                 return (rn.compareTo(BigDecimal.ZERO) > 0)
                         ? rev.divide(rn, 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+            case "roomnights":
+                return summaries.stream()
+                        .map(s -> s.getRoomNights() != null ? s.getRoomNights() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
             case "revpar":
                 // RevPAR = 加权出租率 * 加权ADR
                 BigDecimal occ = calcMetric(summaries, "occupancy").divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
@@ -531,23 +547,50 @@ public class ReportServiceImpl implements ReportService {
     /**
      * 计算周级别指标
      */
-    private BigDecimal calcWeeklyMetric(List<DimDate> weekDims, Map<String, List<DailyReportSummary>> reportByDate, String metric) {
+    private BigDecimal calcWeeklyMetric(List<DimDate> weekDims, Map<String, List<DailyReportSummary>> reportByDate,
+                                        String metric, int totalActiveStores) {
         List<DailyReportSummary> weekSummaries = new ArrayList<>();
+        int daysInPeriod = weekDims.size();
         for (DimDate dim : weekDims) {
             weekSummaries.addAll(reportByDate.getOrDefault(dim.getDateKey(), Collections.emptyList()));
         }
-        return calcMetric(weekSummaries, metric);
+        return calcMetricOrFillRate(weekSummaries, metric, daysInPeriod, totalActiveStores);
     }
 
     /**
      * 计算月级别指标
      */
-    private BigDecimal calcPeriodMetric(List<DimDate> periodDims, Map<String, List<DailyReportSummary>> reportByDate, String metric) {
+    private BigDecimal calcPeriodMetric(List<DimDate> periodDims, Map<String, List<DailyReportSummary>> reportByDate,
+                                        String metric, int totalActiveStores) {
         List<DailyReportSummary> periodSummaries = new ArrayList<>();
+        int daysInPeriod = periodDims.size();
         for (DimDate dim : periodDims) {
             periodSummaries.addAll(reportByDate.getOrDefault(dim.getDateKey(), Collections.emptyList()));
         }
-        return calcMetric(periodSummaries, metric);
+        return calcMetricOrFillRate(periodSummaries, metric, daysInPeriod, totalActiveStores);
+    }
+
+    /**
+     * 统一指标计算入口：普通指标走calcMetric，填报率走特殊逻辑
+     * @param summaries 该日期/周期的日报汇总列表
+     * @param metric 指标名
+     * @param daysInPeriod 该周期天数
+     * @param totalActiveStores 活跃门店数
+     */
+    private BigDecimal calcMetricOrFillRate(List<DailyReportSummary> summaries, String metric,
+                                            int daysInPeriod, int totalActiveStores) {
+        if ("fillrate".equals(metric)) {
+            // 填报率 = 实际填报数 / 应填报数 * 100
+            // 应填报数 = 活跃门店数 * 天数
+            if (totalActiveStores <= 0 || daysInPeriod <= 0) return BigDecimal.ZERO;
+            int shouldFill = totalActiveStores * daysInPeriod;
+            // 去重：一天内一个门店可能有多条summary（不应出现，但防呆）
+            long filledCount = summaries.size();
+            return new BigDecimal(filledCount)
+                    .divide(new BigDecimal(shouldFill), 4, RoundingMode.HALF_UP)
+                    .multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP);
+        }
+        return calcMetric(summaries, metric);
     }
 
     /**
