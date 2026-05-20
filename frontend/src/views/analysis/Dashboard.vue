@@ -80,7 +80,7 @@
               </el-radio-group>
             </div>
           </template>
-          <div ref="chartRefs.revenue" class="chart-container"></div>
+          <div :ref="el => chartRefs.revenue = el" class="chart-container"></div>
         </el-card>
       </el-col>
       <el-col :xs="24" :lg="8">
@@ -95,7 +95,7 @@
               </el-radio-group>
             </div>
           </template>
-          <div ref="chartRefs.occupancy" class="chart-container"></div>
+          <div :ref="el => chartRefs.occupancy = el" class="chart-container"></div>
         </el-card>
       </el-col>
       <el-col :xs="24" :lg="8">
@@ -110,7 +110,7 @@
               </el-radio-group>
             </div>
           </template>
-          <div ref="chartRefs.adr" class="chart-container"></div>
+          <div :ref="el => chartRefs.adr = el" class="chart-container"></div>
         </el-card>
       </el-col>
     </el-row>
@@ -129,7 +129,7 @@
               </el-radio-group>
             </div>
           </template>
-          <div ref="chartRefs.revpar" class="chart-container"></div>
+          <div :ref="el => chartRefs.revpar = el" class="chart-container"></div>
         </el-card>
       </el-col>
       <el-col :xs="24" :lg="8">
@@ -144,7 +144,7 @@
               </el-radio-group>
             </div>
           </template>
-          <div ref="chartRefs.roomnights" class="chart-container"></div>
+          <div :ref="el => chartRefs.roomnights = el" class="chart-container"></div>
         </el-card>
       </el-col>
       <el-col :xs="24" :lg="8">
@@ -159,7 +159,7 @@
               </el-radio-group>
             </div>
           </template>
-          <div ref="chartRefs.fillrate" class="chart-container"></div>
+          <div :ref="el => chartRefs.fillrate = el" class="chart-container"></div>
         </el-card>
       </el-col>
     </el-row>
@@ -226,15 +226,15 @@ const periodState = reactive({
   fillrate: 'day'
 })
 
-// 图表DOM引用
-const chartRefs = reactive({
-  revenue: ref(null),
-  occupancy: ref(null),
-  adr: ref(null),
-  revpar: ref(null),
-  roomnights: ref(null),
-  fillrate: ref(null)
-})
+// 图表DOM引用（用普通对象，不用reactive包裹ref，否则Vue3自动解包导致ref绑定失效）
+const chartRefs = {
+  revenue: null,
+  occupancy: null,
+  adr: null,
+  revpar: null,
+  roomnights: null,
+  fillrate: null
+}
 
 // 图表实例
 const chartInstances = {}
