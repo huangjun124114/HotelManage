@@ -12,6 +12,7 @@
             value-format="YYYY-MM-DD"
             style="width:280px"
           />
+          <DateQuickSelect v-model="dateRange" style="margin-left:8px" />
         </el-form-item>
         <el-form-item label="排名指标">
           <el-select v-model="rankType" style="width:140px">
@@ -20,6 +21,7 @@
             <el-option label="间夜数" value="rooms" />
             <el-option label="ADR" value="adr" />
             <el-option label="RevPAR" value="revpar" />
+            <el-option label="评分" value="score" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -46,6 +48,7 @@
                 <template v-if="rankType === 'revenue'">¥{{ row.value?.toLocaleString() }}</template>
                 <template v-else-if="rankType === 'occupancy'">{{ (row.value * 100).toFixed(1) }}%</template>
                 <template v-else-if="rankType === 'adr' || rankType === 'revpar'">¥{{ row.value?.toFixed(2) }}</template>
+                <template v-else-if="rankType === 'score'">{{ row.value?.toFixed(2) }}</template>
                 <template v-else>{{ row.value }}</template>
               </template>
             </el-table-column>
@@ -59,21 +62,21 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { getStoreRanking } from '@/api/analysis'
+import DateQuickSelect from '@/components/DateQuickSelect.vue'
 import * as echarts from 'echarts'
 
 const loading = ref(false)
-const dateRange = ref(() => {
-  const now = new Date()
-  const end = now.toISOString().slice(0, 10)
-  const start = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10)
-  return [start, end]
-})
+const now = new Date()
+const dateRange = ref([
+  new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10),
+  now.toISOString().slice(0, 10)
+])
 const rankType = ref('revenue')
 const barChartRef = ref(null)
 const rankingData = ref([])
 
 const rankLabel = computed(() => {
-  const map = { revenue: '营收(元)', occupancy: '出租率(%)', rooms: '间夜数', adr: 'ADR(元)', revpar: 'RevPAR(元)' }
+  const map = { revenue: '营收(元)', occupancy: '出租率(%)', rooms: '间夜数', adr: 'ADR(元)', revpar: 'RevPAR(元)', score: '评分' }
   return map[rankType.value] || ''
 })
 

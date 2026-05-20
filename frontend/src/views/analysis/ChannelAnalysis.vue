@@ -15,9 +15,12 @@
             start-placeholder="开始"
             end-placeholder="结束"
             value-format="YYYY-MM-DD"
-            @change="loadData"
             style="width:260px"
           />
+          <DateQuickSelect v-model="searchForm.dateRange" style="margin-left:8px" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="loadData">查询</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -52,6 +55,7 @@
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { getChannelAnalysis } from '@/api/analysis'
 import { getStoreOptions } from '@/api/store'
+import DateQuickSelect from '@/components/DateQuickSelect.vue'
 import * as echarts from 'echarts'
 
 const loading = ref(false)

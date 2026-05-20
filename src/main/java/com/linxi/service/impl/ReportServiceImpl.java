@@ -37,6 +37,9 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     private SysUserMapper sysUserMapper;
 
+    @Autowired
+    private DailyReportValueMapper valueMapper;
+
     @Override
     public Map<String, Object> dashboard(String date, String region, Long storeId, List<Long> storeIds) {
         Map<String, Object> result = new HashMap<>();
@@ -809,6 +812,24 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<Map<String, Object>> storeRanking(String startDate, String endDate, String metric) {
+        // 评分排名走独立SQL查询（数据在EAV表）
+        if ("score".equals(metric)) {
+            List<Map<String, Object>> rawList = valueMapper.selectScoreRanking(startDate, endDate);
+            // 添加排名
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (int i = 0; i < rawList.size(); i++) {
+                Map<String, Object> item = rawList.get(i);
+                item.put("rank", i + 1);
+                // 确保value是BigDecimal
+                Object val = item.get("value");
+                if (val instanceof Number) {
+                    item.put("value", new BigDecimal(val.toString()));
+                }
+                result.add(item);
+            }
+            return result;
+        }
+
         // 查询日期范围内的日报数据
         LambdaQueryWrapper<DailyReport> wrapper = new LambdaQueryWrapper<DailyReport>()
                 .ge(DailyReport::getReportDate, startDate)

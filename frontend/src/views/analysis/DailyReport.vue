@@ -17,6 +17,7 @@
             value-format="YYYY-MM-DD"
             style="width:280px"
           />
+          <DateQuickSelect v-model="searchForm.dateRange" style="margin-left:8px" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="loadData">查询</el-button>
@@ -95,6 +96,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { getStoreOptions } from '@/api/store'
 import { queryList, getTemplateFields } from '@/api/report'
+import DateQuickSelect from '@/components/DateQuickSelect.vue'
 import * as XLSX from 'xlsx'
 
 const loading = ref(false)
