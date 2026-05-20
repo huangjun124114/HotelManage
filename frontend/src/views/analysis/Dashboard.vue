@@ -11,11 +11,18 @@
             placeholder="选择日期"
             value-format="YYYY-MM-DD"
             :disabled-date="d => d > new Date()"
-            @change="loadData"
             style="width: 100%"
           />
         </el-col>
-        <el-col :xs="24" :sm="16" :md="12">
+        <el-col :xs="24" :sm="10" :md="8">
+          <span class="filter-label">快捷日期</span>
+          <el-radio-group v-model="quickDate" size="small" @change="onQuickDateChange">
+            <el-radio-button label="today">今天</el-radio-button>
+            <el-radio-button label="week">本周</el-radio-button>
+            <el-radio-button label="month">本月</el-radio-button>
+          </el-radio-group>
+        </el-col>
+        <el-col :xs="24" :sm="16" :md="8">
           <span class="filter-label">门店</span>
           <el-select
             v-model="selectedStores"
@@ -24,7 +31,6 @@
             collapse-tags-tooltip
             placeholder="全部门店"
             clearable
-            @change="loadData"
             style="width: 100%"
           >
             <el-option
@@ -34,6 +40,9 @@
               :value="s.value"
             />
           </el-select>
+        </el-col>
+        <el-col :xs="24" :sm="6" :md="2">
+          <el-button type="primary" @click="loadData" style="width: 100%">查询</el-button>
         </el-col>
       </el-row>
     </el-card>
@@ -215,6 +224,28 @@ const loading = ref(false)
 const selectedDate = ref(new Date().toISOString().slice(0, 10))
 const selectedStores = ref([])
 const storeOptions = ref([])
+const quickDate = ref('today')
+
+// 快捷日期切换
+function onQuickDateChange(val) {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = now.getMonth()
+  const d = now.getDate()
+  const dayOfWeek = now.getDay() || 7 // 周一=1, 周日=7
+
+  if (val === 'today') {
+    selectedDate.value = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+  } else if (val === 'week') {
+    // 本周一
+    const monday = new Date(now)
+    monday.setDate(d - dayOfWeek + 1)
+    selectedDate.value = monday.toISOString().slice(0, 10)
+  } else if (val === 'month') {
+    // 本月1号
+    selectedDate.value = `${y}-${String(m + 1).padStart(2, '0')}-01`
+  }
+}
 
 // 6个趋势图各自的周期状态
 const periodState = reactive({
