@@ -664,62 +664,114 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public List<Map<String, Object>> trend(Long storeId, String startDate, String endDate, String metric) {
+    public List<Map<String, Object>> trend(List<Long> storeIds, String startDate, String endDate, String metric, String period) {
         List<Map<String, Object>> result = new ArrayList<>();
+
+        if (period == null || period.isEmpty()) {
+            period = "day";
+        }
 
         LambdaQueryWrapper<DailyReportSummary> wrapper = new LambdaQueryWrapper<DailyReportSummary>()
                 .ge(DailyReportSummary::getReportDate, startDate)
                 .le(DailyReportSummary::getReportDate, endDate);
-        if (storeId != null) {
-            wrapper.eq(DailyReportSummary::getStoreId, storeId);
+        if (storeIds != null && !storeIds.isEmpty()) {
+            wrapper.in(DailyReportSummary::getStoreId, storeIds);
         }
 
         List<DailyReportSummary> summaries = summaryMapper.selectList(wrapper.orderByAsc(DailyReportSummary::getReportDate));
 
-        // 按日期分组
-        Map<String, List<DailyReportSummary>> grouped = summaries.stream()
-                .collect(Collectors.groupingBy(DailyReportSummary::getReportDate, LinkedHashMap::new, Collectors.toList()));
-
-        for (Map.Entry<String, List<DailyReportSummary>> entry : grouped.entrySet()) {
-            Map<String, Object> point = new HashMap<>();
-            point.put("date", entry.getKey());
-            List<DailyReportSummary> daySummaries = entry.getValue();
-
-            BigDecimal dayRevenue = daySummaries.stream()
-                    .map(s -> s.getTotalRevenue() != null ? s.getTotalRevenue() : BigDecimal.ZERO)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal dayRoomNights = daySummaries.stream()
-                    .map(s -> s.getRoomNights() != null ? s.getRoomNights() : BigDecimal.ZERO)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            point.put("revenue", dayRevenue);
-            point.put("roomNights", dayRoomNights);
-
-            if (!daySummaries.isEmpty()) {
-                point.put("occupancyRate", daySummaries.stream()
-                        .map(s -> s.getOccupancyRate() != null ? s.getOccupancyRate() : BigDecimal.ZERO)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                        .divide(new BigDecimal(daySummaries.size()), 4, RoundingMode.HALF_UP));
-                point.put("adr", daySummaries.stream()
-                        .map(s -> s.getAdr() != null ? s.getAdr() : BigDecimal.ZERO)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                        .divide(new BigDecimal(daySummaries.size()), 2, RoundingMode.HALF_UP));
+        if ("week".equals(period)) {
+            // 按周汇总
+            Map<String, List<DailyReportSummary>> weekGrouped = new LinkedHashMap<>();
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            for (DailyReportSummary s : summaries) {
+                LocalDate d = LocalDate.parse(s.getReportDate(), fmt);
+                // ISO周：获取所在周的周一日期作为key
+                LocalDate monday = d.minusDays(d.getDayOfWeek().getValue() - 1);
+                String weekKey = monday.format(fmt);
+                weekGrouped.computeIfAbsent(weekKey, k -> new ArrayList<>()).add(s);
             }
+            for (Map.Entry<String, List<DailyReportSummary>> entry : weekGrouped.entrySet()) {
+                Map<String, Object> point = new HashMap<>();
+                point.put("date", entry.getKey());
+                List<DailyReportSummary> weekSummaries = entry.getValue();
+                point.put("revenue", weekSummaries.stream()
+                        .map(s -> s.getTotalRevenue() != null ? s.getTotalRevenue() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+                point.put("roomNights", weekSummaries.stream()
+                        .map(s -> s.getRoomNights() != null ? s.getRoomNights() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+                point.put("count", weekSummaries.size());
+                result.add(point);
+            }
+        } else if ("month".equals(period)) {
+            // 按月汇总
+            Map<String, List<DailyReportSummary>> monthGrouped = summaries.stream()
+                    .collect(Collectors.groupingBy(
+                            s -> s.getReportDate() != null && s.getReportDate().length() >= 7 ? s.getReportDate().substring(0, 7) : s.getReportDate(),
+                            LinkedHashMap::new, Collectors.toList()));
+            for (Map.Entry<String, List<DailyReportSummary>> entry : monthGrouped.entrySet()) {
+                Map<String, Object> point = new HashMap<>();
+                point.put("date", entry.getKey());
+                List<DailyReportSummary> monthSummaries = entry.getValue();
+                point.put("revenue", monthSummaries.stream()
+                        .map(s -> s.getTotalRevenue() != null ? s.getTotalRevenue() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+                point.put("roomNights", monthSummaries.stream()
+                        .map(s -> s.getRoomNights() != null ? s.getRoomNights() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+                point.put("count", monthSummaries.size());
+                result.add(point);
+            }
+        } else {
+            // 按天汇总（默认）
+            Map<String, List<DailyReportSummary>> grouped = summaries.stream()
+                    .collect(Collectors.groupingBy(DailyReportSummary::getReportDate, LinkedHashMap::new, Collectors.toList()));
 
-            point.put("count", daySummaries.size());
-            result.add(point);
+            for (Map.Entry<String, List<DailyReportSummary>> entry : grouped.entrySet()) {
+                Map<String, Object> point = new HashMap<>();
+                point.put("date", entry.getKey());
+                List<DailyReportSummary> daySummaries = entry.getValue();
+
+                BigDecimal dayRevenue = daySummaries.stream()
+                        .map(s -> s.getTotalRevenue() != null ? s.getTotalRevenue() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal dayRoomNights = daySummaries.stream()
+                        .map(s -> s.getRoomNights() != null ? s.getRoomNights() : BigDecimal.ZERO)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                point.put("revenue", dayRevenue);
+                point.put("roomNights", dayRoomNights);
+
+                if (!daySummaries.isEmpty()) {
+                    // 加权平均出租率 = 总间夜 / 总可用房量
+                    BigDecimal totalOwnRooms = daySummaries.stream()
+                            .map(s -> s.getOwnRoomCount() != null ? s.getOwnRoomCount() : BigDecimal.ZERO)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    point.put("occupancyRate", totalOwnRooms.compareTo(BigDecimal.ZERO) > 0
+                            ? dayRoomNights.divide(totalOwnRooms, 4, RoundingMode.HALF_UP)
+                            : BigDecimal.ZERO);
+                    // 加权ADR = 总营收 / 总间夜
+                    point.put("adr", dayRoomNights.compareTo(BigDecimal.ZERO) > 0
+                            ? dayRevenue.divide(dayRoomNights, 2, RoundingMode.HALF_UP)
+                            : BigDecimal.ZERO);
+                }
+
+                point.put("count", daySummaries.size());
+                result.add(point);
+            }
         }
 
         return result;
     }
 
     @Override
-    public List<Map<String, Object>> channelAnalysis(Long storeId, String startDate, String endDate) {
+    public List<Map<String, Object>> channelAnalysis(List<Long> storeIds, String startDate, String endDate) {
         LambdaQueryWrapper<DailyReportChannel> wrapper = new LambdaQueryWrapper<DailyReportChannel>()
                 .ge(DailyReportChannel::getReportDate, startDate)
                 .le(DailyReportChannel::getReportDate, endDate);
-        if (storeId != null) {
-            wrapper.eq(DailyReportChannel::getStoreId, storeId);
+        if (storeIds != null && !storeIds.isEmpty()) {
+            wrapper.in(DailyReportChannel::getStoreId, storeIds);
         }
 
         List<DailyReportChannel> channels = channelMapper.selectList(wrapper);
@@ -756,10 +808,11 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public List<Map<String, Object>> storeRanking(String date, String metric) {
-        // 查询新表 daily_report（不再用已废弃的 daily_report_summary）
+    public List<Map<String, Object>> storeRanking(String startDate, String endDate, String metric) {
+        // 查询日期范围内的日报数据
         LambdaQueryWrapper<DailyReport> wrapper = new LambdaQueryWrapper<DailyReport>()
-                .eq(DailyReport::getReportDate, date);
+                .ge(DailyReport::getReportDate, startDate)
+                .le(DailyReport::getReportDate, endDate);
 
         List<DailyReport> reports = reportMapper.selectList(wrapper);
 
@@ -767,25 +820,56 @@ public class ReportServiceImpl implements ReportService {
         Map<Long, String> storeNameMap = stores.stream()
                 .collect(Collectors.toMap(Store::getId, Store::getStoreName, (a, b) -> a));
 
-        List<Map<String, Object>> result = reports.stream()
-                .map(r -> {
-                    Map<String, Object> item = new HashMap<>();
-                    item.put("storeId", r.getStoreId());
-                    item.put("storeName", r.getStoreName() != null ? r.getStoreName() : storeNameMap.getOrDefault(r.getStoreId(), ""));
+        // 按门店分组汇总
+        Map<Long, List<DailyReport>> groupedByStore = reports.stream()
+                .filter(r -> r.getStoreId() != null)
+                .collect(Collectors.groupingBy(DailyReport::getStoreId));
 
+        List<Map<String, Object>> result = groupedByStore.entrySet().stream()
+                .map(entry -> {
+                    Long sid = entry.getKey();
+                    List<DailyReport> storeReports = entry.getValue();
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("storeId", sid);
+                    item.put("storeName", storeNameMap.getOrDefault(sid, storeReports.get(0).getStoreName() != null ? storeReports.get(0).getStoreName() : ""));
+
+                    // 汇总计算指标值
                     BigDecimal value = BigDecimal.ZERO;
+                    BigDecimal totalRevenue = storeReports.stream()
+                            .map(r -> r.getTotalRevenue() != null ? r.getTotalRevenue() : BigDecimal.ZERO)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal totalRoomNights = storeReports.stream()
+                            .map(r -> r.getRoomNights() != null ? r.getRoomNights() : BigDecimal.ZERO)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    int totalOwnRooms = storeReports.stream()
+                            .mapToInt(r -> r.getOwnRoomCount() != null ? r.getOwnRoomCount() : 0)
+                            .sum();
+
                     if ("revenue".equals(metric)) {
-                        value = r.getTotalRevenue() != null ? r.getTotalRevenue() : BigDecimal.ZERO;
+                        value = totalRevenue;
                     } else if ("occupancyRate".equals(metric) || "occupancy".equals(metric)) {
-                        value = r.getOccupancyRate() != null ? r.getOccupancyRate() : BigDecimal.ZERO;
+                        // 加权出租率 = 总间夜 / 总可用房量
+                        value = totalOwnRooms > 0
+                                ? totalRoomNights.divide(new BigDecimal(totalOwnRooms), 4, RoundingMode.HALF_UP)
+                                : BigDecimal.ZERO;
                     } else if ("adr".equals(metric)) {
-                        value = r.getAdr() != null ? r.getAdr() : BigDecimal.ZERO;
+                        // 加权ADR = 总营收 / 总间夜
+                        value = totalRoomNights.compareTo(BigDecimal.ZERO) > 0
+                                ? totalRevenue.divide(totalRoomNights, 2, RoundingMode.HALF_UP)
+                                : BigDecimal.ZERO;
                     } else if ("revpar".equals(metric)) {
-                        value = r.getRevpar() != null ? r.getRevpar() : BigDecimal.ZERO;
+                        // 加权RevPAR = 加权出租率 * 加权ADR
+                        BigDecimal occ = totalOwnRooms > 0
+                                ? totalRoomNights.divide(new BigDecimal(totalOwnRooms), 4, RoundingMode.HALF_UP)
+                                : BigDecimal.ZERO;
+                        BigDecimal adr = totalRoomNights.compareTo(BigDecimal.ZERO) > 0
+                                ? totalRevenue.divide(totalRoomNights, 2, RoundingMode.HALF_UP)
+                                : BigDecimal.ZERO;
+                        value = occ.multiply(adr).setScale(2, RoundingMode.HALF_UP);
                     } else if ("rooms".equals(metric)) {
-                        value = r.getRoomNights() != null ? r.getRoomNights() : BigDecimal.ZERO;
+                        value = totalRoomNights;
                     } else {
-                        value = r.getTotalRevenue() != null ? r.getTotalRevenue() : BigDecimal.ZERO;
+                        value = totalRevenue;
                     }
                     item.put("value", value);
                     return item;
@@ -801,6 +885,226 @@ public class ReportServiceImpl implements ReportService {
         for (int i = 0; i < result.size(); i++) {
             result.get(i).put("rank", i + 1);
         }
+
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> monthlyDetail(String month, List<Long> storeIds) {
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        // 查询该月所有日报数据
+        LambdaQueryWrapper<DailyReport> wrapper = new LambdaQueryWrapper<DailyReport>()
+                .eq(DailyReport::getReportMonth, month);
+        if (storeIds != null && !storeIds.isEmpty()) {
+            wrapper.in(DailyReport::getStoreId, storeIds);
+        }
+        List<DailyReport> reports = reportMapper.selectList(wrapper);
+
+        // 获取门店名称
+        List<Store> stores = storeMapper.selectList(new LambdaQueryWrapper<Store>().eq(Store::getStatus, 1));
+        Map<Long, String> storeNameMap = stores.stream()
+                .collect(Collectors.toMap(Store::getId, Store::getStoreName, (a, b) -> a));
+
+        // 按门店分组
+        Map<Long, List<DailyReport>> groupedByStore = reports.stream()
+                .filter(r -> r.getStoreId() != null)
+                .collect(Collectors.groupingBy(DailyReport::getStoreId, LinkedHashMap::new, Collectors.toList()));
+
+        // 汇总变量（用于合计行）
+        BigDecimal grandTotalRevenue = BigDecimal.ZERO;
+        BigDecimal grandTotalRoomNights = BigDecimal.ZERO;
+        int grandTotalOwnRooms = 0;
+        BigDecimal grandTotalDailyRoomFee = BigDecimal.ZERO;
+        BigDecimal grandTotalHourlyRoomFee = BigDecimal.ZERO;
+        BigDecimal grandTotalOtherFee = BigDecimal.ZERO;
+        BigDecimal grandTotalDepositAmount = BigDecimal.ZERO;
+        BigDecimal grandTotalWalkinRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalCtripRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalLyRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalQunarRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalZhixingRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalExternalRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalMeituanHotelRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalFliggyRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalDouyinRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalXiaozhuRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalTujiaRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalMeituanHomestayRoomNights = BigDecimal.ZERO;
+        BigDecimal grandTotalJialiRoomNights = BigDecimal.ZERO;
+
+        for (Map.Entry<Long, List<DailyReport>> entry : groupedByStore.entrySet()) {
+            Long sid = entry.getKey();
+            List<DailyReport> storeReports = entry.getValue();
+            Map<String, Object> item = new HashMap<>();
+            item.put("storeId", sid);
+            item.put("storeName", storeNameMap.getOrDefault(sid, storeReports.get(0).getStoreName() != null ? storeReports.get(0).getStoreName() : ""));
+            item.put("reportCount", storeReports.size());
+
+            // 汇总字段
+            BigDecimal totalRevenue = storeReports.stream()
+                    .map(r -> r.getTotalRevenue() != null ? r.getTotalRevenue() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalRoomNights = storeReports.stream()
+                    .map(r -> r.getRoomNights() != null ? r.getRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            int totalOwnRooms = storeReports.stream()
+                    .mapToInt(r -> r.getOwnRoomCount() != null ? r.getOwnRoomCount() : 0)
+                    .sum();
+            BigDecimal totalDailyRoomFee = storeReports.stream()
+                    .map(r -> r.getDailyRoomFee() != null ? r.getDailyRoomFee() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalHourlyRoomFee = storeReports.stream()
+                    .map(r -> r.getHourlyRoomFee() != null ? r.getHourlyRoomFee() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalOtherFee = storeReports.stream()
+                    .map(r -> r.getOtherFee() != null ? r.getOtherFee() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalDepositAmount = storeReports.stream()
+                    .map(r -> r.getDepositAmount() != null ? r.getDepositAmount() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // 渠道间夜汇总
+            BigDecimal totalWalkinRoomNights = storeReports.stream()
+                    .map(r -> r.getWalkinRoomNights() != null ? r.getWalkinRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalCtripRoomNights = storeReports.stream()
+                    .map(r -> r.getCtripRoomNights() != null ? r.getCtripRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalLyRoomNights = storeReports.stream()
+                    .map(r -> r.getLyRoomNights() != null ? r.getLyRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalQunarRoomNights = storeReports.stream()
+                    .map(r -> r.getQunarRoomNights() != null ? r.getQunarRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalZhixingRoomNights = storeReports.stream()
+                    .map(r -> r.getZhixingRoomNights() != null ? r.getZhixingRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalExternalRoomNights = storeReports.stream()
+                    .map(r -> r.getExternalRoomNights() != null ? r.getExternalRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalMeituanHotelRoomNights = storeReports.stream()
+                    .map(r -> r.getMeituanHotelRoomNights() != null ? r.getMeituanHotelRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalFliggyRoomNights = storeReports.stream()
+                    .map(r -> r.getFliggyRoomNights() != null ? r.getFliggyRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalDouyinRoomNights = storeReports.stream()
+                    .map(r -> r.getDouyinRoomNights() != null ? r.getDouyinRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalXiaozhuRoomNights = storeReports.stream()
+                    .map(r -> r.getXiaozhuRoomNights() != null ? r.getXiaozhuRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalTujiaRoomNights = storeReports.stream()
+                    .map(r -> r.getTujiaRoomNights() != null ? r.getTujiaRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalMeituanHomestayRoomNights = storeReports.stream()
+                    .map(r -> r.getMeituanHomestayRoomNights() != null ? r.getMeituanHomestayRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalJialiRoomNights = storeReports.stream()
+                    .map(r -> r.getJialiRoomNights() != null ? r.getJialiRoomNights() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // 累加到总计
+            grandTotalRevenue = grandTotalRevenue.add(totalRevenue);
+            grandTotalRoomNights = grandTotalRoomNights.add(totalRoomNights);
+            grandTotalOwnRooms += totalOwnRooms;
+            grandTotalDailyRoomFee = grandTotalDailyRoomFee.add(totalDailyRoomFee);
+            grandTotalHourlyRoomFee = grandTotalHourlyRoomFee.add(totalHourlyRoomFee);
+            grandTotalOtherFee = grandTotalOtherFee.add(totalOtherFee);
+            grandTotalDepositAmount = grandTotalDepositAmount.add(totalDepositAmount);
+            grandTotalWalkinRoomNights = grandTotalWalkinRoomNights.add(totalWalkinRoomNights);
+            grandTotalCtripRoomNights = grandTotalCtripRoomNights.add(totalCtripRoomNights);
+            grandTotalLyRoomNights = grandTotalLyRoomNights.add(totalLyRoomNights);
+            grandTotalQunarRoomNights = grandTotalQunarRoomNights.add(totalQunarRoomNights);
+            grandTotalZhixingRoomNights = grandTotalZhixingRoomNights.add(totalZhixingRoomNights);
+            grandTotalExternalRoomNights = grandTotalExternalRoomNights.add(totalExternalRoomNights);
+            grandTotalMeituanHotelRoomNights = grandTotalMeituanHotelRoomNights.add(totalMeituanHotelRoomNights);
+            grandTotalFliggyRoomNights = grandTotalFliggyRoomNights.add(totalFliggyRoomNights);
+            grandTotalDouyinRoomNights = grandTotalDouyinRoomNights.add(totalDouyinRoomNights);
+            grandTotalXiaozhuRoomNights = grandTotalXiaozhuRoomNights.add(totalXiaozhuRoomNights);
+            grandTotalTujiaRoomNights = grandTotalTujiaRoomNights.add(totalTujiaRoomNights);
+            grandTotalMeituanHomestayRoomNights = grandTotalMeituanHomestayRoomNights.add(totalMeituanHomestayRoomNights);
+            grandTotalJialiRoomNights = grandTotalJialiRoomNights.add(totalJialiRoomNights);
+
+            // 加权计算经营指标
+            // 加权出租率 = 总间夜 / 总可用房量
+            BigDecimal occupancyRate = totalOwnRooms > 0
+                    ? totalRoomNights.divide(new BigDecimal(totalOwnRooms), 4, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+            // 加权ADR = 总营收 / 总间夜
+            BigDecimal adr = totalRoomNights.compareTo(BigDecimal.ZERO) > 0
+                    ? totalRevenue.divide(totalRoomNights, 2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+            // 加权RevPAR = 加权出租率 * 加权ADR
+            BigDecimal revpar = occupancyRate.multiply(adr).setScale(2, RoundingMode.HALF_UP);
+
+            // 设置字段值
+            item.put("ownRoomCount", totalOwnRooms);
+            item.put("roomNights", totalRoomNights);
+            item.put("walkinRoomNights", totalWalkinRoomNights);
+            item.put("ctripRoomNights", totalCtripRoomNights);
+            item.put("lyRoomNights", totalLyRoomNights);
+            item.put("qunarRoomNights", totalQunarRoomNights);
+            item.put("zhixingRoomNights", totalZhixingRoomNights);
+            item.put("externalRoomNights", totalExternalRoomNights);
+            item.put("meituanHotelRoomNights", totalMeituanHotelRoomNights);
+            item.put("fliggyRoomNights", totalFliggyRoomNights);
+            item.put("douyinRoomNights", totalDouyinRoomNights);
+            item.put("xiaozhuRoomNights", totalXiaozhuRoomNights);
+            item.put("tujiaRoomNights", totalTujiaRoomNights);
+            item.put("meituanHomestayRoomNights", totalMeituanHomestayRoomNights);
+            item.put("jialiRoomNights", totalJialiRoomNights);
+            item.put("occupancyRate", occupancyRate);
+            item.put("adr", adr);
+            item.put("revpar", revpar);
+            item.put("dailyRoomFee", totalDailyRoomFee);
+            item.put("hourlyRoomFee", totalHourlyRoomFee);
+            item.put("otherFee", totalOtherFee);
+            item.put("totalRevenue", totalRevenue);
+            item.put("depositAmount", totalDepositAmount);
+
+            result.add(item);
+        }
+
+        // 添加合计行
+        BigDecimal grandOccupancyRate = grandTotalOwnRooms > 0
+                ? grandTotalRoomNights.divide(new BigDecimal(grandTotalOwnRooms), 4, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+        BigDecimal grandAdr = grandTotalRoomNights.compareTo(BigDecimal.ZERO) > 0
+                ? grandTotalRevenue.divide(grandTotalRoomNights, 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+        BigDecimal grandRevpar = grandOccupancyRate.multiply(grandAdr).setScale(2, RoundingMode.HALF_UP);
+
+        Map<String, Object> totalRow = new HashMap<>();
+        totalRow.put("storeId", null);
+        totalRow.put("storeName", "合计");
+        totalRow.put("reportCount", reports.size());
+        totalRow.put("ownRoomCount", grandTotalOwnRooms);
+        totalRow.put("roomNights", grandTotalRoomNights);
+        totalRow.put("walkinRoomNights", grandTotalWalkinRoomNights);
+        totalRow.put("ctripRoomNights", grandTotalCtripRoomNights);
+        totalRow.put("lyRoomNights", grandTotalLyRoomNights);
+        totalRow.put("qunarRoomNights", grandTotalQunarRoomNights);
+        totalRow.put("zhixingRoomNights", grandTotalZhixingRoomNights);
+        totalRow.put("externalRoomNights", grandTotalExternalRoomNights);
+        totalRow.put("meituanHotelRoomNights", grandTotalMeituanHotelRoomNights);
+        totalRow.put("fliggyRoomNights", grandTotalFliggyRoomNights);
+        totalRow.put("douyinRoomNights", grandTotalDouyinRoomNights);
+        totalRow.put("xiaozhuRoomNights", grandTotalXiaozhuRoomNights);
+        totalRow.put("tujiaRoomNights", grandTotalTujiaRoomNights);
+        totalRow.put("meituanHomestayRoomNights", grandTotalMeituanHomestayRoomNights);
+        totalRow.put("jialiRoomNights", grandTotalJialiRoomNights);
+        totalRow.put("occupancyRate", grandOccupancyRate);
+        totalRow.put("adr", grandAdr);
+        totalRow.put("revpar", grandRevpar);
+        totalRow.put("dailyRoomFee", grandTotalDailyRoomFee);
+        totalRow.put("hourlyRoomFee", grandTotalHourlyRoomFee);
+        totalRow.put("otherFee", grandTotalOtherFee);
+        totalRow.put("totalRevenue", grandTotalRevenue);
+        totalRow.put("depositAmount", grandTotalDepositAmount);
+
+        result.add(totalRow);
 
         return result;
     }

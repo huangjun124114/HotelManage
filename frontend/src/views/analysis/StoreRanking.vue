@@ -2,21 +2,28 @@
   <div class="store-ranking" v-loading="loading">
     <el-card shadow="never" class="filter-card">
       <el-form inline>
-        <el-form-item label="日期">
+        <el-form-item label="日期范围">
           <el-date-picker
-            v-model="selectedDate"
-            type="date"
-            placeholder="选择日期"
+            v-model="dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
             value-format="YYYY-MM-DD"
-            @change="loadData"
+            style="width:280px"
           />
         </el-form-item>
         <el-form-item label="排名指标">
-          <el-select v-model="rankType" @change="loadData" style="width:140px">
+          <el-select v-model="rankType" style="width:140px">
             <el-option label="营收" value="revenue" />
             <el-option label="出租率" value="occupancy" />
             <el-option label="间夜数" value="rooms" />
+            <el-option label="ADR" value="adr" />
+            <el-option label="RevPAR" value="revpar" />
           </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="loadData">查询</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -37,7 +44,8 @@
             <el-table-column :label="rankLabel" width="120" align="right">
               <template #default="{ row }">
                 <template v-if="rankType === 'revenue'">¥{{ row.value?.toLocaleString() }}</template>
-                <template v-else-if="rankType === 'occupancy'">{{ row.value }}%</template>
+                <template v-else-if="rankType === 'occupancy'">{{ (row.value * 100).toFixed(1) }}%</template>
+                <template v-else-if="rankType === 'adr' || rankType === 'revpar'">¥{{ row.value?.toFixed(2) }}</template>
                 <template v-else>{{ row.value }}</template>
               </template>
             </el-table-column>
@@ -54,13 +62,18 @@ import { getStoreRanking } from '@/api/analysis'
 import * as echarts from 'echarts'
 
 const loading = ref(false)
-const selectedDate = ref(new Date().toISOString().slice(0, 10))
+const dateRange = ref(() => {
+  const now = new Date()
+  const end = now.toISOString().slice(0, 10)
+  const start = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10)
+  return [start, end]
+})
 const rankType = ref('revenue')
 const barChartRef = ref(null)
 const rankingData = ref([])
 
 const rankLabel = computed(() => {
-  const map = { revenue: '营收(元)', occupancy: '出租率(%)', rooms: '间夜数' }
+  const map = { revenue: '营收(元)', occupancy: '出租率(%)', rooms: '间夜数', adr: 'ADR(元)', revpar: 'RevPAR(元)' }
   return map[rankType.value] || ''
 })
 
@@ -68,7 +81,10 @@ function initBarChart() {
   if (!barChartRef.value || !rankingData.value.length) return
   const chart = echarts.init(barChartRef.value)
   const names = rankingData.value.map(r => r.storeName).reverse()
-  const values = rankingData.value.map(r => r.value).reverse()
+  const values = rankingData.value.map(r => {
+    if (rankType.value === 'occupancy') return (r.value * 100).toFixed(1)
+    return r.value
+  }).reverse()
 
   chart.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
@@ -84,9 +100,15 @@ function initBarChart() {
 }
 
 async function loadData() {
+  if (!dateRange.value || !dateRange.value[0] || !dateRange.value[1]) return
   loading.value = true
   try {
-    const res = await getStoreRanking({ date: selectedDate.value, metric: rankType.value })
+    const params = {
+      startDate: dateRange.value[0],
+      endDate: dateRange.value[1],
+      metric: rankType.value
+    }
+    const res = await getStoreRanking(params)
     rankingData.value = res.data || []
     nextTick(() => initBarChart())
   } catch (e) { /* ignore */ }

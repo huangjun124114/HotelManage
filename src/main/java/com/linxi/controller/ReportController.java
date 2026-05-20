@@ -42,25 +42,36 @@ public class ReportController {
         return Result.success(reportService.monthlyReport(storeId, month));
     }
 
+    @GetMapping("/monthly-detail")
+    public Result<List<Map<String, Object>>> monthlyDetail(@RequestParam String month,
+                                                             @RequestParam(required = false) String storeIds) {
+        List<Long> storeIdList = parseStoreIds(storeIds);
+        return Result.success(reportService.monthlyDetail(month, storeIdList));
+    }
+
     @GetMapping("/trend")
-    public Result<List<Map<String, Object>>> trend(@RequestParam(required = false) Long storeId,
+    public Result<List<Map<String, Object>>> trend(@RequestParam(required = false) String storeIds,
                                                      @RequestParam String startDate,
                                                      @RequestParam String endDate,
-                                                     @RequestParam(defaultValue = "revenue") String metric) {
-        return Result.success(reportService.trend(storeId, startDate, endDate, metric));
+                                                     @RequestParam(defaultValue = "revenue") String metric,
+                                                     @RequestParam(defaultValue = "day") String period) {
+        List<Long> storeIdList = parseStoreIds(storeIds);
+        return Result.success(reportService.trend(storeIdList, startDate, endDate, metric, period));
     }
 
     @GetMapping("/channel-analysis")
-    public Result<List<Map<String, Object>>> channelAnalysis(@RequestParam(required = false) Long storeId,
+    public Result<List<Map<String, Object>>> channelAnalysis(@RequestParam(required = false) String storeId,
                                                                @RequestParam String startDate,
                                                                @RequestParam String endDate) {
-        return Result.success(reportService.channelAnalysis(storeId, startDate, endDate));
+        List<Long> storeIdList = parseStoreIds(storeId);
+        return Result.success(reportService.channelAnalysis(storeIdList, startDate, endDate));
     }
 
     @GetMapping("/store-ranking")
-    public Result<List<Map<String, Object>>> storeRanking(@RequestParam String date,
+    public Result<List<Map<String, Object>>> storeRanking(@RequestParam String startDate,
+                                                            @RequestParam String endDate,
                                                             @RequestParam(defaultValue = "revenue") String metric) {
-        return Result.success(reportService.storeRanking(date, metric));
+        return Result.success(reportService.storeRanking(startDate, endDate, metric));
     }
 
     /**

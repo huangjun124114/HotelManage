@@ -12,6 +12,10 @@ export function getMonthly(params) {
   return request({ url: '/reports/monthly', method: 'get', params })
 }
 
+export function getMonthlyDetail(params) {
+  return request({ url: '/reports/monthly-detail', method: 'get', params })
+}
+
 export function getTrend(params) {
   return request({ url: '/reports/trend', method: 'get', params })
 }
