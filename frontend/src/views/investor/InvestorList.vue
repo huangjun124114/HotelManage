@@ -96,8 +96,8 @@
       <el-form-item label="投资金额" prop="investAmount">
         <el-input-number v-model="addInvestForm.investAmount" :min="0" :precision="2" style="width:100%" />
       </el-form-item>
-      <el-form-item label="持股比例(%)" prop="shareRatio">
-        <el-input-number v-model="addInvestForm.shareRatio" :min="0" :max="100" :precision="2" style="width:100%" placeholder="如输入30表示30%" />
+      <el-form-item label="持股比例" prop="shareRatio">
+        <el-input-number v-model="addInvestForm.shareRatio" :min="0" :max="100" :precision="2" style="width:100%" placeholder="百分比，如30表示30%" />
       </el-form-item>
       <el-form-item label="投资日期" prop="investDate">
         <el-date-picker v-model="addInvestForm.investDate" type="date" value-format="YYYY-MM-DD" style="width:100%" />
@@ -161,8 +161,8 @@
       <el-form-item label="投资金额" prop="investAmount">
         <el-input-number v-model="editRelationForm.investAmount" :min="0" :precision="2" style="width:100%" />
       </el-form-item>
-      <el-form-item label="持股比例(%)" prop="shareRatio">
-        <el-input-number v-model="editRelationForm.shareRatio" :min="0" :max="100" :precision="2" style="width:100%" placeholder="如输入30表示30%" />
+      <el-form-item label="持股比例" prop="shareRatio">
+        <el-input-number v-model="editRelationForm.shareRatio" :min="0" :max="100" :precision="2" style="width:100%" placeholder="百分比，如30表示30%" />
       </el-form-item>
       <el-form-item label="投资日期" prop="investDate">
         <el-date-picker v-model="editRelationForm.investDate" type="date" value-format="YYYY-MM-DD" style="width:100%" />
