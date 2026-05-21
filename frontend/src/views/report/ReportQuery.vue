@@ -12,7 +12,7 @@
     <template #search>
       <el-form-item label="门店">
         <el-select v-model="searchForm.storeId" placeholder="全部" clearable style="width:200px">
-          <el-option v-for="s in storeOptions" :key="s.id" :label="s.name" :value="s.id" />
+          <el-option v-for="s in storeOptions" :key="s.value" :label="s.label" :value="s.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="日期范围">

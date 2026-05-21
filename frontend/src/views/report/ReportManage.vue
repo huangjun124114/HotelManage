@@ -182,7 +182,7 @@
             <el-col v-if="templates.length > 1" :span="8">
               <el-form-item label="模板" label-width="80px">
                 <el-select v-model="selectedTemplateId" @change="loadTemplateFields" style="width:100%">
-                  <el-option v-for="t in templates" :key="t.id" :label="t.name" :value="t.id" />
+                  <el-option v-for="t in templates" :key="t.id" :label="t.templateName" :value="t.id" />
                 </el-select>
               </el-form-item>
             </el-col>

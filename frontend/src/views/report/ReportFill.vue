@@ -14,9 +14,9 @@
             >
               <el-option
                 v-for="s in storeOptions"
-                :key="s.id"
-                :label="s.name"
-                :value="s.id"
+                :key="s.value"
+                :label="s.label"
+                :value="s.value"
               />
             </el-select>
           </el-form-item>
@@ -44,7 +44,7 @@
     <el-card shadow="never" class="template-card" v-if="templates.length > 1">
       <el-form-item label="模板" label-width="60px">
         <el-select v-model="selectedTemplateId" @change="loadTemplateFields" style="width:250px">
-          <el-option v-for="t in templates" :key="t.id" :label="t.name" :value="t.id" />
+          <el-option v-for="t in templates" :key="t.id" :label="t.templateName" :value="t.id" />
         </el-select>
       </el-form-item>
     </el-card>
