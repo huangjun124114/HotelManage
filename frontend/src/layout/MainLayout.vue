@@ -1,14 +1,17 @@
 <template>
   <el-container class="layout-container">
+    <!-- 移动端遮罩 -->
+    <div v-if="isMobile && !isCollapse" class="mobile-overlay" @click="isCollapse = true"></div>
+
     <!-- 侧边栏 -->
-    <el-aside :width="isCollapse ? '64px' : '220px'" class="sidebar">
+    <el-aside :width="isCollapse ? '0px' : (isMobile ? '220px' : (isCollapse ? '64px' : '220px'))" :class="['sidebar', { 'sidebar-mobile': isMobile, 'sidebar-open': isMobile && !isCollapse }]">
       <div class="logo" @click="goHome">
-        <span v-if="!isCollapse" class="logo-text">林夕置业</span>
+        <span v-if="!isCollapse || isMobile" class="logo-text">林夕置业</span>
         <span v-else class="logo-mini">林</span>
       </div>
       <el-menu
         :default-active="activeMenu"
-        :collapse="isCollapse"
+        :collapse="isCollapse && !isMobile"
         :collapse-transition="false"
         background-color="#001529"
         text-color="#ffffffa6"
@@ -45,13 +48,18 @@
       <!-- 顶部导航 -->
       <el-header class="header">
         <div class="header-left">
-          <el-icon class="collapse-btn" @click="toggleCollapse">
+          <el-icon v-if="isMobile" class="collapse-btn" @click="isCollapse = !isCollapse">
+            <Expand v-if="isCollapse" />
+            <Fold v-else />
+          </el-icon>
+          <el-icon v-else class="collapse-btn" @click="toggleCollapse">
             <Fold v-if="!isCollapse" />
             <Expand v-else />
           </el-icon>
           <span class="system-title">林夕置业经营日报系统</span>
         </div>
         <div class="header-right">
+          <a href="/manual.html" target="_blank" class="manual-link">操作手册</a>
           <MessageBell />
           <el-dropdown trigger="click">
             <span class="user-info">
@@ -80,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { getUserMenus } from '@/api/menu'
@@ -92,6 +100,21 @@ const userStore = useUserStore()
 
 const isCollapse = ref(false)
 const menuList = ref([])
+const isMobile = ref(false)
+
+function checkMobile() {
+  isMobile.value = window.innerWidth < 768
+  if (isMobile.value) isCollapse.value = true
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 const activeMenu = computed(() => route.path)
 
@@ -285,6 +308,17 @@ loadMenus()
   font-size: 14px;
 }
 
+.manual-link {
+  font-size: 13px;
+  color: #666;
+  text-decoration: none;
+  margin-right: 8px;
+  transition: color 0.2s;
+}
+.manual-link:hover {
+  color: #1890ff;
+}
+
 .main-content {
   background: #f0f2f5;
   min-height: calc(100vh - 60px);
@@ -299,9 +333,26 @@ loadMenus()
     top: 0;
     bottom: 0;
     z-index: 1000;
+    width: 0 !important;
+    transition: width 0.3s;
+    overflow: hidden;
   }
-
+  .sidebar-open {
+    width: 220px !important;
+  }
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+  }
   .system-title {
+    display: none;
+  }
+  .main-content {
+    padding: 12px;
+  }
+  .manual-link {
     display: none;
   }
 }
