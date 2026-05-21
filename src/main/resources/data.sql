@@ -34,7 +34,7 @@ VALUES
 -- 门店管理
 (10, 0, '门店管理', 'store', 1, '/store', NULL, 'store:view', 2),
 (11, 10, '门店列表', 'store:list', 2, '/store/list', 'views/store/StoreList.vue', 'store:list', 1),
-(12, 10, '门店人员', 'store:user', 2, '/store/user', 'views/store/StoreUser.vue', 'store:user', 2),
+(41, 10, '投资者列表', 'investor:list', 2, '/investor/list', 'views/investor/InvestorList.vue', 'investor:list', 2),
 
 -- 日报管理
 (20, 0, '日报管理', 'report', 1, '/report', NULL, 'report:view', 3),
@@ -51,10 +51,7 @@ VALUES
 (35, 30, '门店排名', 'analysis:ranking', 2, '/analysis/ranking', 'views/analysis/StoreRanking.vue', 'analysis:ranking', 5),
 (36, 30, '经营趋势', 'analysis:trend', 2, '/analysis/trend', 'views/analysis/Trend.vue', 'analysis:trend', 6),
 
--- 投资者管理
-(40, 0, '投资者管理', 'investor', 1, '/investor', NULL, 'investor:view', 5),
-(41, 40, '投资者列表', 'investor:list', 2, '/investor/list', 'views/investor/InvestorList.vue', 'investor:list', 1),
-(42, 40, '投资关系配置', 'investor:relation', 2, '/investor/relation', 'views/investor/InvestorRelation.vue', 'investor:relation', 2),
+-- 投资者管理（已合并到门店管理下，id=41挪到parent_id=10）
 
 -- 系统管理
 (50, 0, '系统管理', 'system', 1, '/system', NULL, 'system:view', 6),
@@ -72,7 +69,7 @@ SELECT 1, id FROM sys_menu;
 
 -- 给CEO分配核心菜单（去掉系统管理部分敏感菜单）
 INSERT OR IGNORE INTO sys_role_menu (role_id, menu_id)
-SELECT 2, id FROM sys_menu WHERE id IN (1,10,11,12,20,21,23,24,30,31,32,33,34,35,36,40,41,42);
+SELECT 2, id FROM sys_menu WHERE id IN (1,10,11,20,21,23,24,30,31,32,33,34,35,36,41);
 
 -- 给店长分配门店相关菜单
 INSERT OR IGNORE INTO sys_role_menu (role_id, menu_id)
@@ -80,7 +77,7 @@ SELECT 4, id FROM sys_menu WHERE id IN (1,20,21,30,32,33,34,35,36);
 
 -- 给投资者分配只读菜单（首页、门店列表、日报管理、报表中心、投资者管理）
 INSERT OR IGNORE INTO sys_role_menu (role_id, menu_id)
-SELECT 6, id FROM sys_menu WHERE id IN (1,10,11,20,21,30,31,32,33,34,35,36,40,41,42);
+SELECT 6, id FROM sys_menu WHERE id IN (1,10,11,20,21,30,31,32,33,34,35,36,41);
 
 -- 6. 示例门店（9家，均在深圳市，门店编码按拼音首字母定义）
 INSERT OR IGNORE INTO store (id, store_code, store_name, short_name, city, region_name, address, own_room_count, status)
