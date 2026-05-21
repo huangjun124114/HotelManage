@@ -552,6 +552,10 @@ public class DailyReportServiceImpl implements DailyReportService {
         if (query.getStoreId() != null) {
             wrapper.eq(DailyReport::getStoreId, query.getStoreId());
         }
+        // 数据范围过滤：storeIds限制查询范围
+        if (query.getStoreIds() != null && !query.getStoreIds().isEmpty()) {
+            wrapper.in(DailyReport::getStoreId, query.getStoreIds());
+        }
         if (query.getStartDate() != null && !query.getStartDate().isEmpty()) {
             wrapper.ge(DailyReport::getReportDate, LocalDate.parse(query.getStartDate()));
         }

@@ -39,6 +39,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN', 'ROLE_CEO')")
     public Result<SysUser> getById(@PathVariable Long id) {
         return Result.success(userService.getById(id));
     }
@@ -59,6 +60,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN')")
     @OperationLog(module = "用户管理", type = "UPDATE", description = "编辑用户")
     public Result<Void> update(@PathVariable Long id, @RequestBody SysUser user) {
         user.setId(id);
@@ -67,12 +69,14 @@ public class UserController {
     }
 
     @PutMapping("/{id}/reset-password")
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN')")
     public Result<Void> resetPassword(@PathVariable Long id) {
         userService.resetPassword(id);
         return Result.success();
     }
 
     @PutMapping("/{id}/status")
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN')")
     public Result<Void> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
         userService.updateStatus(id, status);
         return Result.success();
@@ -87,12 +91,16 @@ public class UserController {
     }
 
     @PutMapping("/{id}/roles")
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN')")
+    @OperationLog(module = "用户管理", type = "UPDATE", description = "分配角色")
     public Result<Void> assignRoles(@PathVariable Long id, @RequestBody List<Long> roleIds) {
         userService.assignRoles(id, roleIds);
         return Result.success();
     }
 
     @PutMapping("/{id}/stores")
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN')")
+    @OperationLog(module = "用户管理", type = "UPDATE", description = "分配门店")
     public Result<Void> assignStores(@PathVariable Long id, @RequestBody List<Long> storeIds) {
         userService.assignStores(id, storeIds);
         return Result.success();

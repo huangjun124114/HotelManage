@@ -55,6 +55,7 @@ public class StoreServiceImpl implements StoreService {
                 .like(StringUtils.hasText(query.getStoreCode()), Store::getStoreCode, query.getStoreCode())
                 .like(StringUtils.hasText(query.getCity()), Store::getCity, query.getCity())
                 .eq(query.getStatus() != null, Store::getStatus, query.getStatus())
+                .in(query.getStoreIds() != null && !query.getStoreIds().isEmpty(), Store::getId, query.getStoreIds())
                 .orderByDesc(Store::getCreateTime);
         return storeMapper.selectPage(page, wrapper);
     }

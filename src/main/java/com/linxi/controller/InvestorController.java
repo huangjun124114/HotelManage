@@ -67,6 +67,7 @@ public class InvestorController {
      * 新增投资人（自动创建系统账户）
      */
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN', 'ROLE_CEO')")
     public Result<Map<String, Object>> save(@RequestBody Investor investor) {
         investorService.save(investor);
         Map<String, Object> result = new java.util.HashMap<>();
@@ -81,6 +82,7 @@ public class InvestorController {
      * 修改投资人
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN', 'ROLE_CEO')")
     public Result<Void> update(@PathVariable Long id, @RequestBody Investor investor) {
         investor.setId(id);
         investorService.update(investor);
@@ -91,6 +93,7 @@ public class InvestorController {
      * 删除投资人
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN', 'ROLE_CEO')")
     public Result<Void> delete(@PathVariable Long id) {
         investorService.delete(id);
         return Result.success();
@@ -112,6 +115,7 @@ public class InvestorController {
      * 保存投资人的门店关联
      */
     @PutMapping("/{id}/stores")
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN', 'ROLE_CEO')")
     public Result<Void> saveInvestorStores(@PathVariable Long id, @RequestBody List<InvestorStore> stores) {
         // 删除旧的关联
         investorStoreMapper.delete(new LambdaQueryWrapper<InvestorStore>()
@@ -135,6 +139,7 @@ public class InvestorController {
      * 删除单个门店关联
      */
     @DeleteMapping("/{investorId}/stores/{storeId}")
+    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN', 'ROLE_CEO')")
     public Result<Void> deleteInvestorStore(@PathVariable Long investorId, @PathVariable Long storeId) {
         investorStoreMapper.delete(new LambdaQueryWrapper<InvestorStore>()
                 .eq(InvestorStore::getInvestorId, investorId)

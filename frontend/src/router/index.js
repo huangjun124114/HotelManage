@@ -144,7 +144,37 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫 - 增强版：防止坏token导致死循环
+// 解码JWT获取payload（不验证签名，仅读取信息用于前端路由判断）
+function decodeJwt(token) {
+  try {
+    const payload = token.split('.')[1]
+    return JSON.parse(atob(payload))
+  } catch {
+    return null
+  }
+}
+
+// 检查token是否过期
+function isTokenExpired(token) {
+  const payload = decodeJwt(token)
+  if (!payload || !payload.exp) return false
+  return Date.now() >= payload.exp * 1000
+}
+
+// 获取用户角色列表（从localStorage中缓存的userInfo）
+function getUserRoles() {
+  try {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    return userInfo.roles || []
+  } catch {
+    return []
+  }
+}
+
+// 需要管理员角色的路由前缀
+const adminRoutes = ['/system', '/investor']
+
+// 路由守卫 - 增强版：token校验+角色权限+过期检测
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
 
@@ -161,6 +191,25 @@ router.beforeEach((to, from, next) => {
       next()
     }
   } else if (token) {
+    // 检查token是否过期
+    if (isTokenExpired(token)) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('userInfo')
+      next('/login')
+      return
+    }
+
+    // 检查管理路由权限（系统管理/投资人管理需要SUPER_ADMIN或CEO角色）
+    const isAdminRoute = adminRoutes.some(prefix => to.path.startsWith(prefix))
+    if (isAdminRoute) {
+      const roles = getUserRoles()
+      const hasAdminRole = roles.some(r => r === 'ROLE_SUPER_ADMIN' || r === 'ROLE_CEO')
+      if (!hasAdminRole) {
+        next('/home')
+        return
+      }
+    }
+
     next()
   } else {
     // 未登录访问需认证页面 → 清除残留数据后跳登录

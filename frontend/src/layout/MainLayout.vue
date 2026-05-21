@@ -135,15 +135,26 @@ async function loadMenus() {
   }
 }
 
+// 获取用户角色
+function getUserRoles() {
+  try {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    return userInfo.roles || []
+  } catch {
+    return []
+  }
+}
+
+// 判断是否为管理角色
+function isAdminRole() {
+  return getUserRoles().some(r => r === 'ROLE_SUPER_ADMIN' || r === 'ROLE_CEO')
+}
+
+// 菜单降级：API失败时仅显示基础菜单，不暴露管理菜单
 function getDefaultMenus() {
-  return [
+  const admin = isAdminRole()
+  const menus = [
     { id: 1, name: '工作台', path: '/home', icon: 'HomeFilled' },
-    {
-      id: 2, name: '门店管理', path: '/store', icon: 'Shop', children: [
-        { id: 21, name: '门店列表', path: '/store/list' },
-        { id: 22, name: '门店用户', path: '/store/user' }
-      ]
-    },
     {
       id: 3, name: '日报管理', path: '/report', icon: 'Document', children: [
         { id: 31, name: '日报管理', path: '/report/manage' },
@@ -153,32 +164,36 @@ function getDefaultMenus() {
     },
     {
       id: 4, name: '经营分析', path: '/analysis', icon: 'DataAnalysis', children: [
-        { id: 41, name: '总部看板', path: '/analysis/dashboard' },
-        { id: 42, name: '日报分析', path: '/analysis/daily' },
-        { id: 43, name: '月报分析', path: '/analysis/monthly' },
-        { id: 44, name: '渠道分析', path: '/analysis/channel' },
-        { id: 45, name: '门店排名', path: '/analysis/ranking' },
-        { id: 46, name: '趋势分析', path: '/analysis/trend' }
-      ]
-    },
-    {
-      id: 5, name: '投资人管理', path: '/investor', icon: 'User', children: [
-        { id: 51, name: '投资人列表', path: '/investor/list' },
-        { id: 52, name: '投资关系', path: '/investor/relation' }
-      ]
-    },
-    {
-      id: 6, name: '系统管理', path: '/system', icon: 'Setting', children: [
-        { id: 61, name: '用户管理', path: '/system/user' },
-        { id: 62, name: '角色管理', path: '/system/role' },
-        { id: 63, name: '菜单管理', path: '/system/menu' },
-        { id: 64, name: '模板管理', path: '/system/template' },
-        { id: 65, name: '字段配置', path: '/system/field' },
-        { id: 66, name: '系统配置', path: '/system/config' },
-        { id: 67, name: '操作日志', path: '/system/log' }
+        { id: 41, name: '总部看板', path: '/analysis/dashboard' }
       ]
     }
   ]
+  // 只有管理员角色在API失败时才显示管理菜单（作为降级兜底）
+  if (admin) {
+    menus.push(
+      {
+        id: 2, name: '门店管理', path: '/store', icon: 'Shop', children: [
+          { id: 21, name: '门店列表', path: '/store/list' }
+        ]
+      },
+      {
+        id: 5, name: '投资人管理', path: '/investor', icon: 'User', children: [
+          { id: 51, name: '投资人列表', path: '/investor/list' }
+        ]
+      },
+      {
+        id: 6, name: '系统管理', path: '/system', icon: 'Setting', children: [
+          { id: 61, name: '用户管理', path: '/system/user' },
+          { id: 62, name: '角色管理', path: '/system/role' },
+          { id: 63, name: '菜单管理', path: '/system/menu' },
+          { id: 64, name: '模板管理', path: '/system/template' },
+          { id: 65, name: '字段配置', path: '/system/field' },
+          { id: 66, name: '操作日志', path: '/system/log' }
+        ]
+      }
+    )
+  }
+  return menus
 }
 
 loadMenus()
