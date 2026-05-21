@@ -96,8 +96,8 @@
       <el-form-item label="投资金额" prop="investAmount">
         <el-input-number v-model="addInvestForm.investAmount" :min="0" :precision="2" style="width:100%" />
       </el-form-item>
-      <el-form-item label="持股比例" prop="shareRatio">
-        <el-input-number v-model="addInvestForm.shareRatio" :min="0" :max="100" :precision="2" style="width:100%" />
+      <el-form-item label="持股比例(%)" prop="shareRatio">
+        <el-input-number v-model="addInvestForm.shareRatio" :min="0" :max="100" :precision="2" style="width:100%" placeholder="如输入30表示30%" />
       </el-form-item>
       <el-form-item label="投资日期" prop="investDate">
         <el-date-picker v-model="addInvestForm.investDate" type="date" value-format="YYYY-MM-DD" style="width:100%" />
@@ -127,7 +127,7 @@
         <template #default="{ row }">¥{{ formatAmount(row.investAmount) }}</template>
       </el-table-column>
       <el-table-column label="持股比例" width="100" align="right">
-        <template #default="{ row }">{{ row.investmentRatio }}%</template>
+        <template #default="{ row }">{{ formatRatio(row.investmentRatio) }}</template>
       </el-table-column>
       <el-table-column prop="authStartDate" label="投资日期" width="110" />
       <el-table-column label="撤资日期" width="110">
@@ -161,8 +161,8 @@
       <el-form-item label="投资金额" prop="investAmount">
         <el-input-number v-model="editRelationForm.investAmount" :min="0" :precision="2" style="width:100%" />
       </el-form-item>
-      <el-form-item label="持股比例" prop="shareRatio">
-        <el-input-number v-model="editRelationForm.shareRatio" :min="0" :max="100" :precision="2" style="width:100%" />
+      <el-form-item label="持股比例(%)" prop="shareRatio">
+        <el-input-number v-model="editRelationForm.shareRatio" :min="0" :max="100" :precision="2" style="width:100%" placeholder="如输入30表示30%" />
       </el-form-item>
       <el-form-item label="投资日期" prop="investDate">
         <el-date-picker v-model="editRelationForm.investDate" type="date" value-format="YYYY-MM-DD" style="width:100%" />
@@ -255,6 +255,14 @@ function formatAmount(val) {
   if (val === null || val === undefined) return '-'
   const num = Number(val)
   return isNaN(num) ? '-' : num.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function formatRatio(val) {
+  if (val === null || val === undefined) return '-'
+  const num = Number(val)
+  if (isNaN(num)) return '-'
+  // 数据库存的是百分比值（如30.00表示30%），直接显示+%
+  return num.toFixed(2).replace(/\.?0+$/, '') + '%'
 }
 
 async function loadData() {
