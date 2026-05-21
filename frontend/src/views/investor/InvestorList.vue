@@ -45,11 +45,10 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="220" fixed="right">
+        <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" link @click="handleEdit(row)">编辑</el-button>
-            <el-button type="success" size="small" link @click="handleAddInvest(row)">增加投资</el-button>
-            <el-button type="info" size="small" link @click="handleViewRecords(row)">查看投资记录</el-button>
+            <el-button type="success" size="small" link @click="handleViewRecords(row)">投资记录</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -121,6 +120,11 @@
     :append-to-body="true"
     @close="handleRecordDialogClose"
   >
+    <div style="display:flex; justify-content:flex-end; margin-bottom:12px">
+      <el-button type="primary" size="small" @click="handleAddInvest">
+        <el-icon><Plus /></el-icon> 增加投资
+      </el-button>
+    </div>
     <el-table :data="relationData" border stripe v-loading="relationLoading" style="width:100%">
       <el-table-column prop="storeName" label="门店名称" min-width="140" />
       <el-table-column label="投资金额" width="130" align="right">
@@ -328,8 +332,7 @@ async function handleSubmit() {
 }
 
 // ---- 增加投资逻辑 ----
-function handleAddInvest(row) {
-  currentInvestor.value = row
+function handleAddInvest() {
   resetAddInvestForm()
   addInvestDialogVisible.value = true
 }
@@ -361,6 +364,7 @@ async function handleAddInvestSubmit() {
     ElMessage.success('投资记录已添加')
     addInvestDialogVisible.value = false
     loadData()
+    await loadRelationData()
   } catch (e) {
     const msg = e?.response?.data?.message || e?.message || '添加失败'
     ElMessage.error(msg)
