@@ -1,11 +1,14 @@
 package com.linxi.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.linxi.common.BusinessException;
 import com.linxi.common.PageResult;
 import com.linxi.common.Result;
 import com.linxi.annotation.OperationLog;
 import com.linxi.dto.UserQueryDTO;
+import com.linxi.entity.Store;
 import com.linxi.entity.SysUser;
+import com.linxi.service.StoreService;
 import com.linxi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private StoreService storeService;
 
     @GetMapping
     @PreAuthorize("hasRole('USER')")
@@ -41,6 +47,13 @@ public class UserController {
     @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN')")
     @OperationLog(module = "用户管理", type = "CREATE", description = "新增用户")
     public Result<Void> save(@RequestBody SysUser user) {
+        // 如果请求中包含 storeId，校验该门店是否可用
+        if (user.getStoreId() != null) {
+            Store store = storeService.getById(user.getStoreId());
+            if (store != null && Integer.valueOf(0).equals(store.getStatus())) {
+                throw new BusinessException("该门店已禁用，不能新增人员");
+            }
+        }
         userService.save(user);
         return Result.success();
     }
