@@ -5,8 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.linxi.common.BusinessException;
 import com.linxi.dto.StoreQueryDTO;
+import com.linxi.entity.DailyReport;
+import com.linxi.entity.InvestorStore;
 import com.linxi.entity.Store;
+import com.linxi.entity.SysUserStore;
+import com.linxi.mapper.DailyReportMapper;
+import com.linxi.mapper.InvestorStoreMapper;
 import com.linxi.mapper.StoreMapper;
+import com.linxi.mapper.SysUserStoreMapper;
 import com.linxi.service.StoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +28,15 @@ public class StoreServiceImpl implements StoreService {
 
     @Autowired
     private StoreMapper storeMapper;
+
+    @Autowired
+    private InvestorStoreMapper investorStoreMapper;
+
+    @Autowired
+    private DailyReportMapper dailyReportMapper;
+
+    @Autowired
+    private SysUserStoreMapper sysUserStoreMapper;
 
     @Override
     public Store getById(Long id) {
@@ -78,6 +93,30 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public boolean delete(Long id) {
+        // 校验 investor_store 是否有关联记录
+        Long investorCount = investorStoreMapper.selectCount(
+                new LambdaQueryWrapper<InvestorStore>().eq(InvestorStore::getStoreId, id)
+        );
+        if (investorCount > 0) {
+            throw new BusinessException("此门店存在投资记录/日报记录/团队记录，不能删除，但可以禁用");
+        }
+
+        // 校验 daily_report 是否有关联记录
+        Long dailyReportCount = dailyReportMapper.selectCount(
+                new LambdaQueryWrapper<DailyReport>().eq(DailyReport::getStoreId, id)
+        );
+        if (dailyReportCount > 0) {
+            throw new BusinessException("此门店存在投资记录/日报记录/团队记录，不能删除，但可以禁用");
+        }
+
+        // 校验 sys_user_store 是否有该门店的用户关联（即团队成员记录）
+        Long userStoreCount = sysUserStoreMapper.selectCount(
+                new LambdaQueryWrapper<SysUserStore>().eq(SysUserStore::getStoreId, id)
+        );
+        if (userStoreCount > 0) {
+            throw new BusinessException("此门店存在投资记录/日报记录/团队记录，不能删除，但可以禁用");
+        }
+
         return storeMapper.deleteById(id) > 0;
     }
 }

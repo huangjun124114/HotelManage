@@ -83,10 +83,10 @@
       </div>
     </el-card>
 
-    <!-- 查看详情弹窗（只读，展示完整字段数据） -->
+    <!-- 查看详情弹窗（只读，紧凑展示） -->
     <el-dialog v-model="detailVisible" title="日报详情" width="900px" close-on-click-modal="false">
       <div v-loading="detailLoading">
-        <el-descriptions v-if="detailData" :column="3" border class="detail-base-info">
+        <el-descriptions v-if="detailData" :column="4" border class="detail-base-info" size="small">
           <el-descriptions-item label="门店">{{ detailData.storeName }}</el-descriptions-item>
           <el-descriptions-item label="日期">{{ detailData.reportDate }}</el-descriptions-item>
           <el-descriptions-item label="状态">
@@ -94,18 +94,23 @@
           </el-descriptions-item>
         </el-descriptions>
 
-        <!-- 分组展示字段数据 -->
+        <!-- 分组展示字段数据（可折叠） -->
         <div v-if="detailFields.length > 0" class="detail-fields-area">
           <el-card
             v-for="group in detailGroupedFields"
             :key="group.name"
             shadow="never"
-            class="detail-card"
+            class="detail-card compact-card"
           >
             <template #header>
-              <span class="group-title">{{ group.name }}</span>
+              <div class="card-header" @click="toggleDetailGroup(group.name)">
+                <span class="group-title">{{ group.name }}</span>
+                <el-icon class="collapse-icon" :class="{ 'is-collapsed': detailCollapsedGroups[group.name] }">
+                  <ArrowDown />
+                </el-icon>
+              </div>
             </template>
-            <el-descriptions :column="3" border>
+            <el-descriptions :column="4" border size="small" v-show="!detailCollapsedGroups[group.name]">
               <el-descriptions-item
                 v-for="field in group.fields"
                 :key="fieldKey(field)"
@@ -190,29 +195,35 @@
           </el-row>
         </el-card>
 
-        <!-- 动态字段表单（三列） -->
+        <!-- 动态字段表单（四列紧凑） -->
         <div v-if="fields.length > 0" class="fields-area">
           <el-card
             v-for="group in groupedFields"
             :key="group.name"
             shadow="never"
-            class="drawer-card"
+            class="drawer-card compact-card"
           >
             <template #header>
-              <span class="group-title">{{ group.name }}</span>
+              <div class="card-header" @click="toggleFormGroup(group.name)">
+                <span class="group-title">{{ group.name }}</span>
+                <el-icon class="collapse-icon" :class="{ 'is-collapsed': formCollapsedGroups[group.name] }">
+                  <ArrowDown />
+                </el-icon>
+              </div>
             </template>
-            <el-form ref="formRef" :model="formData" :rules="formRules" label-width="130px">
-              <el-row :gutter="16">
+            <el-form ref="formRef" :model="formData" :rules="formRules" label-width="110px" v-show="!formCollapsedGroups[group.name]">
+              <el-row :gutter="12">
                 <el-col
                   v-for="field in group.fields"
                   :key="fieldKey(field)"
                   :xs="24"
-                  :sm="8"
+                  :sm="12"
+                  :md="6"
                 >
                   <el-form-item
                     :label="fieldLabel(field)"
                     :prop="fieldKey(field)"
-                    :required="field.required === 1"
+                    :required="field.required === 1 && field.readonlyFlag !== 1 && field.readonly !== 1"
                   >
                     <!-- 只读/计算字段 -->
                     <el-input
@@ -262,7 +273,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, ArrowDown } from '@element-plus/icons-vue'
 import { getStoreOptions } from '@/api/store'
 import { getToday, getDetail, saveDraft, submit, queryList, lock, unlock, reject, getTemplateFields } from '@/api/report'
 import request from '@/utils/request'
@@ -427,6 +438,16 @@ const reportId = ref(null)
 const formData = reactive({})
 const formRules = reactive({})
 
+// ===== 分组折叠状态 =====
+const formCollapsedGroups = reactive({})
+const detailCollapsedGroups = reactive({})
+function toggleFormGroup(name) {
+  formCollapsedGroups[name] = !formCollapsedGroups[name]
+}
+function toggleDetailGroup(name) {
+  detailCollapsedGroups[name] = !detailCollapsedGroups[name]
+}
+
 // ===== 字段精度判断 =====
 // 房间数/间夜/扫码：整数（precision=0）
 // 金额相关：两位小数（precision=2）
@@ -460,19 +481,51 @@ function getFieldStep(field) {
   return 0.01
 }
 
+// ===== 渠道间夜字段编码（与数据库 daily_report_field 一致） =====
+const CHANNEL_ROOM_NIGHTS_KEYS = [
+  'walkin_room_nights',              // 散客
+  'ctrip_room_nights',               // 携程
+  'ly_room_nights',                  // 同程艺龙
+  'qunar_room_nights',               // 去哪儿
+  'zhixing_room_nights',             // 智行
+  'external_room_nights',            // 外网
+  'meituan_hotel_room_nights',       // 美团酒店
+  'fliggy_room_nights',              // 飞猪
+  'douyin_room_nights',              // 抖音
+  'xiaozhu_room_nights',             // 小猪
+  'tujia_room_nights',               // 途家
+  'meituan_homestay_room_nights',    // 美团民宿
+  'jiali_room_nights',               // 红色加力/加力
+]
+
 // ===== 计算字段 =====
 function calcComputedValues(d) {
   const vals = {}
+
+  // 间夜数 = 各渠道房间数之和 + 钟点房数量
+  const channelSum = CHANNEL_ROOM_NIGHTS_KEYS.reduce((sum, key) => sum + Number(d[key] || 0), 0)
+  const hourlyRoomCount = Number(d.hourly_room_count || 0)
+  vals.room_nights = channelSum + hourlyRoomCount
+
+  const rooms = vals.room_nights
+  const ownRooms = Number(d.own_room_count || 0)
+
+  // 出租率 = 间夜数 / 自有房量 * 100
+  vals.occupancy_rate = ownRooms > 0 ? (rooms / ownRooms * 100).toFixed(2) : '0.00'
+
+  // 当日总房费 = 日租房房费 + 钟点房费
   const roomFee = Number(d.daily_room_fee || 0)
   const hourFee = Number(d.hourly_room_fee || 0)
   const miscFee = Number(d.other_fee || 0)
-  vals.total_revenue = (roomFee + hourFee + miscFee).toFixed(2)
+  const totalRoomFee = roomFee + hourFee
 
-  const rooms = Number(d.room_nights || 0)
-  const ownRooms = Number(d.own_room_count || 1)
-  vals.occupancy_rate = ownRooms > 0 ? (rooms / ownRooms * 100).toFixed(2) : '0.00'
+  // ADR = 当日总房费 / 间夜数
+  vals.adr = rooms > 0 ? (totalRoomFee / rooms).toFixed(2) : '0.00'
 
-  vals.adr = rooms > 0 ? (roomFee / rooms).toFixed(2) : '0.00'
+  // 当日总营收 = 当日总房费 + 杂费
+  vals.total_revenue = (totalRoomFee + miscFee).toFixed(2)
+
+  // RevPAR = 当日总营收 / 自有房量
   vals.revpar = ownRooms > 0 ? (Number(vals.total_revenue) / ownRooms).toFixed(2) : '0.00'
 
   return vals
@@ -741,7 +794,7 @@ onMounted(() => {
 .report-manage {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .search-card {
@@ -752,13 +805,13 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .pagination {
   display: flex;
   justify-content: flex-end;
-  padding: 16px 0 0;
+  padding: 12px 0 0;
 }
 
 .drawer-content {
@@ -766,30 +819,75 @@ onMounted(() => {
 }
 
 .drawer-card {
-  margin-bottom: 12px;
+  margin-bottom: 6px;
+}
+
+.compact-card :deep(.el-card__header) {
+  padding: 8px 12px;
+}
+
+.compact-card :deep(.el-card__body) {
+  padding: 8px 12px;
+}
+
+.compact-card :deep(.el-form-item) {
+  margin-bottom: 4px;
+}
+
+.compact-card :deep(.el-form-item__label) {
+  font-size: 13px;
+  padding-right: 4px;
+}
+
+.compact-card :deep(.el-descriptions__cell) {
+  padding: 4px 8px !important;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.card-header:hover {
+  background: #f5f7fa;
+  margin: -8px -12px;
+  padding: 8px 12px;
+  border-radius: 4px 4px 0 0;
+}
+
+.collapse-icon {
+  transition: transform 0.3s;
+  color: #909399;
+}
+
+.collapse-icon.is-collapsed {
+  transform: rotate(-90deg);
 }
 
 .group-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #333;
 }
 
 .fields-area {
-  max-height: calc(100vh - 300px);
+  max-height: calc(100vh - 260px);
   overflow-y: auto;
   padding-right: 4px;
 }
 
 .detail-base-info {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .detail-fields-area {
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 .detail-card {
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 </style>

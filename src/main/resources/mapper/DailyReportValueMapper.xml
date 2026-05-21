@@ -36,4 +36,21 @@
             update_time = excluded.update_time
     </insert>
 
+    <select id="selectScoreRanking" resultType="java.util.Map">
+        SELECT t.store_id AS storeId, s.store_name AS storeName, ROUND(AVG(t.channel_avg), 2) AS value
+        FROM (
+            SELECT dr.store_id, dv.field_code, AVG(dv.value_number) AS channel_avg
+            FROM daily_report_value dv
+            JOIN daily_report dr ON dv.report_id = dr.id
+            WHERE dv.field_code IN ('ctrip_score','ly_score','qunar_score',
+                                    'zhixing_score','meituan_score','fliggy_score')
+              AND dv.value_number > 0
+              AND dr.report_date BETWEEN #{startDate} AND #{endDate}
+            GROUP BY dr.store_id, dv.field_code
+        ) t
+        JOIN store s ON t.store_id = s.id
+        GROUP BY t.store_id, s.store_name
+        ORDER BY value DESC
+    </select>
+
 </mapper>

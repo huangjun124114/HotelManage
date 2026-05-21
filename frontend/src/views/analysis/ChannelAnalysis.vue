@@ -3,8 +3,8 @@
     <el-card shadow="never" class="filter-card">
       <el-form inline>
         <el-form-item label="门店">
-          <el-select v-model="searchForm.storeId" placeholder="全部" clearable @change="loadData" style="width:200px">
-            <el-option v-for="s in storeOptions" :key="s.id" :label="s.name" :value="s.id" />
+          <el-select v-model="searchForm.storeIds" multiple placeholder="全部" clearable collapse-tags collapse-tags-tooltip style="width:280px">
+            <el-option v-for="s in storeOptions" :key="s.value" :label="s.label" :value="s.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="日期范围">
@@ -15,9 +15,12 @@
             start-placeholder="开始"
             end-placeholder="结束"
             value-format="YYYY-MM-DD"
-            @change="loadData"
             style="width:260px"
           />
+          <DateQuickSelect v-model="searchForm.dateRange" style="margin-left:8px" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="loadData">查询</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -34,9 +37,9 @@
           <template #header>渠道间夜明细</template>
           <el-table :data="channelData" border stripe size="small">
             <el-table-column prop="channelName" label="渠道" />
-            <el-table-column prop="rooms" label="间夜数" align="right" />
+            <el-table-column prop="roomNights" label="间夜数" align="right" />
             <el-table-column label="占比" width="100" align="right">
-              <template #default="{ row }">{{ row.ratio }}%</template>
+              <template #default="{ row }">{{ (row.ratio * 100).toFixed(1) }}%</template>
             </el-table-column>
             <el-table-column label="房费" width="120" align="right">
               <template #default="{ row }">¥{{ row.roomFee?.toLocaleString() }}</template>
@@ -52,6 +55,7 @@
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { getChannelAnalysis } from '@/api/analysis'
 import { getStoreOptions } from '@/api/store'
+import DateQuickSelect from '@/components/DateQuickSelect.vue'
 import * as echarts from 'echarts'
 
 const loading = ref(false)
@@ -60,7 +64,7 @@ const pieChartRef = ref(null)
 const channelData = ref([])
 
 const searchForm = reactive({
-  storeId: null,
+  storeIds: [],
   dateRange: (() => {
     const now = new Date()
     const end = now.toISOString().slice(0, 10)
@@ -79,7 +83,7 @@ function initPieChart() {
       type: 'pie',
       radius: ['40%', '70%'],
       center: ['40%', '50%'],
-      data: channelData.value.map(c => ({ name: c.channelName, value: c.rooms })),
+      data: channelData.value.map(c => ({ name: c.channelName, value: c.roomNights })),
       emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.5)' } }
     }]
   })
@@ -89,7 +93,9 @@ async function loadData() {
   loading.value = true
   try {
     const params = {}
-    if (searchForm.storeId) params.storeId = searchForm.storeId
+    if (searchForm.storeIds && searchForm.storeIds.length > 0) {
+      params.storeId = searchForm.storeIds.join(',')
+    }
     if (searchForm.dateRange) {
       params.startDate = searchForm.dateRange[0]
       params.endDate = searchForm.dateRange[1]

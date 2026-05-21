@@ -16,7 +16,7 @@ const routes = [
       {
         path: 'home',
         name: 'Home',
-        component: () => import('@/views/Home.vue'),
+        component: () => import('@/views/analysis/Dashboard.vue'),
         meta: { title: '首页', requireAuth: true }
       },
       {
@@ -24,12 +24,6 @@ const routes = [
         name: 'StoreList',
         component: () => import('@/views/store/StoreList.vue'),
         meta: { title: '门店管理', requireAuth: true }
-      },
-      {
-        path: 'store/user',
-        name: 'StoreUser',
-        component: () => import('@/views/store/StoreUser.vue'),
-        meta: { title: '门店用户', requireAuth: true }
       },
       {
         path: 'report/manage',
@@ -98,12 +92,6 @@ const routes = [
         name: 'InvestorList',
         component: () => import('@/views/investor/InvestorList.vue'),
         meta: { title: '投资人管理', requireAuth: true }
-      },
-      {
-        path: 'investor/relation',
-        name: 'InvestorRelation',
-        component: () => import('@/views/investor/InvestorRelation.vue'),
-        meta: { title: '投资关系', requireAuth: true }
       },
       {
         path: 'system/user',

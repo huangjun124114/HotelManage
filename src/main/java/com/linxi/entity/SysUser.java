@@ -3,6 +3,8 @@ package com.linxi.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @TableName("sys_user")
 public class SysUser {
@@ -36,4 +38,17 @@ public class SysUser {
 
     @TableField(exist = false)
     private String storeCode;
+
+    // 多门店/多角色关联字段（非数据库字段）
+    @TableField(exist = false)
+    private List<Long> storeIds;
+
+    @TableField(exist = false)
+    private List<String> storeNames;
+
+    @TableField(exist = false)
+    private List<Long> roleIds;
+
+    @TableField(exist = false)
+    private List<String> roleNames;
 }

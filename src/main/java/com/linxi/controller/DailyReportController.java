@@ -2,6 +2,7 @@ package com.linxi.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.linxi.common.BusinessException;
 import com.linxi.common.PageResult;
 import com.linxi.common.Result;
 import com.linxi.dto.DailyReportQueryDTO;
@@ -53,6 +54,13 @@ public class DailyReportController {
 
     @PostMapping("/draft")
     public Result<Void> saveDraft(@RequestBody DailyReportSaveDTO dto) {
+        // 如果请求中包含 storeId，校验该门店是否可用
+        if (dto.getStoreId() != null) {
+            Store store = storeMapper.selectById(dto.getStoreId());
+            if (store != null && Integer.valueOf(0).equals(store.getStatus())) {
+                throw new BusinessException("该门店已禁用，不能新增日报");
+            }
+        }
         dailyReportService.saveDraft(dto);
         return Result.success();
     }
@@ -60,6 +68,13 @@ public class DailyReportController {
     @PostMapping("/submit")
     @PreAuthorize("hasAnyAuthority('report:fill', 'ROLE_STORE_MANAGER', 'ROLE_STORE_STAFF')")
     public Result<Void> submit(@RequestBody DailyReportSaveDTO dto) {
+        // 如果请求中包含 storeId，校验该门店是否可用
+        if (dto.getStoreId() != null) {
+            Store store = storeMapper.selectById(dto.getStoreId());
+            if (store != null && Integer.valueOf(0).equals(store.getStatus())) {
+                throw new BusinessException("该门店已禁用，不能新增日报");
+            }
+        }
         dailyReportService.submit(dto);
         return Result.success();
     }

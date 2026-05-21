@@ -1,14 +1,42 @@
 <template>
   <div class="dashboard" v-loading="loading">
-    <!-- 日期选择 -->
-    <el-card shadow="never" class="date-card">
-      <el-date-picker
-        v-model="selectedDate"
-        type="date"
-        placeholder="选择日期"
-        value-format="YYYY-MM-DD"
-        @change="loadData"
-      />
+    <!-- 筛选栏 -->
+    <el-card shadow="never" class="filter-card">
+      <el-row :gutter="16" align="middle">
+        <el-col :xs="24" :sm="10" :md="8">
+          <span class="filter-label">基准日期</span>
+          <el-date-picker
+            v-model="selectedDate"
+            type="date"
+            placeholder="选择日期"
+            value-format="YYYY-MM-DD"
+            :disabled-date="d => d > new Date()"
+            style="width: 100%"
+          />
+        </el-col>
+        <el-col :xs="24" :sm="14" :md="14">
+          <span class="filter-label">门店</span>
+          <el-select
+            v-model="selectedStores"
+            multiple
+            collapse-tags
+            collapse-tags-tooltip
+            placeholder="全部门店"
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="s in storeOptions"
+              :key="s.value"
+              :label="s.label"
+              :value="s.value"
+            />
+          </el-select>
+        </el-col>
+        <el-col :xs="24" :sm="6" :md="2">
+          <el-button type="primary" @click="loadData" style="width: 100%">查询</el-button>
+        </el-col>
+      </el-row>
     </el-card>
 
     <!-- 统计卡片 -->
@@ -39,18 +67,100 @@
       </el-col>
     </el-row>
 
-    <!-- 图表行 -->
+    <!-- 趋势对比图 - 第一行 -->
     <el-row :gutter="16" class="chart-row">
-      <el-col :xs="24" :lg="12">
+      <el-col :xs="24" :lg="8">
         <el-card>
-          <template #header>最近7日营收趋势</template>
-          <div ref="revenueChartRef" class="chart-container"></div>
+          <template #header>
+            <div class="chart-header">
+              <span>营收趋势</span>
+              <el-radio-group v-model="periodState.revenue" size="small" @change="() => loadTrend('revenue')">
+                <el-radio-button label="day">天</el-radio-button>
+                <el-radio-button label="week">周</el-radio-button>
+                <el-radio-button label="month">月</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
+          <div :ref="el => chartRefs.revenue = el" class="chart-container"></div>
         </el-card>
       </el-col>
-      <el-col :xs="24" :lg="12">
+      <el-col :xs="24" :lg="8">
         <el-card>
-          <template #header>最近7日出租率趋势</template>
-          <div ref="occupancyChartRef" class="chart-container"></div>
+          <template #header>
+            <div class="chart-header">
+              <span>出租率趋势</span>
+              <el-radio-group v-model="periodState.occupancy" size="small" @change="() => loadTrend('occupancy')">
+                <el-radio-button label="day">天</el-radio-button>
+                <el-radio-button label="week">周</el-radio-button>
+                <el-radio-button label="month">月</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
+          <div :ref="el => chartRefs.occupancy = el" class="chart-container"></div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :lg="8">
+        <el-card>
+          <template #header>
+            <div class="chart-header">
+              <span>ADR趋势</span>
+              <el-radio-group v-model="periodState.adr" size="small" @change="() => loadTrend('adr')">
+                <el-radio-button label="day">天</el-radio-button>
+                <el-radio-button label="week">周</el-radio-button>
+                <el-radio-button label="month">月</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
+          <div :ref="el => chartRefs.adr = el" class="chart-container"></div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 趋势对比图 - 第二行 -->
+    <el-row :gutter="16" class="chart-row">
+      <el-col :xs="24" :lg="8">
+        <el-card>
+          <template #header>
+            <div class="chart-header">
+              <span>RevPAR趋势</span>
+              <el-radio-group v-model="periodState.revpar" size="small" @change="() => loadTrend('revpar')">
+                <el-radio-button label="day">天</el-radio-button>
+                <el-radio-button label="week">周</el-radio-button>
+                <el-radio-button label="month">月</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
+          <div :ref="el => chartRefs.revpar = el" class="chart-container"></div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :lg="8">
+        <el-card>
+          <template #header>
+            <div class="chart-header">
+              <span>间夜数趋势</span>
+              <el-radio-group v-model="periodState.roomnights" size="small" @change="() => loadTrend('roomnights')">
+                <el-radio-button label="day">天</el-radio-button>
+                <el-radio-button label="week">周</el-radio-button>
+                <el-radio-button label="month">月</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
+          <div :ref="el => chartRefs.roomnights = el" class="chart-container"></div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :lg="8">
+        <el-card>
+          <template #header>
+            <div class="chart-header">
+              <span>填报率趋势</span>
+              <el-radio-group v-model="periodState.fillrate" size="small" @change="() => loadTrend('fillrate')">
+                <el-radio-button label="day">天</el-radio-button>
+                <el-radio-button label="week">周</el-radio-button>
+                <el-radio-button label="month">月</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
+          <div :ref="el => chartRefs.fillrate = el" class="chart-container"></div>
         </el-card>
       </el-col>
     </el-row>
@@ -59,7 +169,16 @@
     <el-row :gutter="16" class="table-row">
       <el-col :xs="24" :lg="12">
         <el-card>
-          <template #header>门店营收排名</template>
+          <template #header>
+            <div class="chart-header">
+              <span>门店营收排名</span>
+              <el-radio-group v-model="rankingPeriod.revenue" size="small" @change="() => loadRanking('revenue')">
+                <el-radio-button label="day">天</el-radio-button>
+                <el-radio-button label="week">周</el-radio-button>
+                <el-radio-button label="month">月</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
           <el-table :data="data.revenueRanking || []" size="small">
             <el-table-column type="index" label="#" width="50" />
             <el-table-column prop="storeName" label="门店" />
@@ -71,7 +190,16 @@
       </el-col>
       <el-col :xs="24" :lg="12">
         <el-card>
-          <template #header>门店出租率排名</template>
+          <template #header>
+            <div class="chart-header">
+              <span>门店出租率排名</span>
+              <el-radio-group v-model="rankingPeriod.occupancy" size="small" @change="() => loadRanking('occupancy')">
+                <el-radio-button label="day">天</el-radio-button>
+                <el-radio-button label="week">周</el-radio-button>
+                <el-radio-button label="month">月</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
           <el-table :data="data.occupancyRanking || []" size="small">
             <el-table-column type="index" label="#" width="50" />
             <el-table-column prop="storeName" label="门店" />
@@ -96,63 +224,86 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick, onUnmounted } from 'vue'
 import StatCard from '@/components/StatCard.vue'
-import { getDashboard } from '@/api/analysis'
+import { getDashboard, getTrendCompare, getStoreRanking } from '@/api/analysis'
+import { getStoreOptions } from '@/api/store'
 import * as echarts from 'echarts'
 
 const loading = ref(false)
 const selectedDate = ref(new Date().toISOString().slice(0, 10))
-const revenueChartRef = ref(null)
-const occupancyChartRef = ref(null)
+const selectedStores = ref([])
+const storeOptions = ref([])
+
+// 排名表周期状态
+const rankingPeriod = reactive({
+  revenue: 'day',
+  occupancy: 'day'
+})
+
+// 6个趋势图各自的周期状态
+const periodState = reactive({
+  revenue: 'day',
+  occupancy: 'day',
+  adr: 'day',
+  revpar: 'day',
+  roomnights: 'day',
+  fillrate: 'day'
+})
+
+// 图表DOM引用（用普通对象，不用reactive包裹ref，否则Vue3自动解包导致ref绑定失效）
+const chartRefs = {
+  revenue: null,
+  occupancy: null,
+  adr: null,
+  revpar: null,
+  roomnights: null,
+  fillrate: null
+}
+
+// 图表实例
+const chartInstances = {}
 
 const data = reactive({
   shouldFill: 0, filled: 0, unfilled: 0,
   totalRevenue: 0, totalRooms: 0, avgOccupancy: 0,
   avgADR: '', avgRevPAR: '',
-  dateLabels: [], revenueTrend: [], occupancyTrend: [],
   revenueRanking: [], occupancyRanking: [], unfilledStores: []
 })
 
-function formatMoney(val) {
-  if (val == null || val === '') return '¥0'
-  return val.toLocaleString('zh-CN', { minimumFractionDigits: 2 })
+// 图表配置映射
+const chartConfig = {
+  revenue:    { name: '营收',       unit: '¥', prefix: '¥', suffix: '',  yMax: null },
+  occupancy:  { name: '出租率(%)',  unit: '%', prefix: '',  suffix: '%', yMax: 100 },
+  adr:        { name: 'ADR(¥)',     unit: '¥', prefix: '¥', suffix: '',  yMax: null },
+  revpar:     { name: 'RevPAR(¥)',  unit: '¥', prefix: '¥', suffix: '',  yMax: null },
+  roomnights: { name: '间夜数',     unit: '',  prefix: '',  suffix: '',  yMax: null },
+  fillrate:   { name: '填报率(%)',  unit: '%', prefix: '',  suffix: '%', yMax: 100 }
 }
 
-function initCharts() {
-  if (revenueChartRef.value) {
-    const chart = echarts.init(revenueChartRef.value)
-    chart.setOption({
-      tooltip: { trigger: 'axis' },
-      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-      xAxis: { type: 'category', data: data.dateLabels, boundaryGap: false },
-      yAxis: { type: 'value' },
-      series: [{
-        name: '营收', type: 'line', data: data.revenueTrend, smooth: true,
-        itemStyle: { color: '#1890ff' }
-      }]
-    })
-  }
+function formatMoney(val) {
+  if (val == null || val === '') return '0.00'
+  return Number(val).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
 
-  if (occupancyChartRef.value) {
-    const chart = echarts.init(occupancyChartRef.value)
-    chart.setOption({
-      tooltip: { trigger: 'axis' },
-      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-      xAxis: { type: 'category', data: data.dateLabels, boundaryGap: false },
-      yAxis: { type: 'value', max: 100 },
-      series: [{
-        name: '出租率(%)', type: 'line', data: data.occupancyTrend, smooth: true,
-        itemStyle: { color: '#52c41a' }
-      }]
-    })
-  }
+function buildStoreIdsParam() {
+  return selectedStores.value.length > 0 ? selectedStores.value.join(',') : undefined
+}
+
+async function loadStoreOptions() {
+  try {
+    const res = await getStoreOptions()
+    storeOptions.value = res.data || []
+  } catch (e) { /* ignore */ }
 }
 
 async function loadData() {
   loading.value = true
   try {
-    const res = await getDashboard({ date: selectedDate.value })
+    const params = { date: selectedDate.value }
+    const ids = buildStoreIdsParam()
+    if (ids) params.storeIds = ids
+    const res = await getDashboard(params)
     const d = res.data || {}
     data.shouldFill = d.shouldFill ?? 0
     data.filled = d.filled ?? 0
@@ -162,18 +313,132 @@ async function loadData() {
     data.avgOccupancy = d.avgOccupancy ?? 0
     data.avgADR = d.avgADR ?? ''
     data.avgRevPAR = d.avgRevPAR ?? ''
-    data.dateLabels = d.dateLabels || []
-    data.revenueTrend = d.revenueTrend || []
-    data.occupancyTrend = d.occupancyTrend || []
-    data.revenueRanking = d.revenueRanking || []
-    data.occupancyRanking = d.occupancyRanking || []
     data.unfilledStores = d.unfilledStores || []
-    nextTick(() => initCharts())
+    // 加载排名（默认day周期）
+    await Promise.all([
+      loadRanking('revenue'),
+      loadRanking('occupancy')
+    ])
+    // 加载全部6个趋势图
+    await Promise.all([
+      loadTrend('revenue'),
+      loadTrend('occupancy'),
+      loadTrend('adr'),
+      loadTrend('revpar'),
+      loadTrend('roomnights'),
+      loadTrend('fillrate')
+    ])
   } catch (e) { /* ignore */ }
   finally { loading.value = false }
 }
 
-onMounted(() => loadData())
+async function loadTrend(metric) {
+  try {
+    const params = {
+      date: selectedDate.value,
+      period: periodState[metric],
+      metric: metric
+    }
+    const ids = buildStoreIdsParam()
+    if (ids) params.storeIds = ids
+    const res = await getTrendCompare(params)
+    const d = res.data || {}
+    renderTrendChart(metric, d)
+  } catch (e) { /* ignore */ }
+}
+
+// 加载排名数据（营收/出租率）
+async function loadRanking(metric) {
+  try {
+    const period = rankingPeriod[metric]
+    const params = {
+      date: selectedDate.value,
+      period: period,
+      metric: metric
+    }
+    const ids = buildStoreIdsParam()
+    if (ids) params.storeIds = ids
+    const res = await getStoreRanking(params)
+    const list = (res.data || []).slice(0, 10) // Top10
+
+    if (metric === 'revenue') {
+      data.revenueRanking = list.map(item => ({
+        storeName: item.storeName,
+        revenue: item.value
+      }))
+    } else if (metric === 'occupancy') {
+      data.occupancyRanking = list.map(item => ({
+        storeName: item.storeName,
+        // storeRanking 返回的是0~1小数，转换为百分比数值
+        occupancy: item.value != null ? (Number(item.value) * 100).toFixed(2) : '0.00'
+      }))
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function renderTrendChart(metric, trendData) {
+  nextTick(() => {
+    const domRef = chartRefs[metric]
+    if (!domRef) return
+
+    // 初始化或获取已有实例
+    if (!chartInstances[metric]) {
+      chartInstances[metric] = echarts.init(domRef)
+    }
+    const chart = chartInstances[metric]
+    const config = chartConfig[metric]
+
+    const labels = trendData.labels || []
+    const current = (trendData.current || []).map(v => v ?? null)
+    const lastYear = (trendData.lastYear || []).map(v => v ?? null)
+
+    chart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          let tip = params[0].axisValue + '<br/>'
+          params.forEach(p => {
+            const val = p.value != null ? p.value : '-'
+            tip += `${p.marker} ${p.seriesName}: ${config.prefix}${val}${config.suffix}<br/>`
+          })
+          return tip
+        }
+      },
+      legend: { data: ['当期', '去年同期'] },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: { type: 'category', data: labels, boundaryGap: false },
+      yAxis: {
+        type: 'value',
+        ...(config.yMax ? { max: config.yMax } : {})
+      },
+      series: [
+        {
+          name: '当期', type: 'line', data: current, smooth: true,
+          itemStyle: { color: '#1890ff' }, lineStyle: { width: 2 }
+        },
+        {
+          name: '去年同期', type: 'line', data: lastYear, smooth: true,
+          itemStyle: { color: '#bfbfbf' }, lineStyle: { width: 2, type: 'dashed' }
+        }
+      ]
+    }, true)
+  })
+}
+
+function handleResize() {
+  Object.values(chartInstances).forEach(chart => chart?.resize())
+}
+
+onMounted(async () => {
+  await loadStoreOptions()
+  await loadData()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  Object.values(chartInstances).forEach(chart => chart?.dispose())
+})
 </script>
 
 <style scoped>
@@ -183,7 +448,27 @@ onMounted(() => loadData())
   gap: 16px;
 }
 
+.filter-card :deep(.el-card__body) {
+  padding: 12px 16px;
+}
+
+.filter-label {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 14px;
+  color: #606266;
+  white-space: nowrap;
+}
+
 .stat-row .el-col { margin-bottom: 16px; }
 
-.chart-container { height: 300px; }
+.chart-container { height: 280px; }
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-row { margin-top: 0; }
 </style>

@@ -21,5 +21,5 @@ export function getRoleMenus(id) {
 }
 
 export function saveRoleMenus(id, menuIds) {
-  return request({ url: `/roles/${id}/menus`, method: 'put', data: { menuIds } })
+  return request({ url: `/roles/${id}/menus`, method: 'put', data: menuIds })
 }

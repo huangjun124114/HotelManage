@@ -1,5 +1,6 @@
 package com.linxi.controller;
 
+import com.linxi.common.BusinessException;
 import com.linxi.common.Result;
 import com.linxi.entity.Investor;
 import com.linxi.entity.InvestorStore;
@@ -9,6 +10,7 @@ import com.linxi.mapper.InvestorMapper;
 import com.linxi.mapper.InvestorStoreMapper;
 import com.linxi.mapper.StoreMapper;
 import com.linxi.mapper.SysUserStoreMapper;
+import com.linxi.service.InvestorRelationService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,9 @@ public class InvestorRelationController {
 
     @Autowired
     private SysUserStoreMapper sysUserStoreMapper;
+
+    @Autowired
+    private InvestorRelationService investorRelationService;
 
     /**
      * 查询投资人的门店关系列表（含门店名称）
@@ -82,6 +87,12 @@ public class InvestorRelationController {
     public Result<Void> save(@RequestBody Map<String, Object> params) {
         Long investorId = Long.valueOf(params.get("investorId").toString());
         Long storeId = Long.valueOf(params.get("storeId").toString());
+
+        // 校验门店是否处于禁用状态
+        Store store = storeMapper.selectById(storeId);
+        if (store != null && Integer.valueOf(0).equals(store.getStatus())) {
+            throw new BusinessException("该门店已禁用，不能新增投资记录");
+        }
 
         // 检查是否已存在该关系
         Long existCount = investorStoreMapper.selectCount(
@@ -132,6 +143,41 @@ public class InvestorRelationController {
             sysUserStoreMapper.insert(userStore);
         }
 
+        return Result.success();
+    }
+
+    /**
+     * 编辑投资关系
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
+    public Result<Void> update(@PathVariable Long id, @RequestBody Map<String, Object> params) {
+        InvestorStore relation = new InvestorStore();
+        relation.setId(id);
+
+        if (params.get("investAmount") != null) {
+            relation.setInvestAmount(new BigDecimal(params.get("investAmount").toString()));
+        }
+        if (params.get("investmentRatio") != null) {
+            relation.setInvestmentRatio(new BigDecimal(params.get("investmentRatio").toString()));
+        } else if (params.get("shareRatio") != null) {
+            relation.setInvestmentRatio(new BigDecimal(params.get("shareRatio").toString()));
+        }
+        if (params.get("authStartDate") != null) {
+            relation.setAuthStartDate(params.get("authStartDate").toString());
+        } else if (params.get("investDate") != null) {
+            relation.setAuthStartDate(params.get("investDate").toString());
+        }
+        if (params.get("authEndDate") != null) {
+            relation.setAuthEndDate(params.get("authEndDate").toString());
+        } else if (params.get("withdrawDate") != null) {
+            relation.setAuthEndDate(params.get("withdrawDate").toString());
+        }
+        if (params.get("storeId") != null) {
+            relation.setStoreId(Long.valueOf(params.get("storeId").toString()));
+        }
+
+        investorRelationService.update(relation);
         return Result.success();
     }
 
