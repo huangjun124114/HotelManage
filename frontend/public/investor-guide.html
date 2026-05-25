@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投资人操作指南 - 林夕置业酒店经营日报管理系统</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif; color: #2d3748; background: #f7fafc; line-height: 1.7; }
+
+/* Layout */
+.layout { display: flex; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  position: fixed; top: 0; left: 0; width: 280px; height: 100vh;
+  background: #1a365d; color: #fff; overflow-y: auto;
+  padding: 0; z-index: 100;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+}
+.sidebar-header {
+  padding: 24px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.1);
+}
+.sidebar-header h2 { font-size: 16px; font-weight: 600; letter-spacing: 0.5px; }
+.sidebar-header p { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+.sidebar nav { padding: 12px 0; }
+.sidebar nav a {
+  display: block; padding: 9px 20px 9px 28px; color: rgba(255,255,255,0.82);
+  text-decoration: none; font-size: 13.5px; transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+.sidebar nav a:hover { background: rgba(255,255,255,0.08); color: #fff; border-left-color: #63b3ed; }
+.sidebar nav a.sub { padding-left: 44px; font-size: 12.5px; color: rgba(255,255,255,0.65); }
+.sidebar nav a.sub:hover { color: #fff; }
+.sidebar nav .nav-group { padding: 10px 20px 4px; font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.4); letter-spacing: 1px; font-weight: 600; }
+
+/* Main content */
+.main { margin-left: 280px; flex: 1; padding: 32px 40px 60px; max-width: 1000px; }
+
+/* Page title */
+.page-title {
+  font-size: 28px; font-weight: 700; color: #1a365d;
+  margin-bottom: 8px; padding-bottom: 16px;
+  border-bottom: 3px solid #1a365d;
+}
+.page-subtitle { font-size: 14px; color: #718096; margin-bottom: 32px; }
+
+/* Section */
+.section { margin-bottom: 48px; scroll-margin-top: 24px; }
+.section h2 {
+  font-size: 22px; font-weight: 700; color: #1a365d;
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+}
+.section h3 {
+  font-size: 18px; font-weight: 600; color: #2c5282;
+  margin: 28px 0 12px; padding-left: 12px;
+  border-left: 4px solid #3182ce;
+}
+.section h4 {
+  font-size: 15px; font-weight: 600; color: #2d3748;
+  margin: 20px 0 10px;
+}
+.section p { margin-bottom: 12px; font-size: 14.5px; }
+
+/* Card */
+.card {
+  background: #fff; border-radius: 8px; padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+  margin-bottom: 20px;
+}
+
+/* Highlight box */
+.highlight-box {
+  background: linear-gradient(135deg, #ebf8ff 0%, #f0fff4 100%);
+  border: 1px solid #bee3f8; border-left: 5px solid #3182ce;
+  border-radius: 8px; padding: 20px 24px; margin: 20px 0;
+}
+.highlight-box h4 {
+  font-size: 15px; font-weight: 700; color: #1a365d;
+  margin: 0 0 12px; display: flex; align-items: center; gap: 8px;
+}
+.highlight-box h4::before { content: "\1F4CC"; }
+.highlight-box.calc { border-left-color: #38a169; background: linear-gradient(135deg, #f0fff4 0%, #fefcbf40 100%); }
+.highlight-box.calc h4::before { content: "\1F522"; }
+.highlight-box.warn { border-left-color: #d69e2e; background: linear-gradient(135deg, #fffff0 0%, #fefcbf40 100%); }
+.highlight-box.warn h4::before { content: "\26A0\FE0F"; }
+.highlight-box ul { margin: 0; padding-left: 20px; }
+.highlight-box li { margin-bottom: 6px; font-size: 14px; }
+.highlight-box code {
+  background: rgba(26,54,93,0.08); padding: 2px 6px; border-radius: 3px;
+  font-family: "Cascadia Code", "Fira Code", Consolas, monospace; font-size: 13px; color: #1a365d;
+}
+
+/* Steps */
+.steps { counter-reset: step; margin: 16px 0; }
+.step {
+  display: flex; gap: 16px; margin-bottom: 16px;
+  counter-increment: step;
+}
+.step-num {
+  flex-shrink: 0; width: 32px; height: 32px;
+  background: #3182ce; color: #fff; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; margin-top: 2px;
+}
+.step-num::after { content: counter(step); }
+.step-content { flex: 1; }
+.step-content p { margin-bottom: 6px; }
+
+/* Path indicator */
+.path {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #edf2f7; padding: 4px 12px; border-radius: 4px;
+  font-size: 13px; color: #2d3748; margin-bottom: 12px;
+  font-family: "Cascadia Code", Consolas, monospace;
+}
+.path .sep { color: #a0aec0; }
+
+/* Table */
+.data-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+.data-table th {
+  background: #1a365d; color: #fff; padding: 10px 14px;
+  text-align: left; font-weight: 600; font-size: 13px;
+}
+.data-table td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; }
+.data-table tr:nth-child(even) { background: #f7fafc; }
+.data-table tr:hover { background: #ebf8ff; }
+
+/* Badge */
+.badge {
+  display: inline-block; padding: 2px 10px; border-radius: 12px;
+  font-size: 12px; font-weight: 600;
+}
+.badge-blue { background: #ebf8ff; color: #2b6cb0; }
+.badge-green { background: #f0fff4; color: #276749; }
+.badge-gray { background: #edf2f7; color: #4a5568; }
+
+/* FAQ */
+.faq-item { border-bottom: 1px solid #e2e8f0; padding: 16px 0; }
+.faq-item:last-child { border-bottom: none; }
+.faq-q {
+  font-weight: 600; color: #1a365d; font-size: 15px;
+  cursor: pointer; display: flex; align-items: flex-start; gap: 8px;
+}
+.faq-q::before { content: "Q"; flex-shrink: 0; background: #3182ce; color: #fff; width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-top: 1px; }
+.faq-a { margin-top: 10px; padding-left: 32px; color: #4a5568; font-size: 14px; }
+
+/* Footer */
+.footer {
+  margin-top: 60px; padding: 24px 0; border-top: 2px solid #e2e8f0;
+  text-align: center; color: #a0aec0; font-size: 13px;
+}
+.footer a { color: #3182ce; text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { width: 100%; height: auto; position: relative; }
+  .sidebar nav { display: flex; flex-wrap: wrap; padding: 8px; }
+  .sidebar nav a { padding: 6px 12px; font-size: 12px; border-left: none; border-bottom: 2px solid transparent; }
+  .sidebar nav a.sub { padding-left: 12px; }
+  .sidebar nav .nav-group { display: none; }
+  .main { margin-left: 0; padding: 20px 16px 40px; }
+  .layout { flex-direction: column; }
+  .page-title { font-size: 22px; }
+}
+
+/* Menu items */
+.menu-list { margin: 12px 0; }
+.menu-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px; margin-bottom: 6px;
+  background: #f7fafc; border-radius: 6px; border: 1px solid #e2e8f0;
+}
+.menu-icon {
+  width: 32px; height: 32px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.menu-icon.blue { background: #ebf8ff; }
+.menu-icon.green { background: #f0fff4; }
+.menu-icon.purple { background: #faf5ff; }
+.menu-icon.orange { background: #fffaf0; }
+.menu-label { font-size: 14px; font-weight: 600; color: #2d3748; }
+.menu-desc { font-size: 12px; color: #718096; }
+.menu-tag {
+  margin-left: auto; font-size: 11px; padding: 2px 8px;
+  border-radius: 10px; background: #fed7d7; color: #c53030; font-weight: 600;
+}
+.menu-tag.readonly { background: #e2e8f0; color: #4a5568; }
+
+/* Stat cards grid */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin: 16px 0; }
+.stat-card {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 14px; text-align: center;
+}
+.stat-card .label { font-size: 12px; color: #718096; margin-bottom: 4px; }
+.stat-card .value { font-size: 18px; font-weight: 700; color: #1a365d; }
+
+/* Unordered list */
+.section ul, .section ol { margin: 8px 0 12px 20px; }
+.section li { margin-bottom: 6px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h2>林夕置业</h2>
+    <p>酒店经营日报管理系统 · 投资人手册</p>
+  </div>
+  <nav>
+    <a href="index.html" style="color:#63b3ed;font-weight:700;margin-bottom:8px;border-left-color:#63b3ed">← 返回导航首页</a>
+    <div class="nav-group">概览</div>
+    <a href="#overview">角色概览</a>
+    <a href="#permissions" class="sub">权限与数据范围</a>
+    <a href="#menus" class="sub">可用菜单</a>
+
+    <div class="nav-group">操作指南</div>
+    <a href="#dashboard">首页工作台</a>
+    <a href="#hotel-list">门店列表（只读）</a>
+    <a href="#investor-list">投资人列表（只读）</a>
+    <a href="#analysis">经营分析</a>
+    <a href="#board" class="sub">总部看板</a>
+    <a href="#daily-report" class="sub">门店日报表</a>
+    <a href="#monthly-report" class="sub">门店月报表</a>
+    <a href="#channel" class="sub">渠道分析</a>
+    <a href="#ranking" class="sub">门店排名</a>
+    <a href="#trend" class="sub">经营趋势</a>
+
+    <div class="nav-group">参考信息</div>
+    <a href="#business-logic">业务逻辑详解</a>
+    <a href="#data-permission" class="sub">数据权限说明</a>
+    <a href="#kpi-calc" class="sub">核心指标计算</a>
+    <a href="#board-calc" class="sub">看板指标计算</a>
+    <a href="#invest-relation" class="sub">投资关系说明</a>
+    <a href="#channel-table" class="sub">渠道对照表</a>
+
+    <div class="nav-group">帮助</div>
+    <a href="#faq">常见问题 FAQ</a>
+  </nav>
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+  <h1 class="page-title">投资人操作指南</h1>
+  <p class="page-subtitle">林夕置业酒店经营日报管理系统 · 版本 V1.0 · 2026-05-24</p>
+
+  <!-- ===== 第一部分：角色概览 ===== -->
+  <div class="section" id="overview">
+    <h2>一、角色概览</h2>
+    <p>作为<strong>投资人/股东</strong>，您可以通过本系统查看所投资门店的经营数据，了解营收、出租率、渠道分布等关键指标，辅助投资决策。</p>
+
+    <div class="highlight-box warn">
+      <h4>投资人角色要点</h4>
+      <ul>
+        <li><strong>身份：</strong>投资人 / 股东</li>
+        <li><strong>核心能力：</strong>查看投资门店的经营数据与分析报表</li>
+        <li><strong>数据范围：</strong>仅限与您有投资关系的门店</li>
+        <li><strong>权限限制：</strong>所有数据均为<strong>只读</strong>，不可填报日报、修改数据或管理用户/门店</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section" id="permissions">
+    <h3>权限与数据范围</h3>
+    <div class="card">
+      <table class="data-table">
+        <thead>
+          <tr><th style="width:30%">能力项</th><th>投资人权限</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>查看门店经营数据</td><td><span class="badge badge-green">&#10003; 允许</span></td></tr>
+          <tr><td>查看经营分析报表</td><td><span class="badge badge-green">&#10003; 允许</span></td></tr>
+          <tr><td>导出 Excel 报表</td><td><span class="badge badge-green">&#10003; 允许</span></td></tr>
+          <tr><td>填报/修改日报数据</td><td><span class="badge" style="background:#fed7d7;color:#c53030;">&#10007; 不允许</span></td></tr>
+          <tr><td>新增/编辑/删除门店</td><td><span class="badge" style="background:#fed7d7;color:#c53030;">&#10007; 不允许</span></td></tr>
+          <tr><td>管理用户账号</td><td><span class="badge" style="background:#fed7d7;color:#c53030;">&#10007; 不允许</span></td></tr>
+          <tr><td>管理投资人信息</td><td><span class="badge" style="background:#fed7d7;color:#c53030;">&#10007; 不允许</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section" id="menus">
+    <h3>可用菜单一览</h3>
+    <div class="menu-list">
+      <div class="menu-item">
+        <div class="menu-icon blue">&#127968;</div>
+        <div><div class="menu-label">首页</div><div class="menu-desc">投资门店概览与快捷入口</div></div>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon green">&#127976;</div>
+        <div><div class="menu-label">门店列表</div><div class="menu-desc">查看所有门店基础信息</div></div>
+        <span class="menu-tag readonly">只读</span>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon purple">&#128101;</div>
+        <div><div class="menu-label">投资人列表</div><div class="menu-desc">查看投资人基本信息</div></div>
+        <span class="menu-tag readonly">只读</span>
+      </div>
+      <div class="menu-item">
+        <div class="menu-icon orange">&#128200;</div>
+        <div><div class="menu-label">经营分析（6个子模块）</div><div class="menu-desc">总部看板 / 门店日报表 / 门店月报表 / 渠道分析 / 门店排名 / 经营趋势</div></div>
+      </div>
+    </div>
+    <p style="margin-top:12px;font-size:13px;color:#718096;"><strong>登录后第一步：</strong>系统将自动跳转至首页，展示您的投资门店列表。</p>
+  </div>
+
+  <!-- ===== 第二部分：逐步操作指南 ===== -->
+  <div class="section" id="dashboard">
+    <h2>二、逐步操作指南</h2>
+    <h3>2.1 首页工作台（投资人视图）</h3>
+    <p>登录系统后，首页将展示您所投资门店的经营概况。</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-content">
+          <p><strong>查看投资门店列表</strong></p>
+          <p>首页核心区域展示投资门店表格，包含以下字段：</p>
+          <table class="data-table">
+            <thead><tr><th>字段</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>门店名称</td><td>酒店门店全称</td></tr>
+              <tr><td>城市</td><td>门店所在城市</td></tr>
+              <tr><td>今日营收</td><td>当日营业总收入（元）</td></tr>
+              <tr><td>本月累计营收</td><td>本月截至当日的累计营收（元）</td></tr>
+              <tr><td>今日出租率</td><td>当日房间出租率（%）</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-content">
+          <p><strong>查看门店经营趋势</strong></p>
+          <p>点击门店对应行的<strong>"查看趋势"</strong>按钮，系统将弹出该门店的经营趋势折线图，直观展示近期营收、出租率等指标变化。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-content">
+          <p><strong>进入经营分析</strong></p>
+          <p>通过首页快捷入口或左侧菜单进入<strong>"经营分析"</strong>模块，查看更详细的报表与数据分析。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="hotel-list">
+    <h3>2.2 查看门店列表</h3>
+    <div class="path">左侧菜单 <span class="sep">&#8594;</span> 门店列表</div>
+    <div class="card">
+      <p>门店列表展示所有门店的基础信息（名称、城市、地址、房间数等）。</p>
+      <ul>
+        <li>可以浏览和查看所有门店基础信息</li>
+        <li><strong>不能</strong>新增、编辑或删除门店</li>
+        <li>页面为<strong>纯只读</strong>模式</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section" id="investor-list">
+    <h3>2.3 查看投资人列表</h3>
+    <div class="path">左侧菜单 <span class="sep">&#8594;</span> 投资人管理 <span class="sep">&#8594;</span> 投资人列表</div>
+    <div class="card">
+      <p>投资人列表展示系统中投资人的基本信息（姓名、联系方式、投资门店等）。</p>
+      <ul>
+        <li>可查看投资人基本信息</li>
+        <li>页面为<strong>纯只读</strong>模式，不可编辑</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section" id="analysis">
+    <h3>2.4 经营分析</h3>
+    <p>经营分析是投资人最常用的核心模块，包含 <strong>6 个子功能</strong>，覆盖从总部全局到门店明细的多维度数据分析。</p>
+  </div>
+
+  <!-- 2.4.1 总部看板 -->
+  <div class="section" id="board">
+    <h4>2.4.1 总部看板</h4>
+    <div class="path">经营分析 <span class="sep">&#8594;</span> 总部看板</div>
+    <p>总部看板提供所有投资门店的全局经营概览，适合快速掌握整体运营状况。</p>
+
+    <div class="card">
+      <p><strong>筛选条件：</strong></p>
+      <ul>
+        <li><strong>基准日期：</strong>选择要查看的日期</li>
+        <li><strong>门店多选：</strong>下拉多选，仅显示您有投资关系的门店</li>
+        <li><strong>查询按钮：</strong>点击执行筛选查询</li>
+        <li><strong>快捷日期：</strong>一键选择本周 / 本月 / 本年</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <p><strong>8 个统计卡片：</strong></p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="label">应填报</div><div class="value">-</div></div>
+        <div class="stat-card"><div class="label">已填报</div><div class="value">-</div></div>
+        <div class="stat-card"><div class="label">未填报</div><div class="value">-</div></div>
+        <div class="stat-card"><div class="label">总营收</div><div class="value">-</div></div>
+        <div class="stat-card"><div class="label">总间夜</div><div class="value">-</div></div>
+        <div class="stat-card"><div class="label">均出租率</div><div class="value">-</div></div>
+        <div class="stat-card"><div class="label">均 ADR</div><div class="value">-</div></div>
+        <div class="stat-card"><div class="label">均 RevPAR</div><div class="value">-</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p><strong>6 个趋势对比图：</strong></p>
+      <p>每个图表均支持 <strong>天 / 周 / 月</strong> 三种时间维度切换，并展示<strong>当期 vs 去年同期</strong>的对比曲线。</p>
+      <ol>
+        <li>营收趋势对比</li>
+        <li>出租率趋势对比</li>
+        <li>ADR 趋势对比</li>
+        <li>RevPAR 趋势对比</li>
+        <li>间夜数趋势对比</li>
+        <li>填报率趋势对比</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <p><strong>门店排名：</strong>按营收和出租率展示门店排名列表。</p>
+      <p><strong>未填报门店列表：</strong>显示当日尚未填报数据的门店，便于督促跟进。</p>
+    </div>
+  </div>
+
+  <!-- 2.4.2 门店日报表 -->
+  <div class="section" id="daily-report">
+    <h4>2.4.2 门店日报表</h4>
+    <div class="path">经营分析 <span class="sep">&#8594;</span> 门店日报表</div>
+    <p>门店日报表按门店和日期展示每日经营明细数据，是最细粒度的数据查看方式。</p>
+
+    <div class="card">
+      <p><strong>筛选条件：</strong></p>
+      <ul>
+        <li><strong>门店选择：</strong>选择要查看的门店</li>
+        <li><strong>日期范围：</strong>选择起止日期</li>
+        <li><strong>快捷日期：</strong>本周 / 本月 / 本年</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <p><strong>默认显示 8 列：</strong></p>
+      <table class="data-table">
+        <thead><tr><th>列名</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>门店</td><td>门店名称</td></tr>
+          <tr><td>日期</td><td>营业日期</td></tr>
+          <tr><td>自有房量</td><td>该门店可用房间总数</td></tr>
+          <tr><td>间夜数</td><td>当日出租间夜总数</td></tr>
+          <tr><td>散客间夜</td><td>散客渠道间夜数</td></tr>
+          <tr><td>出租率</td><td>当日出租率（%）</td></tr>
+          <tr><td>总营收</td><td>当日总营业收入（元）</td></tr>
+          <tr><td>RevPAR</td><td>每间可用房收入</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <p><strong>自定义列功能：</strong></p>
+      <p>点击"自定义列"按钮，弹出字段选择弹窗，可从 <strong>7 个分类</strong> 中勾选需要显示的字段列，灵活定制报表视图。</p>
+    </div>
+
+    <div class="card">
+      <p><strong>数据导出：</strong>支持将当前筛选结果导出为 <strong>Excel 文件</strong>，点击"导出"按钮即可下载。</p>
+    </div>
+  </div>
+
+  <!-- 2.4.3 门店月报表 -->
+  <div class="section" id="monthly-report">
+    <h4>2.4.3 门店月报表</h4>
+    <div class="path">经营分析 <span class="sep">&#8594;</span> 门店月报表</div>
+    <p>门店月报表将日报数据按月汇总，便于从宏观角度审视门店经营表现。</p>
+
+    <div class="card">
+      <p><strong>筛选条件：</strong></p>
+      <ul>
+        <li><strong>门店选择：</strong>选择要查看的门店</li>
+        <li><strong>月份选择：</strong>选择目标月份</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box calc">
+      <h4>月报计算规则</h4>
+      <ul>
+        <li><strong>金额类 / 数量类：</strong>采用 <code>SUM</code> 求和（如总营收、间夜数）</li>
+        <li><strong>比率类（出租率 / ADR / RevPAR）：</strong>采用<strong>加权平均</strong>计算，非简单算术平均</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <p><strong>数据导出：</strong>支持导出为 <strong>Excel 文件</strong>。</p>
+    </div>
+  </div>
+
+  <!-- 2.4.4 渠道分析 -->
+  <div class="section" id="channel">
+    <h4>2.4.4 渠道分析</h4>
+    <div class="path">经营分析 <span class="sep">&#8594;</span> 渠道分析</div>
+    <p>渠道分析帮助您了解各获客渠道的贡献占比，优化渠道投入策略。</p>
+
+    <div class="card">
+      <p><strong>筛选条件：</strong></p>
+      <ul>
+        <li><strong>门店多选：</strong>选择一个或多个门店</li>
+        <li><strong>日期范围：</strong>选择起止日期</li>
+        <li><strong>快捷日期：</strong>本周 / 本月 / 本年</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <p><strong>渠道间夜占比饼图：</strong></p>
+      <p>直观展示各渠道的间夜数占比情况。</p>
+    </div>
+
+    <div class="card">
+      <p><strong>渠道明细表格：</strong></p>
+      <table class="data-table">
+        <thead><tr><th>列名</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>渠道名称</td><td>渠道来源名称</td></tr>
+          <tr><td>间夜数</td><td>该渠道贡献的间夜总数</td></tr>
+          <tr><td>占比</td><td>该渠道间夜数占总间夜的百分比</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;font-size:13px;color:#718096;">主要渠道包括：携程、美团酒店、散客、同程艺龙、去哪儿、飞猪、小猪、智行等。</p>
+    </div>
+  </div>
+
+  <!-- 2.4.5 门店排名 -->
+  <div class="section" id="ranking">
+    <h4>2.4.5 门店排名</h4>
+    <div class="path">经营分析 <span class="sep">&#8594;</span> 门店排名</div>
+    <p>门店排名帮助您在多个投资门店间进行横向对比，识别标杆和待改进门店。</p>
+
+    <div class="card">
+      <p><strong>排名维度：</strong></p>
+      <ul>
+        <li>营收、出租率、间夜数、ADR、RevPAR、评分</li>
+      </ul>
+      <p><strong>时间维度：</strong></p>
+      <ul>
+        <li>天 / 周 / 月</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <p><strong>展示形式：</strong></p>
+      <ul>
+        <li><strong>横向柱状图：</strong>直观展示各门店排名对比</li>
+        <li><strong>排名明细表格：</strong>精确数值展示</li>
+        <li><strong>日期范围提示：</strong>页面顶部会显示实际查询的日期范围</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 2.4.6 经营趋势 -->
+  <div class="section" id="trend">
+    <h4>2.4.6 经营趋势</h4>
+    <div class="path">经营分析 <span class="sep">&#8594;</span> 经营趋势</div>
+    <p>经营趋势模块提供多指标、多门店的时间序列对比分析。</p>
+
+    <div class="card">
+      <p><strong>功能特性：</strong></p>
+      <ul>
+        <li><strong>多指标折线图：</strong>营收 / 出租率 / 间夜数 / ADR</li>
+        <li><strong>多门店对比：</strong>可同时选择多个投资门店进行趋势对比</li>
+        <li><strong>时间维度：</strong>天 / 周 / 月</li>
+        <li><strong>默认范围：</strong>最近 30 天</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== 第三部分：业务逻辑详解 ===== -->
+  <div class="section" id="business-logic">
+    <h2>三、业务逻辑详解</h2>
+  </div>
+
+  <div class="section" id="data-permission">
+    <h3>3.1 数据权限说明</h3>
+    <div class="highlight-box">
+      <h4>数据权限规则</h4>
+      <ul>
+        <li>投资人<strong>只能看到与自己有投资关系的门店</strong>数据</li>
+        <li>所有数据为<strong>只读</strong>，不可修改、删除或填报</li>
+        <li>如果看不到某个门店的数据，请联系管理员检查<strong>投资关系配置</strong>是否正确</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section" id="kpi-calc">
+    <h3>3.2 核心指标计算逻辑</h3>
+    <div class="highlight-box calc">
+      <h4>核心经营指标公式</h4>
+      <ul>
+        <li><code>间夜数</code> = 各渠道间夜之和 + 钟点房数量</li>
+        <li><code>出租率</code> = 间夜数 / 自有房量 &times; 100（%）</li>
+        <li><code>ADR</code> = 日租房房费 / 间夜数</li>
+        <li><code>RevPAR</code> = 总营收 / 自有房量</li>
+        <li><code>总营收</code> = 日租房房费 + 钟点房费用 + 杂费</li>
+      </ul>
+    </div>
+    <div class="card">
+      <p><strong>指标说明：</strong></p>
+      <table class="data-table">
+        <thead><tr><th>指标</th><th>全称</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><td>ADR</td><td>Average Daily Rate</td><td>平均每日房价，衡量客房定价水平</td></tr>
+          <tr><td>RevPAR</td><td>Revenue Per Available Room</td><td>每间可用房收入，综合反映出租率与房价水平</td></tr>
+          <tr><td>间夜数</td><td>Room Nights</td><td>出租房间数 &times; 住宿夜数的总和</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section" id="board-calc">
+    <h3>3.3 看板指标计算规则</h3>
+    <div class="highlight-box calc">
+      <h4>汇总与平均规则</h4>
+      <ul>
+        <li><strong>均出租率 / 均 ADR / 均 RevPAR：</strong>采用<strong>加权平均</strong>（以间夜数或房量为权重），<em>非</em>简单算术平均</li>
+        <li><strong>同比对比：</strong>与去年同期数据对比，反映年度增长趋势</li>
+        <li><strong>月报汇总：</strong>金额类采用 <code>SUM</code> 求和，比率类采用<strong>加权平均</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section" id="invest-relation">
+    <h3>3.4 投资关系说明</h3>
+    <p>投资关系决定了您在系统中的数据可见范围，由管理员在后台配置。</p>
+    <div class="card">
+      <table class="data-table">
+        <thead><tr><th>字段</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>投资金额</td><td>您在该门店的投资总额</td></tr>
+          <tr><td>持股比例</td><td>您在该门店的股权占比</td></tr>
+          <tr><td>授权起始日期</td><td>数据查看权限的开始日期</td></tr>
+          <tr><td>授权截止日期</td><td>数据查看权限的到期日期</td></tr>
+          <tr><td>可查看数据范围</td><td>由管理员配置，可包括：收入数据、渠道数据、评分数据</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13px;color:#718096;">如发现投资关系有误（如缺少门店或持股比例不正确），请联系系统管理员进行修正。</p>
+  </div>
+
+  <div class="section" id="channel-table">
+    <h3>3.5 渠道对照表</h3>
+    <p>以下为系统支持的 13 个渠道编码与名称对照：</p>
+    <div class="card">
+      <table class="data-table">
+        <thead><tr><th>序号</th><th>渠道编码</th><th>渠道名称</th><th>分类</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>ctrip</td><td>携程</td><td>OTA</td></tr>
+          <tr><td>2</td><td>meituan</td><td>美团酒店</td><td>OTA</td></tr>
+          <tr><td>3</td><td>walk_in</td><td>散客</td><td>直销</td></tr>
+          <tr><td>4</td><td>tc_elong</td><td>同程艺龙</td><td>OTA</td></tr>
+          <tr><td>5</td><td>qunar</td><td>去哪儿</td><td>OTA</td></tr>
+          <tr><td>6</td><td>fliggy</td><td>飞猪</td><td>OTA</td></tr>
+          <tr><td>7</td><td>xiaozhu</td><td>小猪</td><td>民宿平台</td></tr>
+          <tr><td>8</td><td>zhixing</td><td>智行</td><td>OTA</td></tr>
+          <tr><td>9</td><td>hourly</td><td>钟点房</td><td>其他</td></tr>
+          <tr><td>10</td><td>protocol</td><td>协议客户</td><td>直销</td></tr>
+          <tr><td>11</td><td>member</td><td>会员</td><td>直销</td></tr>
+          <tr><td>12</td><td>group</td><td>团队</td><td>直销</td></tr>
+          <tr><td>13</td><td>other</td><td>其他渠道</td><td>其他</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== 第四部分：FAQ ===== -->
+  <div class="section" id="faq">
+    <h2>四、常见问题 FAQ</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">看不到某个门店的数据？</div>
+      <div class="faq-a">请检查您的<strong>投资关系配置</strong>是否正确。系统仅展示与您有投资关系的门店数据。如有疑问，请联系管理员核实。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">数据是实时的吗？</div>
+      <div class="faq-a">不是。经营数据由各门店<strong>每日填报</strong>，非实时更新。通常当日数据在次日完成填报后可查看。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">可以导出数据吗？</div>
+      <div class="faq-a">可以。门店日报表和门店月报表均支持<strong>Excel 导出</strong>，点击页面中的"导出"按钮即可下载。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">忘记密码怎么办？</div>
+      <div class="faq-a">请联系系统管理员，管理员可将密码重置为默认密码 <code style="background:#edf2f7;padding:2px 6px;border-radius:3px;font-size:13px;">123456</code>，登录后请及时修改。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">能否修改数据？</div>
+      <div class="faq-a">不能。投资人角色为<strong>纯只读</strong>权限，所有数据均不可修改。如需数据修正，请联系门店管理员操作。</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p><a href="#overview">&#8592; 返回导航首页</a></p>
+    <p style="margin-top:8px;">文档版本 V1.0 &nbsp;|&nbsp; 2026-05-24</p>
+    <p style="margin-top:4px;">林夕置业酒店经营日报管理系统 &copy; 2026</p>
+  </div>
+
+</main>
+</div>
+</body>
+</html>

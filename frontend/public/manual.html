@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>林夕置业酒店经营日报管理系统 - 用户手册</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #1a365d;
+  --primary-light: #2a4a7f;
+  --primary-lighter: #3b6098;
+  --accent: #e8a838;
+  --bg: #f7f8fc;
+  --white: #ffffff;
+  --text: #2d3748;
+  --text-light: #718096;
+  --border: #e2e8f0;
+  --shadow: 0 2px 8px rgba(26,54,93,0.08);
+  --shadow-hover: 0 4px 16px rgba(26,54,93,0.14);
+  --sidebar-w: 260px;
+  --radius: 10px;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--primary);
+  color: #fff;
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s;
+}
+.sidebar-header {
+  padding: 28px 22px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-header .logo {
+  font-size: 13px;
+  letter-spacing: 2px;
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+.sidebar-header h1 {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 0;
+}
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 22px;
+  color: rgba(255,255,255,0.78);
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+.sidebar-nav a:hover, .sidebar-nav a.active {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border-left-color: var(--accent);
+}
+.sidebar-nav .nav-icon { font-size: 16px; width: 22px; text-align: center; }
+.sidebar-footer {
+  padding: 16px 22px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  font-size: 12px;
+  opacity: 0.5;
+}
+
+/* Mobile toggle */
+.mobile-toggle {
+  display: none;
+  position: fixed;
+  top: 14px; left: 14px;
+  z-index: 200;
+  width: 42px; height: 42px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+/* Main */
+.main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+}
+.main-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 36px 60px;
+}
+
+/* Hero */
+.hero {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 44px 40px;
+  margin-bottom: 36px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  top: -40%; right: -10%;
+  width: 300px; height: 300px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 50%;
+}
+.hero h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+}
+.hero p {
+  font-size: 15px;
+  opacity: 0.88;
+  max-width: 600px;
+  position: relative;
+  z-index: 1;
+}
+.hero .badge {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Section */
+.section {
+  margin-bottom: 36px;
+}
+.section-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Cards grid */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 26px;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.25s, transform 0.25s;
+  border: 1px solid var(--border);
+}
+.card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+.card-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+.card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+.card p, .card ul {
+  font-size: 13.5px;
+  color: var(--text-light);
+}
+.card ul { padding-left: 18px; }
+.card ul li { margin-bottom: 3px; }
+.card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  color: var(--primary-lighter);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.card a:hover { color: var(--primary); }
+
+/* Info box */
+.info-box {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 22px 26px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.info-item:last-child { border-bottom: none; }
+.info-label {
+  font-size: 13px;
+  color: var(--text-light);
+  min-width: 90px;
+}
+.info-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.info-value code {
+  background: #edf2f7;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: "Cascadia Code", Consolas, monospace;
+}
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.stat-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 22px 18px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.stat-num {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+/* Table */
+.table-wrap {
+  overflow-x: auto;
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+thead {
+  background: var(--primary);
+  color: #fff;
+}
+th {
+  padding: 13px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+}
+td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+}
+tbody tr:hover { background: #f0f5ff; }
+.check { color: #38a169; font-weight: 700; }
+.cross { color: #cbd5e0; }
+
+/* Steps */
+.steps {
+  display: flex;
+  gap: 20px;
+  counter-reset: step;
+}
+.step {
+  flex: 1;
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 26px 22px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  position: relative;
+  counter-increment: step;
+}
+.step::before {
+  content: counter(step);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 14px;
+}
+.step h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+.step p {
+  font-size: 13.5px;
+  color: var(--text-light);
+}
+
+/* Flow diagram */
+.flow-container {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 28px 0 0;
+  border-top: 1px solid var(--border);
+  color: var(--text-light);
+  font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .mobile-toggle { display: flex; align-items: center; justify-content: center; }
+  .main { margin-left: 0; }
+  .main-inner { padding: 70px 18px 40px; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .steps { flex-direction: column; }
+  .hero { padding: 30px 24px; }
+  .hero h2 { font-size: 22px; }
+}
+@media (max-width: 500px) {
+  .stats-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Mobile Toggle -->
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="切换导航">&#9776;</button>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">LINXI HOSPITALITY</div>
+    <h1>酒店经营日报<br>管理系统用户手册</h1>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#overview" class="active"><span class="nav-icon">&#9670;</span>系统介绍</a>
+    <a href="#access"><span class="nav-icon">&#9658;</span>访问方式</a>
+    <a href="#roles"><span class="nav-icon">&#9734;</span>角色概览</a>
+    <a href="#scale"><span class="nav-icon">&#9632;</span>系统规模</a>
+    <a href="#permissions"><span class="nav-icon">&#9783;</span>权限矩阵</a>
+    <a href="#quickstart"><span class="nav-icon">&#10102;</span>快速入门</a>
+    <a href="#workflow"><span class="nav-icon">&#8635;</span>日报状态流转</a>
+  </nav>
+  <div class="sidebar-footer">V1.0 &middot; 2026-05-24</div>
+</aside>
+
+<!-- Main Content -->
+<div class="main">
+<div class="main-inner">
+
+  <!-- Hero -->
+  <div class="hero" id="overview">
+    <div class="badge">USER MANUAL V1.0</div>
+    <h2>林夕置业酒店经营日报管理系统</h2>
+    <p>面向林夕置业旗下酒店门店的经营数据管理平台 —— 门店每日经营数据在线填报、总部实时监管、投资者便捷查看、自动化报表分析，一站式解决酒店经营数据管理需求。</p>
+  </div>
+
+  <!-- Tech Stack -->
+  <div class="section">
+    <div class="section-title"><span>&#9881;</span> 技术架构</div>
+    <div class="info-box">
+      <div class="info-item">
+        <span class="info-label">前端框架</span>
+        <span class="info-value">Vue 3.4 + Element Plus</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">后端框架</span>
+        <span class="info-value">Spring Boot 2.7.18 + MyBatis-Plus</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">数据库</span>
+        <span class="info-value">SQLite（轻量嵌入式存储）</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">部署方式</span>
+        <span class="info-value">Docker 容器化部署</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Access -->
+  <div class="section" id="access">
+    <div class="section-title"><span>&#127760;</span> 访问方式</div>
+    <div class="info-box">
+      <div class="info-item">
+        <span class="info-label">生产环境</span>
+        <span class="info-value"><code>http://82.156.225.171</code></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">推荐浏览器</span>
+        <span class="info-value">Chrome、Edge 最新版</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">最低分辨率</span>
+        <span class="info-value">1280 &times; 720</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role Cards -->
+  <div class="section" id="roles">
+    <div class="section-title"><span>&#9734;</span> 角色概览</div>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon">&#128081;</div>
+        <h3>管理员（超级管理员 / CEO）</h3>
+        <ul>
+          <li>系统管理与用户权限配置</li>
+          <li>门店管理与模板配置</li>
+          <li>全部门店数据查看</li>
+          <li>日报审核与经营分析</li>
+        </ul>
+        <a href="admin-guide.html">查看管理员手册 &rarr;</a>
+      </div>
+      <div class="card">
+        <div class="card-icon">&#127978;</div>
+        <h3>店长 / 店员</h3>
+        <ul>
+          <li>每日经营数据填报</li>
+          <li>历史日报查询</li>
+          <li>本店数据统计查看</li>
+          <li>日报提交与修改</li>
+        </ul>
+        <a href="store-guide.html">查看门店手册 &rarr;</a>
+      </div>
+      <div class="card">
+        <div class="card-icon">&#128176;</div>
+        <h3>投资人</h3>
+        <ul>
+          <li>查看投资门店经营数据</li>
+          <li>经营报表与趋势分析</li>
+          <li>关键指标概览</li>
+          <li>只读权限，数据安全</li>
+        </ul>
+        <a href="investor-guide.html">查看投资人手册 &rarr;</a>
+      </div>
+      <div class="card">
+        <div class="card-icon">&#128202;</div>
+        <h3>总部管理人员</h3>
+        <ul>
+          <li>经营数据看板</li>
+          <li>日报 / 月报汇总分析</li>
+          <li>渠道分析与门店排名</li>
+          <li>经营趋势与对比分析</li>
+        </ul>
+        <a href="hq-guide.html">查看总部手册 &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scale -->
+  <div class="section" id="scale">
+    <div class="section-title"><span>&#9632;</span> 系统当前规模</div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num">9</div>
+        <div class="stat-label">门店（均位于深圳）</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">43</div>
+        <div class="stat-label">用户</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">3000+</div>
+        <div class="stat-label">日报记录</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">39</div>
+        <div class="stat-label">日报字段 / 7大分类</div>
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:16px;">
+      <div class="info-item">
+        <span class="info-label">用户构成</span>
+        <span class="info-value">2 管理员 + 9 店长 + 18 文员 + 4 投资人 + 其他</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permission Matrix -->
+  <div class="section" id="permissions">
+    <div class="section-title"><span>&#9783;</span> 角色权限矩阵</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>角色</th>
+            <th>说明</th>
+            <th>系统配置</th>
+            <th>全部门店数据</th>
+            <th>日报审核</th>
+            <th>日报填报</th>
+            <th>本店数据</th>
+            <th>经营分析</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>SUPER_ADMIN</strong></td>
+            <td>超级管理员</td>
+            <td class="check">&#10003;</td>
+            <td class="check">&#10003;</td>
+            <td class="check">&#10003;</td>
+            <td class="check">&#10003;</td>
+            <td class="check">&#10003;</td>
+            <td class="check">&#10003;</td>
+          </tr>
+          <tr>
+            <td><strong>CEO</strong></td>
+            <td>查看全部门店、审核日报、经营分析</td>
+            <td class="cross">&mdash;</td>
+            <td class="check">&#10003;</td>
+            <td class="check">&#10003;</td>
+            <td class="cross">&mdash;</td>
+            <td class="check">&#10003;</td>
+            <td class="check">&#10003;</td>
+          </tr>
+          <tr>
+            <td><strong>REGION_MANAGER</strong></td>
+            <td>查看授权范围门店数据（暂未启用）</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+          </tr>
+          <tr>
+            <td><strong>STORE_MANAGER</strong></td>
+            <td>填报日报、查看本店数据</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+            <td class="check">&#10003;</td>
+            <td class="check">&#10003;</td>
+            <td class="cross">&mdash;</td>
+          </tr>
+          <tr>
+            <td><strong>STORE_STAFF</strong></td>
+            <td>协助填报、查看本店数据</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+            <td class="check">&#10003;</td>
+            <td class="check">&#10003;</td>
+            <td class="cross">&mdash;</td>
+          </tr>
+          <tr>
+            <td><strong>INVESTOR</strong></td>
+            <td>查看投资门店数据（只读）</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+            <td class="cross">&mdash;</td>
+            <td class="check">&#10003;</td>
+            <td class="check">&#10003;</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Quick Start -->
+  <div class="section" id="quickstart">
+    <div class="section-title"><span>&#10102;</span> 快速入门</div>
+    <div class="steps">
+      <div class="step">
+        <h4>获取账号</h4>
+        <p>联系系统管理员获取您的专属账号和初始密码。管理员可通过后台「用户管理」模块快速创建账号。</p>
+      </div>
+      <div class="step">
+        <h4>登录系统</h4>
+        <p>打开浏览器访问 <code style="background:#edf2f7;padding:2px 6px;border-radius:3px;font-size:13px;">http://82.156.225.171</code>，输入账号密码登录，首次登录建议修改初始密码。</p>
+      </div>
+      <div class="step">
+        <h4>查看对应文档</h4>
+        <p>根据您的角色，点击上方对应的手册链接，了解详细操作流程和功能说明。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workflow -->
+  <div class="section" id="workflow">
+    <div class="section-title"><span>&#8635;</span> 日报状态流转</div>
+    <div class="flow-container">
+      <svg viewBox="0 0 680 200" width="680" height="200" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;">
+        <!-- Draft -->
+        <rect x="30" y="70" width="120" height="60" rx="10" fill="#edf2f7" stroke="#a0aec0" stroke-width="2"/>
+        <text x="90" y="95" text-anchor="middle" fill="#2d3748" font-size="14" font-weight="600">草稿</text>
+        <text x="90" y="115" text-anchor="middle" fill="#718096" font-size="12">状态 0</text>
+
+        <!-- Arrow: Draft -> Submitted -->
+        <line x1="150" y1="100" x2="220" y2="100" stroke="#1a365d" stroke-width="2" marker-end="url(#arrowhead)"/>
+        <text x="185" y="92" text-anchor="middle" fill="#1a365d" font-size="11">提交</text>
+
+        <!-- Submitted -->
+        <rect x="220" y="70" width="120" height="60" rx="10" fill="#ebf8ff" stroke="#3182ce" stroke-width="2"/>
+        <text x="280" y="95" text-anchor="middle" fill="#2b6cb0" font-size="14" font-weight="600">已提交</text>
+        <text x="280" y="115" text-anchor="middle" fill="#3182ce" font-size="12">状态 1</text>
+
+        <!-- Arrow: Submitted -> Locked -->
+        <line x1="340" y1="100" x2="410" y2="100" stroke="#1a365d" stroke-width="2" marker-end="url(#arrowhead)"/>
+        <text x="375" y="92" text-anchor="middle" fill="#1a365d" font-size="11">锁定</text>
+
+        <!-- Locked -->
+        <rect x="410" y="70" width="120" height="60" rx="10" fill="#f0fff4" stroke="#38a169" stroke-width="2"/>
+        <text x="470" y="95" text-anchor="middle" fill="#276749" font-size="14" font-weight="600">已锁定</text>
+        <text x="470" y="115" text-anchor="middle" fill="#38a169" font-size="12">状态 2</text>
+
+        <!-- Arrow: Submitted -> Returned (curve down) -->
+        <path d="M 280 130 Q 280 175 160 175" stroke="#e53e3e" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
+        <text x="240" y="172" text-anchor="middle" fill="#e53e3e" font-size="11">退回</text>
+
+        <!-- Returned -->
+        <rect x="40" y="150" width="120" height="50" rx="10" fill="#fff5f5" stroke="#e53e3e" stroke-width="2"/>
+        <text x="100" y="172" text-anchor="middle" fill="#c53030" font-size="14" font-weight="600">退回</text>
+        <text x="100" y="190" text-anchor="middle" fill="#e53e3e" font-size="12">状态 3</text>
+
+        <!-- Arrow: Returned -> Draft -->
+        <path d="M 40 170 Q 15 170 15 130 L 15 100 Q 15 80 30 80" stroke="#718096" stroke-width="1.5" fill="none" marker-end="url(#arrowGray)" stroke-dasharray="5,3"/>
+        <text x="8" y="138" text-anchor="middle" fill="#718096" font-size="10" transform="rotate(-90 8 138)">重新编辑</text>
+
+        <!-- Arrowheads -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#1a365d"/>
+          </marker>
+          <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#e53e3e"/>
+          </marker>
+          <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#718096"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>文档版本 V1.0 &middot; 更新日期 2026-05-24</p>
+    <p>林夕置业 &copy; 2026 &middot; 酒店经营日报管理系统</p>
+  </div>
+
+</div>
+</div>
+
+<script>
+// Highlight active nav on scroll
+const sections = document.querySelectorAll('.section, .hero');
+const navLinks = document.querySelectorAll('.sidebar-nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    const top = s.offsetTop - 120;
+    if (window.scrollY >= top) current = s.getAttribute('id') || s.closest('[id]')?.id;
+  });
+  navLinks.forEach(a => {
+    a.classList.remove('active');
+    if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+  });
+});
+
+// Close sidebar on link click (mobile)
+navLinks.forEach(a => {
+  a.addEventListener('click', () => {
+    if (window.innerWidth <= 900) document.querySelector('.sidebar').classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>

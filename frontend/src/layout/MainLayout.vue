@@ -219,7 +219,10 @@ function getDefaultMenus() {
   return menus
 }
 
-loadMenus()
+// 仅在已登录(有token)时才加载菜单，避免竞态导致未授权
+if (localStorage.getItem('token')) {
+  loadMenus()
+}
 </script>
 
 <style scoped>

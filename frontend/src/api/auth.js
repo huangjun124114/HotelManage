@@ -9,5 +9,5 @@ export function logout() {
 }
 
 export function getUserInfo() {
-  return request({ url: '/auth/user-info', method: 'get' })
+  return request({ url: '/auth/userinfo', method: 'get' })
 }

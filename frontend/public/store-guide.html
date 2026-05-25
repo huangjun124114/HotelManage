@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>林夕置业酒店管理系统 — 门店店长/店员操作手册</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #333; line-height: 1.7; }
+.sidebar { position: fixed; left: 0; top: 0; width: 260px; height: 100vh; background: #1a365d; color: #fff; overflow-y: auto; z-index: 100; padding: 20px 0; }
+.sidebar .logo { text-align: center; padding: 20px; font-size: 18px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
+.sidebar .logo small { display: block; font-size: 12px; font-weight: 400; opacity: 0.7; margin-top: 4px; }
+.sidebar nav a { display: block; color: rgba(255,255,255,0.85); text-decoration: none; padding: 10px 24px; font-size: 14px; transition: all .2s; border-left: 3px solid transparent; }
+.sidebar nav a:hover, .sidebar nav a.active { background: rgba(255,255,255,0.1); color: #fff; border-left-color: #63b3ed; }
+.sidebar nav .nav-group { font-size: 12px; text-transform: uppercase; color: rgba(255,255,255,0.4); padding: 16px 24px 6px; letter-spacing: 1px; }
+.main { margin-left: 260px; padding: 30px 40px; max-width: 1100px; }
+.main h1 { font-size: 28px; color: #1a365d; margin-bottom: 8px; }
+.main h2 { font-size: 22px; color: #1a365d; margin: 36px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }
+.main h3 { font-size: 18px; color: #2d3748; margin: 24px 0 12px; }
+.main .subtitle { color: #718096; font-size: 15px; margin-bottom: 24px; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 20px; }
+.step-list { counter-reset: step; list-style: none; padding: 0; }
+.step-list li { position: relative; padding: 16px 16px 16px 56px; margin-bottom: 12px; background: #f7fafc; border-radius: 8px; border-left: 3px solid #3182ce; counter-increment: step; }
+.step-list li::before { content: counter(step); position: absolute; left: 16px; top: 16px; width: 28px; height: 28px; background: #3182ce; color: #fff; border-radius: 50%; text-align: center; line-height: 28px; font-size: 14px; font-weight: 700; }
+.info-box { background: #ebf8ff; border-left: 4px solid #3182ce; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+.info-box.warn { background: #fffbeb; border-left-color: #d69e2e; }
+.info-box.danger { background: #fff5f5; border-left-color: #e53e3e; }
+.info-box.success { background: #f0fff4; border-left-color: #38a169; }
+.info-box .title { font-weight: 700; margin-bottom: 4px; }
+.formula-box { background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin: 12px 0; font-family: "Courier New", monospace; }
+.formula-box .formula { font-size: 16px; color: #2d3748; font-weight: 600; }
+.formula-box .desc { font-size: 13px; color: #718096; margin-top: 6px; font-family: -apple-system, sans-serif; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+table th { background: #edf2f7; color: #2d3748; font-weight: 600; padding: 10px 14px; text-align: left; font-size: 14px; border-bottom: 2px solid #cbd5e0; }
+table td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+table tr:hover { background: #f7fafc; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: #ebf8ff; color: #2b6cb0; }
+.tag-green { background: #f0fff4; color: #276749; }
+.tag-red { background: #fff5f5; color: #c53030; }
+.tag-yellow { background: #fffbeb; color: #975a16; }
+.back-link { display: inline-block; color: #3182ce; text-decoration: none; font-size: 14px; margin-bottom: 20px; }
+.back-link:hover { text-decoration: underline; }
+.flow-diagram { background: #f7fafc; border-radius: 8px; padding: 20px; margin: 16px 0; text-align: center; }
+.mockup-container { background: #edf2f7; border-radius: 12px; padding: 24px; margin: 20px 0; border: 1px solid #cbd5e0; }
+.mockup-container .mockup-title { font-size: 14px; color: #718096; margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.video-placeholder { background: #1a202c; border-radius: 12px; padding: 60px 20px; margin: 20px 0; text-align: center; color: #a0aec0; position: relative; overflow: hidden; }
+.video-placeholder::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%); opacity: 0.9; }
+.video-placeholder .play-icon { position: relative; z-index: 1; width: 64px; height: 64px; background: rgba(255,255,255,0.15); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; border: 2px solid rgba(255,255,255,0.3); }
+.video-placeholder .play-icon svg { margin-left: 4px; }
+.video-placeholder .video-text { position: relative; z-index: 1; font-size: 14px; }
+.video-placeholder .video-title { position: relative; z-index: 1; font-size: 16px; color: #fff; font-weight: 600; margin-bottom: 4px; }
+.toc-card { background: linear-gradient(135deg, #ebf8ff 0%, #f0fff4 100%); border: 1px solid #bee3f8; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+.toc-card h3 { color: #1a365d; font-size: 16px; margin-bottom: 12px; }
+.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.toc-item { display: flex; align-items: center; color: #2d3748; font-size: 14px; text-decoration: none; padding: 6px 10px; border-radius: 6px; transition: background .2s; }
+.toc-item:hover { background: rgba(255,255,255,0.7); }
+.toc-item .toc-num { width: 24px; height: 24px; background: #3182ce; color: #fff; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; font-weight: 700; margin-right: 10px; flex-shrink: 0; }
+.faq-item { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+.faq-item summary { padding: 14px 18px; cursor: pointer; font-weight: 600; color: #2d3748; background: #f7fafc; list-style: none; display: flex; align-items: center; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::before { content: "+"; display: inline-block; width: 24px; height: 24px; background: #3182ce; color: #fff; border-radius: 50%; text-align: center; line-height: 24px; font-size: 16px; font-weight: 700; margin-right: 12px; flex-shrink: 0; transition: transform .2s; }
+.faq-item[open] summary::before { content: "−"; transform: rotate(180deg); }
+.faq-item .faq-answer { padding: 16px 18px; border-top: 1px solid #e2e8f0; }
+@media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; padding: 20px; } .toc-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    林夕置业酒店管理系统
+    <small>门店店长/店员操作手册</small>
+  </div>
+  <nav>
+    <a href="index.html">← 返回导航首页</a>
+    <div class="nav-group">入门指南</div>
+    <a href="#overview">文档概述</a>
+    <a href="#login">登录与界面</a>
+    <a href="#workspace">首页工作台</a>
+    <div class="nav-group">日报填报（核心）</div>
+    <a href="#report-entry">填报入口</a>
+    <a href="#report-steps">填报9步骤详解</a>
+    <a href="#report-fields">字段说明</a>
+    <a href="#report-calc">自动计算规则</a>
+    <a href="#report-submit">保存与提交</a>
+    <div class="nav-group">日常管理</div>
+    <a href="#status">日报状态说明</a>
+    <a href="#history">查看历史日报</a>
+    <a href="#rejected">处理退回日报</a>
+    <a href="#data">查看本店经营数据</a>
+    <a href="#message">站内消息</a>
+    <div class="nav-group">附录</div>
+    <a href="#videos">操作演示视频</a>
+    <a href="#faq">常见问题</a>
+    <a href="#glossary">术语表</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<a href="index.html" class="back-link">← 返回导航首页</a>
+
+<h1>林夕置业酒店管理系统 — 门店店长/店员操作手册</h1>
+<p class="subtitle">本文档面向门店店长（STORE_MANAGER）和门店员工（STORE_STAFF），帮助您全面掌握系统的日常操作。从登录到填报日报、查看经营数据，本手册提供每一步的详细指引。</p>
+
+<!-- 快速导航 -->
+<div class="toc-card">
+  <h3>📖 快速导航</h3>
+  <div class="toc-grid">
+    <a href="#login" class="toc-item"><span class="toc-num">1</span>登录与界面</a>
+    <a href="#workspace" class="toc-item"><span class="toc-num">2</span>首页工作台</a>
+    <a href="#report-steps" class="toc-item"><span class="toc-num">3</span>日报填报9步骤</a>
+    <a href="#report-calc" class="toc-item"><span class="toc-num">4</span>自动计算规则</a>
+    <a href="#status" class="toc-item"><span class="toc-num">5</span>日报状态说明</a>
+    <a href="#rejected" class="toc-item"><span class="toc-num">6</span>处理退回日报</a>
+    <a href="#data" class="toc-item"><span class="toc-num">7</span>本店经营数据</a>
+    <a href="#videos" class="toc-item"><span class="toc-num">8</span>操作演示视频</a>
+  </div>
+</div>
+
+<!-- ==================== 文档概述 ==================== -->
+<h2 id="overview">文档概述</h2>
+
+<div class="card">
+  <h3>适用角色</h3>
+  <table>
+    <tr><th>角色</th><th>英文标识</th><th>职责说明</th></tr>
+    <tr><td>门店店长</td><td><span class="tag tag-blue">STORE_MANAGER</span></td><td>全面负责本店日常运营管理，包括日报填报、数据查看、员工协调等</td></tr>
+    <tr><td>门店员工</td><td><span class="tag tag-green">STORE_STAFF</span></td><td>协助店长完成日常运营操作，可填报日报和查看本店数据</td></tr>
+  </table>
+
+  <h3>核心职责</h3>
+  <p>每日按时、准确地填报门店经营日报，并通过系统查看本店经营数据，为门店经营决策提供数据支撑。</p>
+
+  <h3>您能做什么</h3>
+  <ul style="padding-left:20px; margin:8px 0;">
+    <li><strong>填报日报：</strong>每日填报经营日报，包括基础数据、各渠道间夜数、收入、扫码、好评、评分等</li>
+    <li><strong>管理草稿：</strong>填报过程中可随时保存草稿，下次继续编辑完善</li>
+    <li><strong>查看数据：</strong>查看本店历史日报、月度报表、渠道分析、经营趋势等经营报表</li>
+    <li><strong>消息通知：</strong>接收站内消息，包括催报提醒、退回通知、系统公告等</li>
+    <li><strong>处理退回：</strong>对CEO退回的日报进行修改后重新提交</li>
+  </ul>
+
+  <h3>您不能做什么</h3>
+  <ul style="padding-left:20px; margin:8px 0;">
+    <li>❌ 不能查看其他门店的经营数据</li>
+    <li>❌ 不能审核日报（审核权限属于CEO）</li>
+    <li>❌ 不能管理系统配置（如新增门店、修改门店信息、管理用户权限等）</li>
+    <li>❌ 不能锁定或解锁日报（仅CEO可操作）</li>
+    <li>❌ 不能删除已提交的日报</li>
+  </ul>
+
+  <div class="info-box">
+    <div class="title">📋 数据权限说明</div>
+    门店店长和门店员工只能看到自己所属门店的数据，无法跨店查看。系统会根据您的账号自动关联门店，所有数据展示、报表查询均限定在本店范围内。如需查看其他门店数据或集团汇总数据，请联系管理员提升权限。
+  </div>
+
+  <div class="info-box success">
+    <div class="title">💡 角色升级</div>
+    如果您需要更多权限（如查看多门店数据、审核日报等），请联系您的上级或系统管理员进行角色调整。
+  </div>
+</div>
+
+<!-- ==================== 登录与界面 ==================== -->
+<h2 id="login">登录与界面</h2>
+
+<div class="card">
+  <h3>登录信息</h3>
+  <table>
+    <tr><th>项目</th><th>说明</th></tr>
+    <tr><td>访问地址</td><td><code style="background:#edf2f7;padding:2px 8px;border-radius:4px;">http://82.156.225.171</code></td></tr>
+    <tr><td>推荐浏览器</td><td>Chrome 80+、Edge 80+、Firefox 75+（建议使用Chrome）</td></tr>
+    <tr><td>账号</td><td>管理员分配的用户名（通常为手机号）</td></tr>
+    <tr><td>初始密码</td><td><code style="background:#edf2f7;padding:2px 8px;border-radius:4px;">123456</code></td></tr>
+    <tr><td>安全限制</td><td>连续5次输错密码，账号自动锁定10分钟</td></tr>
+    <tr><td>会话超时</td><td>30分钟无操作自动退出，需重新登录</td></tr>
+  </table>
+
+  <div class="info-box warn">
+    <div class="title">⚠️ 安全提醒</div>
+    <ul style="padding-left:16px; margin:4px 0;">
+      <li>请妥善保管您的账号密码，不要将密码分享给他人</li>
+      <li>首次登录后建议立即修改初始密码</li>
+      <li>不要在公共电脑上保存密码</li>
+      <li>离开工位时请锁定电脑或退出系统</li>
+    </ul>
+  </div>
+
+  <h3>登录页面示意</h3>
+
+  <!-- SVG Mockup: 登录页面 -->
+  <div class="mockup-container">
+    <div class="mockup-title">系统登录页面界面示意</div>
+    <svg viewBox="0 0 680 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
+      <!-- 背景 -->
+      <rect width="680" height="380" rx="8" fill="#1a365d"/>
+      <!-- 装饰圆 -->
+      <circle cx="580" cy="60" r="120" fill="rgba(255,255,255,0.03)"/>
+      <circle cx="100" cy="320" r="80" fill="rgba(255,255,255,0.03)"/>
+      <!-- 登录卡片 -->
+      <rect x="200" y="50" width="280" height="280" rx="12" fill="#fff"/>
+      <!-- Logo区域 -->
+      <rect x="310" y="72" width="60" height="60" rx="12" fill="#3182ce"/>
+      <text x="340" y="108" text-anchor="middle" font-size="24" fill="#fff" font-weight="700">林</text>
+      <text x="340" y="152" text-anchor="middle" font-size="16" fill="#2d3748" font-weight="700">林夕置业酒店管理系统</text>
+      <text x="340" y="170" text-anchor="middle" font-size="11" fill="#a0aec0">Hotel Management System</text>
+      <!-- 用户名输入框 -->
+      <rect x="228" y="190" width="224" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="244" y="213" font-size="13" fill="#a0aec0">👤 请输入用户名/手机号</text>
+      <!-- 密码输入框 -->
+      <rect x="228" y="236" width="224" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="244" y="259" font-size="13" fill="#a0aec0">🔒 请输入密码</text>
+      <!-- 登录按钮 -->
+      <rect x="228" y="286" width="224" height="38" rx="6" fill="#3182ce"/>
+      <text x="340" y="310" text-anchor="middle" font-size="15" fill="#fff" font-weight="600">登 录</text>
+    </svg>
+  </div>
+
+  <h3>界面布局</h3>
+  <p>登录成功后，系统界面采用经典的后台管理布局，由三部分组成：</p>
+  <table>
+    <tr><th>区域</th><th>位置</th><th>说明</th></tr>
+    <tr><td>侧边菜单</td><td>左侧深色栏（宽260px）</td><td>系统导航菜单，包含首页、日报管理、经营分析、消息中心等各功能模块入口</td></tr>
+    <tr><td>顶部栏</td><td>页面顶部（高60px）</td><td>左侧显示当前页面标题，右侧显示消息铃铛（带未读数字角标）、当前用户头像和姓名、退出登录</td></tr>
+    <tr><td>内容区域</td><td>中央主体</td><td>当前功能的操作界面，根据左侧菜单选择动态切换</td></tr>
+  </table>
+
+  <!-- SVG Mockup: 主界面布局 -->
+  <div class="mockup-container">
+    <div class="mockup-title">系统主界面布局示意</div>
+    <svg viewBox="0 0 680 360" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
+      <!-- 整体框架 -->
+      <rect width="680" height="360" rx="8" fill="#f5f7fa"/>
+      <!-- 侧边栏 -->
+      <rect width="160" height="360" rx="8" fill="#1a365d"/>
+      <rect x="8" y="8" width="144" height="344" fill="#1a365d"/>
+      <!-- Logo -->
+      <rect x="20" y="16" width="120" height="40" rx="6" fill="rgba(255,255,255,0.1)"/>
+      <text x="80" y="32" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">林夕置业</text>
+      <text x="80" y="46" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.6)">酒店管理系统</text>
+      <!-- 菜单项 -->
+      <rect x="12" y="68" width="136" height="28" rx="4" fill="rgba(255,255,255,0.15)"/>
+      <text x="32" y="86" font-size="10" fill="#fff">📊 首页工作台</text>
+      <rect x="12" y="100" width="136" height="24" rx="4" fill="transparent"/>
+      <text x="32" y="116" font-size="10" fill="rgba(255,255,255,0.7)">📝 日报管理</text>
+      <rect x="12" y="128" width="136" height="24" rx="4" fill="transparent"/>
+      <text x="32" y="144" font-size="10" fill="rgba(255,255,255,0.7)">📈 经营分析</text>
+      <rect x="12" y="156" width="136" height="24" rx="4" fill="transparent"/>
+      <text x="32" y="172" font-size="10" fill="rgba(255,255,255,0.7)">💬 消息中心</text>
+      <rect x="12" y="184" width="136" height="24" rx="4" fill="transparent"/>
+      <text x="32" y="200" font-size="10" fill="rgba(255,255,255,0.7)">⚙️ 个人设置</text>
+      <!-- 顶部栏 -->
+      <rect x="160" y="0" width="520" height="44" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="180" y="28" font-size="14" fill="#2d3748" font-weight="600">首页工作台</text>
+      <!-- 铃铛 -->
+      <circle cx="600" cy="22" r="12" fill="#fff5f5"/>
+      <text x="600" y="26" text-anchor="middle" font-size="10">🔔</text>
+      <circle cx="608" cy="14" r="7" fill="#e53e3e"/>
+      <text x="608" y="18" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">3</text>
+      <!-- 用户信息 -->
+      <circle cx="640" cy="22" r="14" fill="#3182ce"/>
+      <text x="640" y="27" text-anchor="middle" font-size="10" fill="#fff">张</text>
+      <text x="660" y="27" font-size="9" fill="#718096">店长</text>
+      <!-- 内容区 - 工作台 -->
+      <!-- 填报状态卡片 -->
+      <rect x="175" y="56" width="240" height="56" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="190" y="78" font-size="10" fill="#718096">今日填报状态</text>
+      <rect x="190" y="86" width="72" height="22" rx="4" fill="#3182ce"/>
+      <text x="226" y="101" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">立即填报</text>
+      <!-- 统计卡片 -->
+      <rect x="425" y="56" width="115" height="56" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="440" y="76" font-size="9" fill="#a0aec0">本月营收</text>
+      <text x="440" y="98" font-size="14" fill="#2d3748" font-weight="700">¥128,500</text>
+      <rect x="550" y="56" width="115" height="56" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="565" y="76" font-size="9" fill="#a0aec0">间夜数</text>
+      <text x="565" y="98" font-size="14" fill="#2d3748" font-weight="700">356</text>
+      <!-- 更多统计卡片 -->
+      <rect x="425" y="120" width="115" height="56" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="440" y="140" font-size="9" fill="#a0aec0">出租率</text>
+      <text x="440" y="162" font-size="14" fill="#38a169" font-weight="700">82.3%</text>
+      <rect x="550" y="120" width="115" height="56" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="565" y="140" font-size="9" fill="#a0aec0">ADR</text>
+      <text x="565" y="162" font-size="14" fill="#2d3748" font-weight="700">¥360</text>
+      <!-- 趋势图占位 -->
+      <rect x="175" y="186" width="490" height="160" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="190" y="208" font-size="11" fill="#2d3748" font-weight="600">最近7天经营趋势</text>
+      <!-- 简化的折线图 -->
+      <polyline points="210,310 270,280 330,295 390,260 450,270 510,240 570,250 630,230" fill="none" stroke="#3182ce" stroke-width="2"/>
+      <polyline points="210,320 270,310 330,315 390,300 450,305 510,290 570,295 630,280" fill="none" stroke="#38a169" stroke-width="2" stroke-dasharray="4,3"/>
+      <!-- 图例 -->
+      <line x1="210" y1="340" x2="230" y2="340" stroke="#3182ce" stroke-width="2"/>
+      <text x="234" y="344" font-size="8" fill="#718096">营收</text>
+      <line x1="270" y1="340" x2="290" y2="340" stroke="#38a169" stroke-width="2" stroke-dasharray="4,3"/>
+      <text x="294" y="344" font-size="8" fill="#718096">出租率</text>
+    </svg>
+  </div>
+
+  <div class="info-box">
+    <div class="title">💡 界面提示</div>
+    <ul style="padding-left:16px; margin:4px 0;">
+      <li>侧边栏菜单可以折叠/展开，方便在需要更大内容区域时使用</li>
+      <li>顶部铃铛图标上的红色数字表示未读消息数量</li>
+      <li>点击用户头像可以进入个人设置，修改密码和个人信息</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== 首页工作台 ==================== -->
+<h2 id="workspace">首页工作台</h2>
+
+<div class="card">
+  <p>登录成功后自动进入首页工作台，这是您每天工作的起点。工作台为您提供了今日工作状态的总览和近期经营数据的快速概览。</p>
+
+  <h3>工作台包含以下区域</h3>
+  <table>
+    <tr><th>区域</th><th>位置</th><th>说明</th></tr>
+    <tr><td>今日填报状态</td><td>左上方</td><td>显示今天日报的填报状态。若未填报/未提交，会显示醒目的「立即填报」按钮，点击可直接进入日报填报页面。已提交则显示「已提交，待审核」；已锁定则显示「审核通过」</td></tr>
+    <tr><td>本月统计卡片（4个）</td><td>右上方</td><td>以数字卡片形式展示：本月累计营收（元）、本月间夜数（间夜）、平均出租率（%）、ADR平均房价（元）</td></tr>
+    <tr><td>7日趋势图</td><td>下方</td><td>以折线图展示最近7天本店的经营趋势，通常包含营收曲线和出租率曲线，帮助您直观了解经营走势</td></tr>
+    <tr><td>快捷入口</td><td>中部或侧边</td><td>常用功能的快速跳转按钮，包括：日报填报、历史日报、经营分析等</td></tr>
+  </table>
+
+  <div class="info-box success">
+    <div class="title">💡 工作台使用小贴士</div>
+    <ul style="padding-left:16px; margin:4px 0;">
+      <li>每天登录后先查看工作台的填报状态，确保不遗漏当日日报</li>
+      <li>关注7日趋势图的走势，如果连续几天下滑，需要及时分析原因</li>
+      <li>本月统计卡片是截至昨日的累计数据，当日数据需次日后才会更新</li>
+      <li>工作台数据每日凌晨自动更新前一天的数据</li>
+    </ul>
+  </div>
+
+  <!-- SVG Mockup: 工作台详细 -->
+  <div class="mockup-container">
+    <div class="mockup-title">工作台统计卡片与趋势图示意</div>
+    <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
+      <rect width="680" height="300" fill="#f5f7fa"/>
+      <!-- 4个统计卡片 -->
+      <rect x="10" y="10" width="158" height="72" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="24" y="32" font-size="11" fill="#a0aec0">本月累计营收</text>
+      <text x="24" y="58" font-size="22" fill="#2d3748" font-weight="700">¥128,500</text>
+      <text x="24" y="74" font-size="9" fill="#38a169">↑ 12.3% 较上月</text>
+
+      <rect x="178" y="10" width="158" height="72" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="192" y="32" font-size="11" fill="#a0aec0">本月间夜数</text>
+      <text x="192" y="58" font-size="22" fill="#2d3748" font-weight="700">356</text>
+      <text x="192" y="74" font-size="9" fill="#38a169">↑ 8.5% 较上月</text>
+
+      <rect x="346" y="10" width="158" height="72" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="360" y="32" font-size="11" fill="#a0aec0">平均出租率</text>
+      <text x="360" y="58" font-size="22" fill="#38a169" font-weight="700">82.3%</text>
+      <text x="360" y="74" font-size="9" fill="#38a169">↑ 3.1% 较上月</text>
+
+      <rect x="514" y="10" width="158" height="72" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="528" y="32" font-size="11" fill="#a0aec0">ADR 平均房价</text>
+      <text x="528" y="58" font-size="22" fill="#2d3748" font-weight="700">¥360</text>
+      <text x="528" y="74" font-size="9" fill="#e53e3e">↓ 2.1% 较上月</text>
+
+      <!-- 趋势图区域 -->
+      <rect x="10" y="95" width="660" height="195" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="28" y="120" font-size="13" fill="#2d3748" font-weight="600">最近7天经营趋势</text>
+      <!-- Y轴 -->
+      <text x="28" y="145" font-size="8" fill="#a0aec0">¥5000</text>
+      <text x="28" y="175" font-size="8" fill="#a0aec0">¥3750</text>
+      <text x="28" y="205" font-size="8" fill="#a0aec0">¥2500</text>
+      <text x="28" y="235" font-size="8" fill="#a0aec0">¥1250</text>
+      <text x="38" y="265" font-size="8" fill="#a0aec0">¥0</text>
+      <!-- 网格线 -->
+      <line x1="65" y1="140" x2="645" y2="140" stroke="#edf2f7" stroke-width="0.5"/>
+      <line x1="65" y1="170" x2="645" y2="170" stroke="#edf2f7" stroke-width="0.5"/>
+      <line x1="65" y1="200" x2="645" y2="200" stroke="#edf2f7" stroke-width="0.5"/>
+      <line x1="65" y1="230" x2="645" y2="230" stroke="#edf2f7" stroke-width="0.5"/>
+      <line x1="65" y1="260" x2="645" y2="260" stroke="#edf2f7" stroke-width="0.5"/>
+      <!-- X轴标签 -->
+      <text x="107" y="278" text-anchor="middle" font-size="9" fill="#a0aec0">周一</text>
+      <text x="190" y="278" text-anchor="middle" font-size="9" fill="#a0aec0">周二</text>
+      <text x="273" y="278" text-anchor="middle" font-size="9" fill="#a0aec0">周三</text>
+      <text x="356" y="278" text-anchor="middle" font-size="9" fill="#a0aec0">周四</text>
+      <text x="439" y="278" text-anchor="middle" font-size="9" fill="#a0aec0">周五</text>
+      <text x="522" y="278" text-anchor="middle" font-size="9" fill="#a0aec0">周六</text>
+      <text x="605" y="278" text-anchor="middle" font-size="9" fill="#a0aec0">周日</text>
+      <!-- 营收折线 -->
+      <polyline points="107,210 190,185 273,200 356,165 439,175 522,145 605,155" fill="none" stroke="#3182ce" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- 数据点 -->
+      <circle cx="107" cy="210" r="4" fill="#3182ce"/>
+      <circle cx="190" cy="185" r="4" fill="#3182ce"/>
+      <circle cx="273" cy="200" r="4" fill="#3182ce"/>
+      <circle cx="356" cy="165" r="4" fill="#3182ce"/>
+      <circle cx="439" cy="175" r="4" fill="#3182ce"/>
+      <circle cx="522" cy="145" r="4" fill="#3182ce"/>
+      <circle cx="605" cy="155" r="4" fill="#3182ce"/>
+      <!-- 出租率折线 -->
+      <polyline points="107,225 190,200 273,215 356,180 439,195 522,160 605,170" fill="none" stroke="#38a169" stroke-width="2" stroke-dasharray="6,3" stroke-linecap="round"/>
+      <!-- 图例 -->
+      <rect x="460" y="110" width="12" height="3" rx="1" fill="#3182ce"/>
+      <text x="476" y="115" font-size="9" fill="#718096">日营收</text>
+      <rect x="530" y="110" width="12" height="3" rx="1" fill="#38a169"/>
+      <text x="546" y="115" font-size="9" fill="#718096">出租率</text>
+    </svg>
+  </div>
+
+  <div class="info-box warn">
+    <div class="title">⚠️ 数据更新说明</div>
+    工作台的统计数据基于已填报且审核通过的日报数据计算。如果您当天尚未填报日报，当日数据将不会反映在统计卡片中。建议每日完成填报后检查工作台数据是否正常更新。
+  </div>
+</div>
+
+<!-- ==================== 日报填报 ==================== -->
+<h2 id="report-entry">日报填报 — 填报入口</h2>
+
+<div class="card">
+  <p>日报填报是门店每天最重要的工作，它直接影响公司的经营数据分析和决策。请确保每日按时、准确填报。</p>
+
+  <h3>进入填报页面的两种方式</h3>
+  <table>
+    <tr><th>方式</th><th>操作</th><th>适用场景</th></tr>
+    <tr>
+      <td><strong>方式一：首页快捷入口</strong></td>
+      <td>在工作台首页，点击「立即填报」按钮</td>
+      <td>每天首次填报时，首页会醒目显示填报状态</td>
+    </tr>
+    <tr>
+      <td><strong>方式二：菜单导航</strong></td>
+      <td>左侧菜单 → 日报管理 → 点击页面上方「填报」按钮</td>
+      <td>通过菜单进入日报管理列表页，再点击填报</td>
+    </tr>
+  </table>
+
+  <div class="info-box">
+    <div class="title">⏰ 建议填报时间</div>
+    建议在每日营业结束后（如晚上10点后）填报当日日报，确保所有当日数据都已产生完毕，避免数据遗漏。如果门店有跨夜入住的客人，以当日实际入住为准。
+  </div>
+
+  <div class="info-box warn">
+    <div class="title">⚠️ 每日必须填报</div>
+    日报必须在当天完成填报。如果忘记填报，CEO会通过系统发送催报提醒。长期未填报会影响门店数据的完整性和公司的经营分析。
+  </div>
+
+  <!-- SVG Mockup: 填报入口 -->
+  <div class="mockup-container">
+    <div class="mockup-title">日报管理列表页 — 点击「填报」按钮进入</div>
+    <svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
+      <rect width="680" height="260" fill="#f5f7fa"/>
+      <!-- 顶部操作栏 -->
+      <rect x="10" y="10" width="660" height="44" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="28" y="38" font-size="14" fill="#2d3748" font-weight="600">日报管理</text>
+      <!-- 填报按钮 -->
+      <rect x="570" y="18" width="86" height="30" rx="6" fill="#3182ce"/>
+      <text x="613" y="38" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">+ 填报</text>
+      <!-- 筛选区域 -->
+      <rect x="10" y="62" width="660" height="36" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="0.5"/>
+      <rect x="20" y="68" width="120" height="24" rx="4" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="32" y="84" font-size="10" fill="#a0aec0">开始日期</text>
+      <rect x="148" y="68" width="120" height="24" rx="4" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="160" y="84" font-size="10" fill="#a0aec0">结束日期</text>
+      <rect x="280" y="68" width="80" height="24" rx="4" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+      <text x="292" y="84" font-size="10" fill="#a0aec0">状态筛选</text>
+      <rect x="372" y="68" width="56" height="24" rx="4" fill="#3182ce"/>
+      <text x="400" y="84" text-anchor="middle" font-size="10" fill="#fff">查询</text>
+      <!-- 列表表头 -->
+      <rect x="10" y="106" width="660" height="30" rx="0" fill="#edf2f7"/>
+      <text x="30" y="126" font-size="10" fill="#4a5568" font-weight="600">日期</text>
+      <text x="160" y="126" font-size="10" fill="#4a5568" font-weight="600">间夜数</text>
+      <text x="260" y="126" font-size="10" fill="#4a5568" font-weight="600">总营收</text>
+      <text x="380" y="126" font-size="10" fill="#4a5568" font-weight="600">出租率</text>
+      <text x="480" y="126" font-size="10" fill="#4a5568" font-weight="600">状态</text>
+      <text x="590" y="126" font-size="10" fill="#4a5568" font-weight="600">操作</text>
+      <!-- 数据行1 -->
+      <rect x="10" y="136" width="660" height="36" fill="#fff" stroke="#e2e8f0" stroke-width="0.3"/>
+      <text x="30" y="158" font-size="11" fill="#2d3748">2026-05-23</text>
+      <text x="160" y="158" font-size="11" fill="#2d3748">48</text>
+      <text x="260" y="158" font-size="11" fill="#2d3748">¥16,800</text>
+      <text x="380" y="158" font-size="11" fill="#2d3748">80.0%</text>
+      <rect x="470" y="148" width="56" height="20" rx="10" fill="#f0fff4"/>
+      <text x="498" y="162" text-anchor="middle" font-size="9" fill="#276749" font-weight="600">已锁定</text>
+      <text x="590" y="158" font-size="10" fill="#3182ce">查看</text>
+      <!-- 数据行2 -->
+      <rect x="10" y="172" width="660" height="36" fill="#fff" stroke="#e2e8f0" stroke-width="0.3"/>
+      <text x="30" y="194" font-size="11" fill="#2d3748">2026-05-22</text>
+      <text x="160" y="194" font-size="11" fill="#2d3748">52</text>
+      <text x="260" y="194" font-size="11" fill="#2d3748">¥18,200</text>
+      <text x="380" y="194" font-size="11" fill="#2d3748">86.7%</text>
+      <rect x="470" y="184" width="56" height="20" rx="10" fill="#f0fff4"/>
+      <text x="498" y="198" text-anchor="middle" font-size="9" fill="#276749" font-weight="600">已锁定</text>
+      <text x="590" y="194" font-size="10" fill="#3182ce">查看</text>
+      <!-- 数据行3 - 今天 -->
+      <rect x="10" y="208" width="660" height="36" fill="#fffbeb" stroke="#e2e8f0" stroke-width="0.3"/>
+      <text x="30" y="230" font-size="11" fill="#2d3748" font-weight="600">2026-05-24</text>
+      <text x="160" y="230" font-size="11" fill="#a0aec0">—</text>
+      <text x="260" y="230" font-size="11" fill="#a0aec0">—</text>
+      <text x="380" y="230" font-size="11" fill="#a0aec0">—</text>
+      <rect x="470" y="220" width="56" height="20" rx="10" fill="#fff5f5"/>
+      <text x="498" y="234" text-anchor="middle" font-size="9" fill="#c53030" font-weight="600">未填报</text>
+      <rect x="578" y="218" width="56" height="22" rx="4" fill="#3182ce"/>
+      <text x="606" y="233" text-anchor="middle" font-size="10" fill="#fff" font-weight="600">填报</text>
+    </svg>
+  </div>
+</div>
+
+<h2 id="report-steps">日报填报 — 9步骤详解</h2>
+
+<div class="card">
+  <p>以下是日报填报的完整9个步骤。系统会引导您依次完成每个环节，自动计算的数据会在您填写完相应字段后实时显示。</p>
+
+  <ol class="step-list">
+
+    <li>
+      <strong>进入填报页面 — 确认日期和门店</strong>
+      <p>系统自动显示今天的日期和门店信息（门店名称、门店编号等），并自动带出本店的自有房量。您无需手动填写日期和门店信息。</p>
+      <p style="margin-top:8px; color:#718096; font-size:13px;">💡 如果发现日期或门店信息有误，请截图并联系管理员。</p>
+
+      <!-- SVG Mockup: 填报页面头部 -->
+      <div class="mockup-container" style="margin-top:12px;">
+        <div class="mockup-title">填报页面顶部 — 自动显示日期和门店</div>
+        <svg viewBox="0 0 680 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
+          <rect width="680" height="100" fill="#fff"/>
+          <text x="20" y="30" font-size="16" fill="#1a365d" font-weight="700">日报填报</text>
+          <rect x="20" y="44" width="300" height="40" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="36" y="60" font-size="10" fill="#a0aec0">填报日期</text>
+          <text x="36" y="76" font-size="13" fill="#2d3748" font-weight="600">2026年05月24日（周日）</text>
+          <rect x="340" y="44" width="200" height="40" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="356" y="60" font-size="10" fill="#a0aec0">所属门店</text>
+          <text x="356" y="76" font-size="13" fill="#2d3748" font-weight="600">林夕酒店·西湖店</text>
+          <rect x="560" y="44" width="100" height="40" rx="6" fill="#ebf8ff" stroke="#3182ce" stroke-width="0.5"/>
+          <text x="576" y="60" font-size="10" fill="#3182ce">自有房量</text>
+          <text x="576" y="76" font-size="16" fill="#3182ce" font-weight="700">60 间</text>
+        </svg>
+      </div>
+    </li>
+
+    <li>
+      <strong>填写基础字段（3个）</strong>
+      <p>基础数据是日报的根基，请确保准确填写。</p>
+      <table>
+        <tr><th>字段</th><th>说明</th><th>是否必填</th><th>填写提示</th></tr>
+        <tr><td>自有房量</td><td>本店可供出租的房间总数</td><td><span class="tag tag-green">✅ 必填</span></td><td>系统自动带出，一般无需修改。如有变动联系管理员</td></tr>
+        <tr><td>钟点房数量</td><td>今日钟点房出租数量（按次计算）</td><td><span class="tag tag-blue">选填</span></td><td>今日没有钟点房则填0或留空</td></tr>
+        <tr><td>维修房</td><td>今日因维修不可用的房间数</td><td><span class="tag tag-blue">选填</span></td><td>有维修房时填写，影响可用房量计算</td></tr>
+      </table>
+
+      <div class="info-box">
+        <div class="title">💡 自有房量说明</div>
+        自有房量是系统根据门店基础信息自动填入的，代表门店当前可供出租的房间总数。如果门店近期进行了房间增减（如新装修开业、部分楼层改造），请联系管理员更新门店信息中的房量数据。
+      </div>
+    </li>
+
+    <li>
+      <strong>填写各渠道间夜数（13个渠道）</strong>
+      <p>间夜数是酒店经营的核心指标。系统提供了13个渠道的分别统计，请将每个渠道今日出租的间夜数准确填入。</p>
+      <table>
+        <tr><th>序号</th><th>渠道名称</th><th>说明</th><th>填写示例</th></tr>
+        <tr><td>1</td><td>散客</td><td>直接到店、电话预订等非线上渠道的客人</td><td>12</td></tr>
+        <tr><td>2</td><td>携程</td><td>携程旅行网平台产生的订单</td><td>8</td></tr>
+        <tr><td>3</td><td>同程艺龙</td><td>同程艺龙平台产生的订单</td><td>5</td></tr>
+        <tr><td>4</td><td>去哪儿</td><td>去哪儿网平台产生的订单</td><td>3</td></tr>
+        <tr><td>5</td><td>智行</td><td>智行平台产生的订单</td><td>2</td></tr>
+        <tr><td>6</td><td>外网</td><td>其他外网渠道（非上述平台的线上订单）</td><td>1</td></tr>
+        <tr><td>7</td><td>美团酒店</td><td>美团酒店频道产生的订单</td><td>6</td></tr>
+        <tr><td>8</td><td>飞猪</td><td>飞猪旅行平台产生的订单</td><td>4</td></tr>
+        <tr><td>9</td><td>抖音</td><td>抖音/抖音来客平台产生的订单</td><td>2</td></tr>
+        <tr><td>10</td><td>小猪</td><td>小猪短租平台产生的订单</td><td>0</td></tr>
+        <tr><td>11</td><td>途家</td><td>途家平台产生的订单</td><td>0</td></tr>
+        <tr><td>12</td><td>美团民宿</td><td>美团民宿频道产生的订单</td><td>1</td></tr>
+        <tr><td>13</td><td>红色加力</td><td>红色加力平台产生的订单</td><td>0</td></tr>
+      </table>
+
+      <div class="info-box">
+        <div class="title">💡 填写提示</div>
+        <ul style="padding-left:16px; margin:4px 0;">
+          <li>每个渠道填入<strong>正整数</strong>，代表该渠道今日实际出租的间夜数</li>
+          <li>没有产生订单的渠道，填 <code>0</code> 或直接留空（系统视为0）</li>
+          <li>间夜数 = 房间数 × 入住天数。例如：1间房住2晚 = 2间夜</li>
+          <li>同一房间如果白天钟点房、晚上日租房，分别计算到对应类别</li>
+          <li>不要重复计算！一间房一天只算1个间夜（日租房部分）</li>
+        </ul>
+      </div>
+
+      <!-- SVG Mockup: 渠道间夜数填写 -->
+      <div class="mockup-container" style="margin-top:12px;">
+        <div class="mockup-title">渠道间夜数填写区域示意</div>
+        <svg viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
+          <rect width="680" height="240" fill="#fff"/>
+          <text x="20" y="26" font-size="13" fill="#2d3748" font-weight="600">各渠道间夜数</text>
+          <!-- 第一排 -->
+          <rect x="20" y="40" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="32" y="54" font-size="9" fill="#a0aec0">散客</text>
+          <text x="32" y="70" font-size="14" fill="#2d3748" font-weight="600">12</text>
+          <rect x="225" y="40" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="237" y="54" font-size="9" fill="#a0aec0">携程</text>
+          <text x="237" y="70" font-size="14" fill="#2d3748" font-weight="600">8</text>
+          <rect x="430" y="40" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="442" y="54" font-size="9" fill="#a0aec0">同程艺龙</text>
+          <text x="442" y="70" font-size="14" fill="#2d3748" font-weight="600">5</text>
+          <!-- 第二排 -->
+          <rect x="20" y="84" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="32" y="98" font-size="9" fill="#a0aec0">去哪儿</text>
+          <text x="32" y="114" font-size="14" fill="#2d3748" font-weight="600">3</text>
+          <rect x="225" y="84" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="237" y="98" font-size="9" fill="#a0aec0">智行</text>
+          <text x="237" y="114" font-size="14" fill="#2d3748" font-weight="600">2</text>
+          <rect x="430" y="84" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="442" y="98" font-size="9" fill="#a0aec0">外网</text>
+          <text x="442" y="114" font-size="14" fill="#a0aec0">0</text>
+          <!-- 第三排 -->
+          <rect x="20" y="128" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="32" y="142" font-size="9" fill="#a0aec0">美团酒店</text>
+          <text x="32" y="158" font-size="14" fill="#2d3748" font-weight="600">6</text>
+          <rect x="225" y="128" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="237" y="142" font-size="9" fill="#a0aec0">飞猪</text>
+          <text x="237" y="158" font-size="14" fill="#2d3748" font-weight="600">4</text>
+          <rect x="430" y="128" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="442" y="142" font-size="9" fill="#a0aec0">抖音</text>
+          <text x="442" y="158" font-size="14" fill="#2d3748" font-weight="600">2</text>
+          <!-- 第四排 -->
+          <rect x="20" y="172" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="32" y="186" font-size="9" fill="#a0aec0">小猪</text>
+          <text x="32" y="202" font-size="14" fill="#a0aec0">0</text>
+          <rect x="225" y="172" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="237" y="186" font-size="9" fill="#a0aec0">途家</text>
+          <text x="237" y="202" font-size="14" fill="#a0aec0">0</text>
+          <rect x="430" y="172" width="195" height="36" rx="6" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="442" y="186" font-size="9" fill="#a0aec0">美团民宿</text>
+          <text x="442" y="202" font-size="14" fill="#2d3748" font-weight="600">1</text>
+          <!-- 第五排 -->
+          <rect x="20" y="216" width="195" height="16" rx="4" fill="#f7fafc" stroke="#e2e8f0" stroke-width="0.5"/>
+          <text x="32" y="228" font-size="9" fill="#a0aec0">红色加力: 0</text>
+          <!-- 自动计算 -->
+          <rect x="430" y="210" width="195" height="28" rx="6" fill="#ebf8ff" stroke="#3182ce" stroke-width="1"/>
+          <text x="442" y="228" font-size="11" fill="#3182ce" font-weight="600">间夜数合计：44</text>
+        </svg>
+      </div>
+    </li>
+
+    <li>
+      <strong>系统自动计算间夜数</strong>
+      <p>填写完各渠道数据后，系统自动汇总计算总间夜数，无需手动填写：</p>
+      <div class="formula-box">
+        <div class="formula">间夜数 = 散客 + 携程 + 同程艺龙 + 去哪儿 + 智行 + 外网 + 美团酒店 + 飞猪 + 抖音 + 小猪 + 途家 + 美团民宿 + 红色加力 + 钟点房数量</div>
+        <div class="desc">所有13个渠道间夜数之和，再加上钟点房数量，等于当日总间夜数。示例：12+8+5+3+2+1+6+4+2+0+0+1+0+2(钟点房) = 46间夜</div>
+      </div>
+    </li>
+
+    <li>
+      <strong>填写收入数据（5个字段）</strong>
+      <p>收入数据反映门店当日的经营成果，请根据实际收款情况填写。</p>
+      <table>
+        <tr><th>字段</th><th>说明</th><th>是否必填</th><th>填写提示</th></tr>
+        <tr><td>日租房房费</td><td>今日所有日租房的总房费收入（元）</td><td><span class="tag tag-green">✅ 必填</span></td><td>填写实际应收金额，非实收金额</td></tr>
+        <tr><td>钟点房费用</td><td>今日所有钟点房的总收入（元）</td><td><span class="tag tag-blue">选填</span></td><td>没有钟点房收入则填0或留空</td></tr>
+        <tr><td>杂费</td><td>其他经营收入（如加床费、洗衣费、迷你吧等）</td><td><span class="tag tag-blue">选填</span></td><td>没有杂费收入则填0或留空</td></tr>
+        <tr><td>当日总营收</td><td>系统自动计算：日租房费 + 钟点房费 + 杂费</td><td><span class="tag tag-yellow">自动</span></td><td>系统实时计算，不可手动修改</td></tr>
+        <tr><td>押金</td><td>今日收取的客人押金总额（元）</td><td><span class="tag tag-blue">选填</span></td><td>记录当日收取的押金，非营收</td></tr>
+      </table>
+
+      <div class="info-box warn">
+        <div class="title">⚠️ 金额填写注意</div>
+        <ul style="padding-left:16px; margin:4px 0;">
+          <li>所有金额单位为<strong>人民币（元）</strong>，填写整数即可</li>
+          <li>日租房房费是所有日租房的房费合计，不是单间房价</li>
+          <li>当日总营收 = 日租房费 + 钟点房费 + 杂费，系统自动计算</li>
+          <li>押金不计入营收，仅作为记录数据</li>
+        </ul>
+      </div>
+    </li>
+
+    <li>
+      <strong>系统自动计算经营指标（3个）</strong>
+      <p>根据已填写的基础数据和收入数据，系统实时计算以下三大核心经营指标：</p>
+      <table>
+        <tr><th>指标</th><th>英文</th><th>计算公式</th><th>说明</th></tr>
+        <tr><td>出租率</td><td>Occupancy Rate</td><td>间夜数 ÷ 自有房量 × 100</td><td>百分比数值，如 85.5 表示 85.5%</td></tr>
+        <tr><td>ADR（平均房价）</td><td>Average Daily Rate</td><td>日租房房费 ÷ 间夜数</td><td>平均每间已出租房间的价格（元）</td></tr>
+        <tr><td>RevPAR（每可用房收入）</td><td>Revenue Per Available Room</td><td>总营收 ÷ 自有房量</td><td>每间可用房（含空置）贡献的营收</td></tr>
+      </table>
+
+      <div class="formula-box">
+        <div class="formula">出租率(%) = 间夜数 ÷ 自有房量 × 100</div>
+        <div class="desc">例：出租 45 间夜，自有房量 60 间 → 出租率 = 45 ÷ 60 × 100 = 75.0%</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula">ADR = 日租房房费 ÷ 间夜数</div>
+        <div class="desc">例：日租房费 13,500 元，间夜数 45 → ADR = 13500 ÷ 45 = 300 元/间。当间夜数为0时，ADR显示为0。</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula">RevPAR = 当日总营收 ÷ 自有房量</div>
+        <div class="desc">例：总营收 15,000 元，自有房量 60 间 → RevPAR = 15000 ÷ 60 = 250 元/间。RevPAR综合反映了出租率和房价水平。</div>
+      </div>
+
+      <div class="info-box success">
+        <div class="title">💡 指标解读</div>
+        <ul style="padding-left:16px; margin:4px 0;">
+          <li><strong>出租率</strong>反映房间卖出去了多少，越高说明越受欢迎</li>
+          <li><strong>ADR</strong>反映平均每间房卖多少钱，体现定价水平</li>
+          <li><strong>RevPAR</strong>是最综合的指标 = 出租率 × ADR，反映整体经营效率</li>
+          <li>提升RevPAR的两个方向：提高出租率 或 提高平均房价</li>
+        </ul>
+      </div>
+
+      <!-- SVG Mockup: 经营指标展示 -->
+      <div class="mockup-container" style="margin-top:12px;">
+        <div class="mockup-title">系统自动计算的经营指标展示示意</div>
+        <svg viewBox="0 0 680 90" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
+          <rect width="680" height="90" fill="#fff"/>
+          <rect x="20" y="10" width="200" height="68" rx="8" fill="#f0fff4" stroke="#38a169" stroke-width="1"/>
+          <text x="36" y="34" font-size="11" fill="#276749">出租率</text>
+          <text x="36" y="62" font-size="26" fill="#276749" font-weight="700">75.0%</text>
+          <rect x="240" y="10" width="200" height="68" rx="8" fill="#ebf8ff" stroke="#3182ce" stroke-width="1"/>
+          <text x="256" y="34" font-size="11" fill="#2b6cb0">ADR 平均房价</text>
+          <text x="256" y="62" font-size="26" fill="#2b6cb0" font-weight="700">¥300</text>
+          <rect x="460" y="10" width="200" height="68" rx="8" fill="#fffbeb" stroke="#d69e2e" stroke-width="1"/>
+          <text x="476" y="34" font-size="11" fill="#975a16">RevPAR 每可用房收入</text>
+          <text x="476" y="62" font-size="26" fill="#975a16" font-weight="700">¥250</text>
+        </svg>
+      </div>
+    </li>
+
+    <li>
+      <strong>填写扫码数据（2个）</strong>
+      <p>扫码数据用于统计线上平台的引流效果。</p>
+      <table>
+        <tr><th>字段</th><th>说明</th><th>填写提示</th></tr>
+        <tr><td>携程扫码</td><td>携程平台扫码次数（今日新增数）</td><td>从携程商家后台获取当日数据</td></tr>
+        <tr><td>美团扫码</td><td>美团平台扫码次数（今日新增数）</td><td>从美团商家后台获取当日数据</td></tr>
+      </table>
+
+      <div class="info-box">
+        <div class="title">💡 扫码数据说明</div>
+        扫码数据不是必填项，但填写后有助于公司分析线上渠道的引流效果和转化率。如果当日没有扫码数据，可以留空。
+      </div>
+    </li>
+
+    <li>
+      <strong>填写好评数据（6个平台）</strong>
+      <p>好评数据反映客人满意度，是门店服务质量的重要指标。</p>
+      <table>
+        <tr><th>序号</th><th>平台</th><th>说明</th><th>获取方式</th></tr>
+        <tr><td>1</td><td>携程</td><td>今日携程新增好评数量</td><td>携程商家后台 → 点评管理</td></tr>
+        <tr><td>2</td><td>美团</td><td>今日美团新增好评数量</td><td>美团商家后台 → 评价管理</td></tr>
+        <tr><td>3</td><td>同程</td><td>今日同程新增好评数量</td><td>同程商家后台</td></tr>
+        <tr><td>4</td><td>去哪儿</td><td>今日去哪儿新增好评数量</td><td>去哪儿商家后台</td></tr>
+        <tr><td>5</td><td>智行</td><td>今日智行新增好评数量</td><td>智行商家后台</td></tr>
+        <tr><td>6</td><td>飞猪</td><td>今日飞猪新增好评数量</td><td>飞猪商家后台</td></tr>
+      </table>
+
+      <div class="info-box success">
+        <div class="title">💡 好评管理建议</div>
+        <ul style="padding-left:16px; margin:4px 0;">
+          <li>鼓励入住客人在各平台留下好评，提升门店口碑</li>
+          <li>及时回复客人的评价（包括好评和差评），展现门店的服务态度</li>
+          <li>如果出现差评，第一时间联系客人了解情况并解决问题</li>
+        </ul>
+      </div>
+    </li>
+
+    <li>
+      <strong>填写评分数据（6个平台）</strong>
+      <p>评分数据反映门店在各平台的综合评分水平，是长期积累的口碑体现。</p>
+      <table>
+        <tr><th>序号</th><th>平台</th><th>说明</th><th>填写格式</th></tr>
+        <tr><td>1</td><td>携程</td><td>携程当前综合评分</td><td>小数点后一位，如 4.8</td></tr>
+        <tr><td>2</td><td>同程</td><td>同程当前综合评分</td><td>小数点后一位，如 4.7</td></tr>
+        <tr><td>3</td><td>去哪儿</td><td>去哪儿当前综合评分</td><td>小数点后一位，如 4.6</td></tr>
+        <tr><td>4</td><td>智行</td><td>智行当前综合评分</td><td>小数点后一位，如 4.5</td></tr>
+        <tr><td>5</td><td>美团</td><td>美团当前综合评分</td><td>小数点后一位，如 4.9</td></tr>
+        <tr><td>6</td><td>飞猪</td><td>飞猪当前综合评分</td><td>小数点后一位，如 4.7</td></tr>
+      </table>
+
+      <div class="info-box">
+        <div class="title">💡 评分说明</div>
+        <ul style="padding-left:16px; margin:4px 0;">
+          <li>评分通常为小数点后一位数字，如 4.8、4.9</li>
+          <li>请填写各平台显示的<strong>最新综合评分</strong>（非单日评分）</li>
+          <li>评分变动较慢，建议每天填报时查看一次即可</li>
+          <li>如果某平台暂无评分，可留空</li>
+        </ul>
+      </div>
+    </li>
+
+  </ol>
+</div>
+
+<h2 id="report-fields">日报填报 — 字段说明汇总</h2>
+
+<div class="card">
+  <p>以下是日报填报中所有字段的汇总说明，方便您快速查阅。</p>
+  <table>
+    <tr><th>分类</th><th>字段名称</th><th>数据类型</th><th>必填</th><th>备注</th></tr>
+    <tr><td rowspan="3"><strong>基础数据</strong></td><td>自有房量</td><td>正整数</td><td>✅ 必填</td><td>系统自动带出</td></tr>
+    <tr><td>钟点房数量</td><td>正整数</td><td>❌ 选填</td><td>无则填0或留空</td></tr>
+    <tr><td>维修房</td><td>正整数</td><td>❌ 选填</td><td>影响可用房量</td></tr>
+    <tr><td rowspan="2"><strong>间夜数据</strong></td><td>13个渠道间夜数</td><td>正整数</td><td>❌ 选填</td><td>无则填0或留空</td></tr>
+    <tr><td>间夜数（合计）</td><td>正整数</td><td>自动计算</td><td>13渠道+钟点房</td></tr>
+    <tr><td rowspan="5"><strong>收入数据</strong></td><td>日租房房费</td><td>金额（元）</td><td>✅ 必填</td><td>当日总房费收入</td></tr>
+    <tr><td>钟点房费用</td><td>金额（元）</td><td>❌ 选填</td><td>当日钟点房收入</td></tr>
+    <tr><td>杂费</td><td>金额（元）</td><td>❌ 选填</td><td>其他经营收入</td></tr>
+    <tr><td>当日总营收</td><td>金额（元）</td><td>自动计算</td><td>三项之和</td></tr>
+    <tr><td>押金</td><td>金额（元）</td><td>❌ 选填</td><td>不计入营收</td></tr>
+    <tr><td rowspan="3"><strong>经营指标</strong></td><td>出租率</td><td>百分比</td><td>自动计算</td><td>如 75.0 = 75%</td></tr>
+    <tr><td>ADR</td><td>金额（元）</td><td>自动计算</td><td>平均房价</td></tr>
+    <tr><td>RevPAR</td><td>金额（元）</td><td>自动计算</td><td>每可用房收入</td></tr>
+    <tr><td rowspan="2"><strong>扫码数据</strong></td><td>携程扫码</td><td>正整数</td><td>❌ 选填</td><td>今日新增次数</td></tr>
+    <tr><td>美团扫码</td><td>正整数</td><td>❌ 选填</td><td>今日新增次数</td></tr>
+    <tr><td rowspan="2"><strong>口碑数据</strong></td><td>6平台好评数</td><td>正整数</td><td>❌ 选填</td><td>今日新增好评</td></tr>
+    <tr><td>6平台评分</td><td>小数（1位）</td><td>❌ 选填</td><td>当前综合评分</td></tr>
+  </table>
+
+  <div class="info-box">
+    <div class="title">📊 数据量统计</div>
+    一份完整日报包含：<strong>3个基础字段 + 13个渠道间夜 + 5个收入字段 + 3个经营指标 + 2个扫码 + 6个好评 + 6个评分 = 38个数据项</strong>。其中系统自动计算5个（间夜合计、总营收、出租率、ADR、RevPAR），实际需手动填写最多33个字段。
+  </div>
+</div>
+
+<h2 id="report-calc">日报填报 — 自动计算规则</h2>
+
+<div class="card">
+  <p>系统在填报过程中实时自动计算以下字段，您无需手动填写。所有自动计算的数据会随着您修改输入字段而即时更新。</p>
+
+  <div class="formula-box">
+    <div class="formula">间夜数 = Σ(13个渠道间夜数) + 钟点房数量</div>
+    <div class="desc">13个渠道的间夜数全部相加，再加上钟点房数量。例：12+8+5+3+2+1+6+4+2+0+0+1+0+2 = 46间夜</div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula">当日总营收 = 日租房房费 + 钟点房费用 + 杂费</div>
+    <div class="desc">三项收入之和。例：13500 + 600 + 200 = 14300元</div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula">出租率(%) = 间夜数 ÷ 自有房量 × 100</div>
+    <div class="desc">已出租房间占总房量的百分比。例：45 ÷ 60 × 100 = 75.0%。出租率可以超过100%（如当日多次翻房）</div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula">ADR = 日租房房费 ÷ 间夜数</div>
+    <div class="desc">平均每间已出租房间的价格。例：13500 ÷ 45 = 300元/间。当间夜数为0时，ADR为0</div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula">RevPAR = 当日总营收 ÷ 自有房量</div>
+    <div class="desc">平均每间可用房贡献的营收。例：15000 ÷ 60 = 250元/间。RevPAR = 出租率 × ADR（数学等价）</div>
+  </div>
+
+  <div class="info-box warn">
+    <div class="title">⚠️ 计算异常排查</div>
+    <ul style="padding-left:16px; margin:4px 0;">
+      <li>如果自动计算的数据与实际不符，请逐一检查输入数据是否正确</li>
+      <li>系统计算是<strong>实时</strong>的，修改任何输入字段后结果会立即更新</li>
+      <li>出租率超过100%不一定错误，可能是一日内同一房间翻房多次（白天退房后再次入住）</li>
+      <li>如果间夜数为0，ADR和RevPAR都会显示为0，这是正常的</li>
+      <li>确认数据无误后，如果计算结果仍然异常，请截图联系管理员</li>
+    </ul>
+  </div>
+
+  <!-- SVG Mockup: 计算关系图 -->
+  <div class="mockup-container" style="margin-top:12px;">
+    <div class="mockup-title">数据计算关系示意图</div>
+    <svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
+      <rect width="680" height="200" fill="#f7fafc"/>
+      <!-- 输入字段 -->
+      <rect x="20" y="20" width="130" height="32" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="85" y="40" text-anchor="middle" font-size="10" fill="#2d3748">13渠道间夜数</text>
+      <rect x="20" y="62" width="130" height="32" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="85" y="82" text-anchor="middle" font-size="10" fill="#2d3748">钟点房数量</text>
+      <rect x="20" y="120" width="130" height="32" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="85" y="140" text-anchor="middle" font-size="10" fill="#2d3748">日租房房费</text>
+      <rect x="20" y="162" width="130" height="32" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="85" y="182" text-anchor="middle" font-size="10" fill="#2d3748">自有房量</text>
+      <!-- 箭头和计算 -->
+      <line x1="150" y1="36" x2="220" y2="60" stroke="#3182ce" stroke-width="1.5" marker-end="url(#calcArrow)"/>
+      <line x1="150" y1="78" x2="220" y2="60" stroke="#3182ce" stroke-width="1.5" marker-end="url(#calcArrow)"/>
+      <rect x="220" y="44" width="120" height="32" rx="6" fill="#ebf8ff" stroke="#3182ce" stroke-width="1.5"/>
+      <text x="280" y="64" text-anchor="middle" font-size="11" fill="#2b6cb0" font-weight="600">间夜数</text>
+      <!-- 收入计算 -->
+      <line x1="150" y1="136" x2="220" y2="136" stroke="#38a169" stroke-width="1.5" marker-end="url(#calcArrowG)"/>
+      <rect x="220" y="120" width="120" height="32" rx="6" fill="#f0fff4" stroke="#38a169" stroke-width="1.5"/>
+      <text x="280" y="140" text-anchor="middle" font-size="11" fill="#276749" font-weight="600">总营收</text>
+      <!-- 经营指标 -->
+      <line x1="340" y1="60" x2="410" y2="36" stroke="#3182ce" stroke-width="1" marker-end="url(#calcArrow)"/>
+      <line x1="340" y1="60" x2="410" y2="80" stroke="#3182ce" stroke-width="1" marker-end="url(#calcArrow)"/>
+      <line x1="340" y1="60" x2="410" y2="124" stroke="#3182ce" stroke-width="1" marker-end="url(#calcArrow)"/>
+      <line x1="340" y1="136" x2="410" y2="124" stroke="#38a169" stroke-width="1" marker-end="url(#calcArrowG)"/>
+      <line x1="340" y1="136" x2="410" y2="168" stroke="#38a169" stroke-width="1" marker-end="url(#calcArrowG)"/>
+      <line x1="150" y1="178" x2="410" y2="36" stroke="#a0aec0" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <line x1="150" y1="178" x2="410" y2="168" stroke="#a0aec0" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <!-- 指标结果 -->
+      <rect x="410" y="20" width="140" height="32" rx="6" fill="#fffbeb" stroke="#d69e2e" stroke-width="1"/>
+      <text x="480" y="40" text-anchor="middle" font-size="11" fill="#975a16" font-weight="600">出租率(%)</text>
+      <rect x="410" y="64" width="140" height="32" rx="6" fill="#fffbeb" stroke="#d69e2e" stroke-width="1"/>
+      <text x="480" y="84" text-anchor="middle" font-size="11" fill="#975a16" font-weight="600">ADR 平均房价</text>
+      <rect x="410" y="108" width="140" height="32" rx="6" fill="#fffbeb" stroke="#d69e2e" stroke-width="1"/>
+      <text x="480" y="128" text-anchor="middle" font-size="11" fill="#975a16" font-weight="600">RevPAR</text>
+      <!-- 图例 -->
+      <rect x="580" y="30" width="12" height="12" rx="2" fill="#fff" stroke="#e2e8f0"/>
+      <text x="596" y="40" font-size="9" fill="#718096">手动输入</text>
+      <rect x="580" y="50" width="12" height="12" rx="2" fill="#ebf8ff" stroke="#3182ce"/>
+      <text x="596" y="60" font-size="9" fill="#718096">自动计算</text>
+      <rect x="580" y="70" width="12" height="12" rx="2" fill="#fffbeb" stroke="#d69e2e"/>
+      <text x="596" y="80" font-size="9" fill="#718096">经营指标</text>
+      <defs>
+        <marker id="calcArrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3182ce"/></marker>
+        <marker id="calcArrowG" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#38a169"/></marker>
+      </defs>
+    </svg>
+  </div>
+</div>
+
+<h2 id="report-submit">日报填报 — 保存与提交</h2>
+
+<div class="card">
+  <p>填报完成后，您可以选择保存草稿或直接提交。以下是两种操作的详细说明：</p>
+
+  <table>
+    <tr><th>操作</th><th>按钮位置</th><th>说明</th><th>结果</th></tr>
+    <tr>
+      <td><strong>保存草稿</strong></td>
+      <td>页面底部「保存草稿」按钮</td>
+      <td>填报过程中可随时点击，保存当前已填写的内容。下次进入填报页面时，系统会自动恢复上次保存的数据</td>
+      <td>日报状态变为「草稿(0)」，可继续编辑</td>
+    </tr>
+    <tr>
+      <td><strong>提交</strong></td>
+      <td>页面底部「提交」按钮</td>
+      <td>确认所有数据无误后点击。系统首先执行必填校验（自有房量、日租房房费），通过后提交成功</td>
+      <td>日报状态变为「已提交(1)」，等待CEO审核</td>
+    </tr>
+  </table>
+
+  <!-- SVG Mockup: 底部按钮 -->
+  <div class="mockup-container" style="margin-top:12px;">
+    <div class="mockup-title">填报页面底部操作按钮示意</div>
+    <svg viewBox="0 0 680 70" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
+      <rect width="680" height="70" fill="#fff"/>
+      <line x1="0" y1="0" x2="680" y2="0" stroke="#e2e8f0" stroke-width="1"/>
+      <rect x="420" y="16" width="110" height="38" rx="6" fill="#fff" stroke="#3182ce" stroke-width="1.5"/>
+      <text x="475" y="40" text-anchor="middle" font-size="14" fill="#3182ce" font-weight="600">保存草稿</text>
+      <rect x="544" y="16" width="110" height="38" rx="6" fill="#3182ce"/>
+      <text x="599" y="40" text-anchor="middle" font-size="14" fill="#fff" font-weight="600">提 交</text>
+      <text x="30" y="42" font-size="12" fill="#a0aec0">* 提交后将进入待审核状态，无法直接修改</text>
+    </svg>
+  </div>
+
+  <div class="info-box">
+    <div class="title">✅ 提交前自查清单</div>
+    <ul style="padding-left:16px; margin:4px 0;">
+      <li>☑ 自有房量是否正确？</li>
+      <li>☑ 日租房房费是否已填写且金额合理？</li>
+      <li>☑ 各渠道间夜数是否与实际一致？</li>
+      <li>☑ 间夜数合计是否正确？</li>
+      <li>☑ 出租率是否在合理范围内？</li>
+      <li>☑ ADR和RevPAR是否与实际大致相符？</li>
+    </ul>
+  </div>
+
+  <div class="info-box danger">
+    <div class="title">❌ 必填校验</div>
+    如果必填字段（自有房量、日租房房费）未填写，系统将阻止提交并高亮提示缺失的字段。请补充完整后再提交。校验失败的日报不会被保存。
+  </div>
+
+  <div class="info-box warn">
+    <div class="title">⚠️ 提交后注意事项</div>
+    <ul style="padding-left:16px; margin:4px 0;">
+      <li>提交后日报进入「已提交」状态，<strong>无法直接编辑</strong></li>
+      <li>如果发现数据有误，需要联系CEO退回后才能修改</li>
+      <li>提交后请留意站内消息，及时查看CEO的审核结果</li>
+      <li>CEO审核通过后日报变为「已锁定」状态，数据归档</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== 日报状态说明 ==================== -->
+<h2 id="status">日报状态说明</h2>
+
+<div class="card">
+  <p>日报从创建到最终归档，会经历不同的状态。理解这些状态有助于您高效管理日报流程。</p>
+
+  <h3>状态流转图</h3>
+  <div class="flow-diagram">
+    <svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg" style="max-width:680px;">
+      <!-- 未填报 -->
+      <rect x="20" y="130" width="100" height="50" rx="8" fill="#edf2f7" stroke="#a0aec0" stroke-width="1.5"/>
+      <text x="70" y="160" text-anchor="middle" font-size="14" fill="#4a5568" font-weight="600">未填报</text>
+      <!-- 箭头 -->
+      <line x1="120" y1="155" x2="160" y2="155" stroke="#a0aec0" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <text x="140" y="148" text-anchor="middle" font-size="9" fill="#a0aec0">创建</text>
+      <!-- 草稿 -->
+      <rect x="160" y="130" width="100" height="50" rx="8" fill="#e2e8f0" stroke="#718096" stroke-width="1.5"/>
+      <text x="210" y="160" text-anchor="middle" font-size="14" fill="#2d3748" font-weight="600">草稿(0)</text>
+      <!-- 箭头 -->
+      <line x1="260" y1="155" x2="300" y2="155" stroke="#3182ce" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+      <text x="280" y="148" text-anchor="middle" font-size="9" fill="#3182ce">提交</text>
+      <!-- 已提交 -->
+      <rect x="300" y="130" width="110" height="50" rx="8" fill="#ebf8ff" stroke="#3182ce" stroke-width="1.5"/>
+      <text x="355" y="160" text-anchor="middle" font-size="14" fill="#2b6cb0" font-weight="600">已提交(1)</text>
+      <!-- 已提交 → 已锁定 -->
+      <line x1="410" y1="155" x2="460" y2="155" stroke="#38a169" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+      <text x="435" y="148" text-anchor="middle" font-size="9" fill="#38a169">通过</text>
+      <!-- 已锁定 -->
+      <rect x="460" y="130" width="110" height="50" rx="8" fill="#f0fff4" stroke="#38a169" stroke-width="1.5"/>
+      <text x="515" y="160" text-anchor="middle" font-size="14" fill="#276749" font-weight="600">已锁定(2)</text>
+      <!-- 已提交 → 退回 → 已退回 -->
+      <path d="M355,180 L355,240 L210,240" stroke="#e53e3e" stroke-width="1.5" fill="none" marker-end="url(#arrowRed)"/>
+      <text x="290" y="232" text-anchor="middle" font-size="11" fill="#e53e3e" font-weight="600">退回</text>
+      <!-- 已退回 -->
+      <rect x="100" y="215" width="110" height="50" rx="8" fill="#fff5f5" stroke="#e53e3e" stroke-width="1.5"/>
+      <text x="155" y="245" text-anchor="middle" font-size="14" fill="#c53030" font-weight="600">已退回(3)</text>
+      <!-- 已退回 → 草稿 -->
+      <path d="M210,225 L210,180" stroke="#718096" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+      <text x="228" y="205" font-size="10" fill="#718096">编辑</text>
+      <!-- 已锁定 → 解锁 → 已提交 -->
+      <path d="M515,130 L515,80 L355,80 L355,130" stroke="#d69e2e" stroke-width="1.5" fill="none" marker-end="url(#arrowYellow)" stroke-dasharray="5,3"/>
+      <text x="435" y="72" text-anchor="middle" font-size="11" fill="#d69e2e" font-weight="600">解锁（仅CEO可操作）</text>
+      <!-- 箭头定义 -->
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#a0aec0"/></marker>
+        <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#3182ce"/></marker>
+        <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#38a169"/></marker>
+        <marker id="arrowRed" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#e53e3e"/></marker>
+        <marker id="arrowYellow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#d69e2e"/></marker>
+      </defs>
+    </svg>
+  </div>
+
+  <h3>状态详细说明</h3>
+  <table>
+    <tr><th>状态</th><th>状态码</th><th>颜色标识</th><th>说明</th><th>可执行操作</th><th>操作人</th></tr>
+    <tr>
+      <td><span class="tag tag-yellow">草稿</span></td>
+      <td>0</td>
+      <td>灰色</td>
+      <td>已保存但未提交，数据可能不完整</td>
+      <td>编辑、提交、删除</td>
+      <td>店长/店员</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-blue">已提交</span></td>
+      <td>1</td>
+      <td>蓝色</td>
+      <td>已提交，等待CEO审核</td>
+      <td>等待审核（不可编辑）</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-green">已锁定</span></td>
+      <td>2</td>
+      <td>绿色</td>
+      <td>CEO审核通过，数据已归档</td>
+      <td>不可修改（CEO可解锁）</td>
+      <td>仅CEO</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-red">已退回</span></td>
+      <td>3</td>
+      <td>红色</td>
+      <td>CEO审核退回，需修改后重新提交</td>
+      <td>编辑、重新提交</td>
+      <td>店长/店员</td>
+    </tr>
+  </table>
+
+  <div class="info-box">
+    <div class="title">💡 状态流转要点</div>
+    <ul style="padding-left:16px; margin:4px 0;">
+      <li>日报从「草稿」提交后变为「已提交」，这是<strong>单向操作</strong>，不能撤回</li>
+      <li>CEO审核通过 → 「已锁定」，数据归档，不可再修改</li>
+      <li>CEO审核退回 → 「已退回」，需要店长/店员修改后重新提交</li>
+      <li>「已退回」的日报编辑后重新提交，再次进入「已提交」状态</li>
+      <li>「已锁定」的日报只能由CEO执行解锁操作，解锁后回到「已提交」状态</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== 查看历史日报 ==================== -->
+<h2 id="history">查看历史日报</h2>
+
+<div class="card">
+  <h3>操作路径</h3>
+  <p>左侧菜单 → <strong>日报管理</strong> → 设置日期范围 → 点击「查询」按钮</p>
+
+  <h3>功能说明</h3>
+  <table>
+    <tr><th>功能</th><th>说明</th></tr>
+    <tr><td>日期筛选</td><td>可选择任意日期范围查看日报，默认显示最近7天</td></tr>
+    <tr><td>状态筛选</td><td>可按日报状态筛选：全部、草稿、已提交、已锁定、已退回</td></tr>
+    <tr><td>查看详情</td><td>点击任意日报条目的「查看」按钮，可查看该日报的完整数据</td></tr>
+    <tr><td>数据导出</td><td>支持将历史日报数据导出为Excel文件，方便线下分析</td></tr>
+    <tr><td>分页浏览</td><td>列表默认每页显示20条，可翻页查看更多历史数据</td></tr>
+  </table>
+
+  <div class="info-box">
+    <div class="title">💡 查看提示</div>
+    <ul style="padding-left:16px; margin:4px 0;">
+      <li>店长只能查看自己所属门店的历史日报，无法查看其他门店的数据</li>
+      <li>列表显示每条日报的日期、间夜数、总营收、出租率和状态等关键信息</li>
+      <li>建议定期回顾历史日报，对比分析经营趋势</li>
+      <li>「已锁定」的日报数据最为可靠，可作为月度/年度结算依据</li>
+    </ul>
+  </div>
+
+  <div class="info-box success">
+    <div class="title">💡 实用技巧</div>
+    在月末时，建议导出当月所有已锁定的日报数据，用于制作月度经营报告，并与系统自动生成的月报表进行核对。
+  </div>
+</div>
+
+<!-- ==================== 处理退回日报 ==================== -->
+<h2 id="rejected">处理退回日报</h2>
+
+<div class="card">
+  <p>当CEO审核后认为数据有误，会将日报退回。收到退回通知后，您需要尽快处理。</p>
+
+  <h3>处理流程（5步）</h3>
+  <ol class="step-list">
+    <li>
+      <strong>收到退回通知</strong>
+      <p>CEO退回日报后，系统会自动发送站内消息通知您。消息中会包含被退回的日报日期。请留意右上角铃铛图标的未读消息提醒。</p>
+    </li>
+    <li>
+      <strong>找到退回的日报</strong>
+      <p>进入日报管理页面，在状态筛选中选择「已退回」，即可快速定位所有被退回的日报。退回的日报状态标签为红色。</p>
+    </li>
+    <li>
+      <strong>查看退回原因</strong>
+      <p>点击日报详情，查看审核人（CEO）填写的退回原因。退回原因会明确显示在日报详情页面，帮助您了解需要修改的具体内容。</p>
+    </li>
+    <li>
+      <strong>编辑修改数据</strong>
+      <p>点击「编辑」按钮进入编辑模式，根据退回原因修改相关数据。修改过程中可多次点击「保存草稿」保存进度，不用担心数据丢失。</p>
+    </li>
+    <li>
+      <strong>重新提交</strong>
+      <p>确认修改无误后，点击「提交」按钮。日报状态重新变为「已提交(1)」，等待CEO再次审核。审核通过后即变为「已锁定(2)」。</p>
+    </li>
+  </ol>
+
+  <div class="info-box warn">
+    <div class="title">⚠️ 退回处理注意</div>
+    <ul style="padding-left:16px; margin:4px 0;">
+      <li>退回的日报请<strong>尽快处理</strong>，避免影响门店数据的及时归档和月度结算</li>
+      <li>如不清楚退回原因，请通过站内消息或直接联系CEO沟通确认</li>
+      <li>重新提交前，请仔细检查所有数据，避免再次被退回</li>
+      <li>同一日报可以被多次退回，每次退回都需要修改后重新提交</li>
+    </ul>
+  </div>
+
+  <!-- SVG Mockup: 退回日报详情 -->
+  <div class="mockup-container" style="margin-top:12px;">
+    <div class="mockup-title">已退回日报详情页 — 显示退回原因</div>
+    <svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
+      <rect width="680" height="200" fill="#fff"/>
+      <!-- 标题栏 -->
+      <text x="20" y="30" font-size="16" fill="#1a365d" font-weight="700">日报详情 — 2026年05月22日</text>
+      <rect x="280" y="14" width="64" height="22" rx="11" fill="#fff5f5"/>
+      <text x="312" y="30" text-anchor="middle" font-size="11" fill="#c53030" font-weight="600">已退回</text>
+      <!-- 退回原因 -->
+      <rect x="20" y="48" width="640" height="52" rx="8" fill="#fff5f5" stroke="#e53e3e" stroke-width="1"/>
+      <text x="36" y="68" font-size="11" fill="#c53030" font-weight="700">退回原因：</text>
+      <text x="36" y="88" font-size="12" fill="#c53030">携程间夜数填写有误，与平台后台数据不一致，请核实后修改。散客数据偏高，请确认是否有重复计算。</text>
+      <!-- 数据摘要 -->
+      <rect x="20" y="112" width="200" height="36" rx="6" fill="#f7fafc"/>
+      <text x="36" y="128" font-size="9" fill="#a0aec0">间夜数</text>
+      <text x="36" y="142" font-size="13" fill="#2d3748" font-weight="600">52 间夜</text>
+      <rect x="230" y="112" width="200" height="36" rx="6" fill="#f7fafc"/>
+      <text x="246" y="128" font-size="9" fill="#a0aec0">总营收</text>
+      <text x="246" y="142" font-size="13" fill="#2d3748" font-weight="600">¥18,200</text>
+      <rect x="440" y="112" width="200" height="36" rx="6" fill="#f7fafc"/>
+      <text x="456" y="128" font-size="9" fill="#a0aec0">出租率</text>
+      <text x="456" y="142" font-size="13" fill="#2d3748" font-weight="600">86.7%</text>
+      <!-- 操作按钮 -->
+      <rect x="480" y="160" width="86" height="32" rx="6" fill="#3182ce"/>
+      <text x="523" y="180" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">编 辑</text>
+      <rect x="576" y="160" width="86" height="32" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="619" y="180" text-anchor="middle" font-size="13" fill="#718096" font-weight="600">返 回</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ==================== 查看本店经营数据 ==================== -->
+<h2 id="data">查看本店经营数据</h2>
+
+<div class="card">
+  <p>店长可通过「经营分析」模块查看本店的经营报表。报表类型与CEO端相同，但数据范围严格限定在本店，无法查看其他门店或集团汇总数据。</p>
+
+  <h3>可用报表</h3>
+  <table>
+    <tr><th>报表名称</th><th>数据维度</th><th>说明</th><th>使用建议</th></tr>
+    <tr>
+      <td><strong>门店日报表</strong></td>
+      <td>逐日明细</td>
+      <td>本店每日经营明细数据，包含间夜数、营收、出租率、ADR、RevPAR等全部字段</td>
+      <td>每日查看，确认数据完整性</td>
+    </tr>
+    <tr>
+      <td><strong>门店月报表</strong></td>
+      <td>月度汇总</td>
+      <td>本店月度汇总数据，包括月度总营收、总间夜、平均出租率、平均ADR等</td>
+      <td>月末查看，了解月度整体经营</td>
+    </tr>
+    <tr>
+      <td><strong>渠道分析</strong></td>
+      <td>渠道维度</td>
+      <td>本店各渠道的间夜数和占比分布，支持按月查看，帮助了解客源结构变化</td>
+      <td>每周查看，优化渠道策略</td>
+    </tr>
+    <tr>
+      <td><strong>经营趋势</strong></td>
+      <td>时间维度</td>
+      <td>本店长期经营趋势图（可选7天/30天/90天），展示营收、出租率、ADR等指标的走势</td>
+      <td>定期查看，把握经营方向</td>
+    </tr>
+  </table>
+
+  <!-- SVG Mockup: 渠道分析图 -->
+  <div class="mockup-container" style="margin-top:12px;">
+    <div class="mockup-title">渠道分析 — 各渠道间夜数占比示意</div>
+    <svg viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:8px;">
+      <rect width="680" height="220" fill="#fff"/>
+      <text x="20" y="28" font-size="14" fill="#2d3748" font-weight="600">渠道分析 — 2026年5月</text>
+      <!-- 横向条形图 -->
+      <text x="20" y="60" font-size="11" fill="#4a5568">散客</text>
+      <rect x="100" y="48" width="220" height="18" rx="3" fill="#3182ce"/>
+      <text x="326" y="62" font-size="10" fill="#4a5568">356 (28.3%)</text>
+      <text x="20" y="84" font-size="11" fill="#4a5568">携程</text>
+      <rect x="100" y="72" width="180" height="18" rx="3" fill="#38a169"/>
+      <text x="286" y="86" font-size="10" fill="#4a5568">245 (19.5%)</text>
+      <text x="20" y="108" font-size="11" fill="#4a5568">美团酒店</text>
+      <rect x="100" y="96" width="150" height="18" rx="3" fill="#d69e2e"/>
+      <text x="256" y="110" font-size="10" fill="#4a5568">198 (15.7%)</text>
+      <text x="20" y="132" font-size="11" fill="#4a5568">同程艺龙</text>
+      <rect x="100" y="120" width="120" height="18" rx="3" fill="#e53e3e"/>
+      <text x="226" y="134" font-size="10" fill="#4a5568">156 (12.4%)</text>
+      <text x="20" y="156" font-size="11" fill="#4a5568">飞猪</text>
+      <rect x="100" y="144" width="90" height="18" rx="3" fill="#805ad5"/>
+      <text x="196" y="158" font-size="10" fill="#4a5568">112 (8.9%)</text>
+      <text x="20" y="180" font-size="11" fill="#4a5568">抖音</text>
+      <rect x="100" y="168" width="70" height="18" rx="3" fill="#dd6b20"/>
+      <text x="176" y="182" font-size="10" fill="#4a5568">89 (7.1%)</text>
+      <text x="20" y="204" font-size="11" fill="#4a5568">其他渠道</text>
+      <rect x="100" y="192" width="60" height="18" rx="3" fill="#a0aec0"/>
+      <text x="166" y="206" font-size="10" fill="#4a5568">102 (8.1%)</text>
+    </svg>
+  </div>
+
+  <div class="info-box success">
+    <div class="title">💡 数据价值</div>
+    <ul style="padding-left:16px; margin:4px 0;">
+      <li>定期查看经营数据有助于发现经营问题、优化渠道策略、提升门店业绩</li>
+      <li>建议每周至少查看一次趋势报表，每月查看月报表进行全面复盘</li>
+      <li>渠道分析帮助了解客源结构，识别高效渠道和低效渠道，优化营销投入</li>
+      <li>经营趋势图是判断门店经营状况是否改善的重要工具</li>
+    </ul>
+  </div>
+
+  <div class="info-box">
+    <div class="title">💡 权限说明</div>
+    您看到的所有报表数据均限定在本店范围内。如需查看多门店对比数据或集团汇总数据，请联系管理员申请权限调整。
+  </div>
+</div>
+
+<!-- ==================== 站内消息 ==================== -->
+<h2 id="message">站内消息</h2>
+
+<div class="card">
+  <h3>消息入口</h3>
+  <p>页面右上角铃铛图标显示未读消息数量（红色角标数字）。点击铃铛可查看最近10条消息列表。点击「消息中心」可进入完整的消息管理页面。</p>
+
+  <h3>消息类型</h3>
+  <table>
+    <tr><th>类型</th><th>触发场景</th><th>说明</th></tr>
+    <tr><td><strong>催报提醒</strong></td><td>当日未填报日报时</td><td>系统自动提醒或CEO手动发送，提醒您尽快填报当日日报</td></tr>
+    <tr><td><strong>退回通知</strong></td><td>CEO退回日报时</td><td>通知您的日报被退回，需查看退回原因并修改后重新提交</td></tr>
+    <tr><td><strong>审核通过</strong></td><td>CEO审核通过日报时</td><td>通知您的日报已审核通过，数据已锁定归档</td></tr>
+    <tr><td><strong>系统通知</strong></td><td>系统升级/维护等</td><td>系统升级公告、维护通知、功能更新说明等</td></tr>
+  </table>
+
+  <h3>消息操作</h3>
+  <table>
+    <tr><th>操作</th><th>说明</th></tr>
+    <tr><td>查看消息</td><td>点击铃铛图标，展开最近10条消息列表</td></tr>
+    <tr><td>标记单条已读</td><td>点击消息条目，自动标记该消息为已读</td></tr>
+    <tr><td>全部已读</td><td>点击消息列表顶部的「全部已读」按钮，一键清除所有未读标记</td></tr>
+    <tr><td>进入消息中心</td><td>点击「查看全部」或左侧菜单「消息中心」，查看所有历史消息</td></tr>
+  </table>
+
+  <!-- SVG Mockup: 消息面板 -->
+  <div class="mockup-container" style="margin-top:12px;">
+    <div class="mockup-title">站内消息面板示意</div>
+    <svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;border-radius:8px;">
+      <rect width="400" height="280" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+      <!-- 头部 -->
+      <rect width="400" height="40" rx="8" fill="#fff"/>
+      <text x="16" y="26" font-size="14" fill="#2d3748" font-weight="600">消息通知</text>
+      <rect x="310" y="10" width="72" height="22" rx="4" fill="#ebf8ff"/>
+      <text x="346" y="26" text-anchor="middle" font-size="10" fill="#3182ce">全部已读</text>
+      <line x1="0" y1="40" x2="400" y2="40" stroke="#e2e8f0" stroke-width="1"/>
+      <!-- 消息1 -->
+      <rect x="0" y="40" width="400" height="56" fill="#fff5f5"/>
+      <circle cx="28" cy="68" r="14" fill="#e53e3e"/>
+      <text x="28" y="72" text-anchor="middle" font-size="10" fill="#fff">退</text>
+      <text x="52" y="60" font-size="11" fill="#2d3748" font-weight="600">日报退回通知</text>
+      <text x="52" y="78" font-size="10" fill="#718096">您的5月22日日报已被退回，请查看退回原因…</text>
+      <text x="350" y="60" font-size="9" fill="#a0aec0">10分钟前</text>
+      <line x1="16" y1="96" x2="384" y2="96" stroke="#e2e8f0" stroke-width="0.5"/>
+      <!-- 消息2 -->
+      <rect x="0" y="96" width="400" height="56" fill="#fffbeb"/>
+      <circle cx="28" cy="124" r="14" fill="#d69e2e"/>
+      <text x="28" y="128" text-anchor="middle" font-size="10" fill="#fff">催</text>
+      <text x="52" y="116" font-size="11" fill="#2d3748" font-weight="600">日报催报提醒</text>
+      <text x="52" y="134" font-size="10" fill="#718096">您今日尚未填报日报，请尽快完成填报。</text>
+      <text x="350" y="116" font-size="9" fill="#a0aec0">1小时前</text>
+      <line x1="16" y1="152" x2="384" y2="152" stroke="#e2e8f0" stroke-width="0.5"/>
+      <!-- 消息3 -->
+      <rect x="0" y="152" width="400" height="56" fill="#fff"/>
+      <circle cx="28" cy="180" r="14" fill="#38a169"/>
+      <text x="28" y="184" text-anchor="middle" font-size="10" fill="#fff">通</text>
+      <text x="52" y="172" font-size="11" fill="#2d3748" font-weight="600">日报审核通过</text>
+      <text x="52" y="190" font-size="10" fill="#718096">您5月21日的日报已审核通过，数据已锁定。</text>
+      <text x="350" y="172" font-size="9" fill="#a0aec0">昨天</text>
+      <line x1="16" y1="208" x2="384" y2="208" stroke="#e2e8f0" stroke-width="0.5"/>
+      <!-- 消息4 -->
+      <rect x="0" y="208" width="400" height="56" fill="#fff"/>
+      <circle cx="28" cy="236" r="14" fill="#3182ce"/>
+      <text x="28" y="240" text-anchor="middle" font-size="10" fill="#fff">系</text>
+      <text x="52" y="228" font-size="11" fill="#2d3748" font-weight="600">系统维护通知</text>
+      <text x="52" y="246" font-size="10" fill="#718096">系统将于5月25日凌晨2:00-4:00进行维护…</text>
+      <text x="350" y="228" font-size="9" fill="#a0aec0">2天前</text>
+    </svg>
+  </div>
+
+  <div class="info-box">
+    <div class="title">💡 消息使用建议</div>
+    <ul style="padding-left:16px; margin:4px 0;">
+      <li>每天登录系统后，建议先查看站内消息，了解是否有退回通知或催报提醒</li>
+      <li>及时标记已读或全部已读，保持消息列表整洁</li>
+      <li>收到退回通知后应尽快处理，不要拖延</li>
+      <li>系统通知通常包含重要信息（如维护时间），请注意查看</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== 操作演示视频 ==================== -->
+<h2 id="videos">操作演示视频</h2>
+
+<div class="card">
+  <p>以下视频演示了系统核心操作的完整流程，帮助您更直观地了解操作步骤。建议新手店长/店员按顺序观看。</p>
+
+  <h3>1. 登录系统</h3>
+  <div class="video-placeholder">
+    <div class="play-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="#fff"/></svg>
+    </div>
+    <div class="video-title">视频：登录系统操作演示</div>
+    <div class="video-text">演示如何访问系统、输入账号密码、完成登录。时长约 1 分钟。</div>
+  </div>
+
+  <h3>2. 首页工作台介绍</h3>
+  <div class="video-placeholder">
+    <div class="play-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="#fff"/></svg>
+    </div>
+    <div class="video-title">视频：首页工作台功能详解</div>
+    <div class="video-text">介绍工作台各区域含义，包括填报状态、统计卡片、趋势图。时长约 2 分钟。</div>
+  </div>
+
+  <h3>3. 日报填报完整流程</h3>
+  <div class="video-placeholder">
+    <div class="play-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="#fff"/></svg>
+    </div>
+    <div class="video-title">视频：日报填报9步骤完整演示</div>
+    <div class="video-text">从进入填报页面到成功提交，完整演示日报填报的9个步骤。时长约 5 分钟。</div>
+  </div>
+
+  <h3>4. 处理退回日报</h3>
+  <div class="video-placeholder">
+    <div class="play-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="#fff"/></svg>
+    </div>
+    <div class="video-title">视频：退回日报处理流程</div>
+    <div class="video-text">演示收到退回通知后如何查看原因、修改数据并重新提交。时长约 2 分钟。</div>
+  </div>
+
+  <h3>5. 查看经营数据报表</h3>
+  <div class="video-placeholder">
+    <div class="play-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="#fff"/></svg>
+    </div>
+    <div class="video-title">视频：经营分析报表查看指南</div>
+    <div class="video-text">介绍如何使用经营分析模块查看门店日报表、月报表、渠道分析和趋势图。时长约 3 分钟。</div>
+  </div>
+
+  <div class="info-box">
+    <div class="title">📹 视频说明</div>
+    以上视频演示均基于系统最新版本录制。如界面与实际操作略有差异，请以实际系统为准。如有任何操作疑问，请联系管理员获取帮助。
+  </div>
+</div>
+
+<!-- ==================== 常见问题 ==================== -->
+<h2 id="faq">常见问题</h2>
+
+<div class="card">
+  <p>以下是门店店长/店员在使用系统过程中最常遇到的问题及解决方案。</p>
+
+  <details class="faq-item" open>
+    <summary>Q: 出租率超过100%怎么办？</summary>
+    <div class="faq-answer">
+      <div class="info-box danger" style="margin-top:0;">
+        <div class="title">原因分析</div>
+        出租率 = 间夜数 ÷ 自有房量 × 100。如果超过100%，说明间夜数大于自有房量。
+      </div>
+      <p><strong>排查步骤：</strong></p>
+      <ol style="padding-left:20px;">
+        <li>检查<strong>自有房量</strong>是否正确 — 是否与实际房间数一致</li>
+        <li>检查<strong>各渠道间夜数</strong>是否有重复计算 — 同一间房是否被计入多个渠道</li>
+        <li>检查<strong>钟点房数量</strong>是否被错误计入 — 钟点房是否重复算到了日租房渠道</li>
+        <li>确认是否存在当日翻房情况 — 一间房白天退房后再次入住</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Q: 提交后还能修改日报吗？</summary>
+    <div class="faq-answer">
+      <p><strong>不能直接修改。</strong>日报提交后进入「已提交」状态，此时无法编辑任何数据。</p>
+      <p>如果数据有误，您需要：</p>
+      <ol style="padding-left:20px;">
+        <li>联系CEO说明情况，请CEO退回您的日报</li>
+        <li>收到退回通知后，在日报管理中找到该日报</li>
+        <li>点击「编辑」进入编辑模式，修改数据</li>
+        <li>确认无误后重新「提交」</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Q: 为什么看不到其他门店的数据？</summary>
+    <div class="faq-answer">
+      <p><strong>这是正常现象。</strong>门店店长/店员的数据权限仅限于自己所属门店，无法查看其他门店的经营数据。这是系统权限设计的一部分，确保数据安全。</p>
+      <p>如有特殊需求（如区域经理需要查看多门店数据），请联系管理员申请角色调整。</p>
+    </div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Q: 忘记填报日报怎么办？</summary>
+    <div class="faq-answer">
+      <div class="info-box warn" style="margin-top:0;">
+        <div class="title">尽快补填</div>
+        如果忘记填报当日日报，CEO会通过系统发送催报提醒。收到提醒后请尽快补填日报并提交。
+      </div>
+      <p><strong>预防建议：</strong></p>
+      <ul style="padding-left:20px;">
+        <li>设置每日固定时间填报（如晚上10点），形成习惯</li>
+        <li>填报完成后可先保存草稿，营业结束后再完善提交</li>
+        <li>留意站内消息中的催报提醒</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Q: 系统自动计算的数据不对怎么办？</summary>
+    <div class="faq-answer">
+      <p>系统的自动计算是<strong>实时</strong>的，计算结果完全基于您填写的输入数据。如果发现计算结果不对，请按以下顺序检查：</p>
+      <ol style="padding-left:20px;">
+        <li>检查<strong>各渠道间夜数</strong>是否填写正确，是否有遗漏或重复</li>
+        <li>检查<strong>日租房房费、钟点房费用、杂费</strong>是否准确</li>
+        <li>检查<strong>自有房量</strong>是否与实际一致</li>
+        <li>确认<strong>钟点房数量</strong>是否已正确填写（影响间夜数合计）</li>
+      </ol>
+      <p>修正输入后，计算结果会自动更新。如果确认输入正确但计算仍异常，请截图联系管理员。</p>
+    </div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Q: 自有房量与实际不符怎么办？</summary>
+    <div class="faq-answer">
+      <p>自有房量由门店基础信息决定，<strong>店长无法自行修改</strong>。如果发现自有房量与实际不符（如门店近期增减了房间），请联系系统管理员更新门店信息中的房量数据。</p>
+      <p>管理员修改后，下次填报日报时系统会自动带出最新的自有房量。</p>
+    </div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Q: 账号被锁定了怎么办？</summary>
+    <div class="faq-answer">
+      <div class="info-box danger" style="margin-top:0;">
+        <div class="title">账号锁定</div>
+        连续5次输错密码会导致账号锁定10分钟。
+      </div>
+      <p><strong>解决方案：</strong></p>
+      <ul style="padding-left:20px;">
+        <li><strong>等待自动解锁：</strong>锁定10分钟后自动恢复，届时使用正确密码登录</li>
+        <li><strong>联系管理员：</strong>如需立即使用，可联系管理员手动解锁</li>
+        <li>解锁后请仔细确认密码再输入，避免再次锁定</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Q: 如何确认日报已成功提交？</summary>
+    <div class="faq-answer">
+      <p>提交成功后有以下确认方式：</p>
+      <ul style="padding-left:20px;">
+        <li>提交按钮旁会显示提交成功的提示</li>
+        <li>日报列表中该日报状态变为「<span class="tag tag-blue">已提交</span>」（蓝色标签）</li>
+        <li>首页工作台不再显示「立即填报」按钮，而是显示「已提交，待审核」</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Q: 草稿状态的日报可以删除吗？</summary>
+    <div class="faq-answer">
+      <p>可以。只有「草稿」状态的日报支持删除操作。删除后该日报数据将不可恢复。</p>
+      <p>「已提交」「已锁定」「已退回」状态的日报均不能删除。如果需要清除这些数据，请联系CEO处理。</p>
+    </div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Q: 可以在手机上使用系统吗？</summary>
+    <div class="faq-answer">
+      <p>系统支持响应式布局，在移动端浏览器中可以正常使用。但为了获得最佳体验，建议使用电脑操作。如果需要在手机上查看数据或简单操作，可以使用手机浏览器访问系统地址。</p>
+      <p>注意：在移动端，左侧导航栏会自动隐藏，可通过菜单按钮展开。</p>
+    </div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Q: 间夜数怎么理解？1间房住2天算几个间夜？</summary>
+    <div class="faq-answer">
+      <p><strong>间夜 = 房间数 × 入住天数</strong>。1间房住2天 = 2个间夜。例如：</p>
+      <ul style="padding-left:20px;">
+        <li>1间房住1晚 = 1间夜</li>
+        <li>3间房住1晚 = 3间夜</li>
+        <li>1间房住3晚 = 3间夜</li>
+        <li>当日填报的间夜数是指<strong>当日实际产生的间夜</strong>，不是预订间夜</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Q: RevPAR和ADR有什么区别？</summary>
+    <div class="faq-answer">
+      <table>
+        <tr><th>指标</th><th>计算方式</th><th>含义</th></tr>
+        <tr><td>ADR</td><td>日租房房费 ÷ 间夜数</td><td>平均每间<strong>已出租</strong>房间的价格</td></tr>
+        <tr><td>RevPAR</td><td>总营收 ÷ 自有房量</td><td>平均每间<strong>可用</strong>房间贡献的营收</td></tr>
+      </table>
+      <p>ADR只考虑已出租的房间，RevPAR考虑所有可用房间（含空置）。RevPAR = ADR × 出租率，是最综合的经营指标。</p>
+    </div>
+  </details>
+</div>
+
+<!-- ==================== 术语表 ==================== -->
+<h2 id="glossary">术语表</h2>
+
+<div class="card">
+  <p>以下是本文档中涉及的酒店行业常用术语解释。</p>
+  <table>
+    <tr><th>术语</th><th>英文</th><th>解释</th></tr>
+    <tr><td>间夜</td><td>Room Night</td><td>酒店计量单位，1间房出租1天 = 1间夜。如1间房住3天 = 3间夜。</td></tr>
+    <tr><td>出租率</td><td>Occupancy Rate (OCC)</td><td>已出租房间占总可用房间的比例，反映房间售卖情况。计算公式：间夜数 ÷ 自有房量 × 100。</td></tr>
+    <tr><td>ADR</td><td>Average Daily Rate</td><td>平均每日房价，即平均每间已出租房间的价格。计算公式：日租房房费 ÷ 间夜数。</td></tr>
+    <tr><td>RevPAR</td><td>Revenue Per Available Room</td><td>每可用房收入，综合反映出租率和房价水平。计算公式：总营收 ÷ 自有房量。RevPAR = ADR × 出租率。</td></tr>
+    <tr><td>自有房量</td><td>Total Available Rooms</td><td>门店可供出租的房间总数，是计算出租率和RevPAR的分母。</td></tr>
+    <tr><td>钟点房</td><td>Hourly Room</td><td>按小时计费的房间出租方式，通常白天时段使用，不过夜。</td></tr>
+    <tr><td>散客</td><td>Walk-in Guest</td><td>非通过线上平台预订，直接到店或电话预订的客人。</td></tr>
+    <tr><td>渠道</td><td>Channel</td><td>客人预订的来源平台，如携程、美团、飞猪等OTA平台或散客等直销渠道。</td></tr>
+    <tr><td>OTA</td><td>Online Travel Agency</td><td>在线旅行社，如携程、美团、飞猪等在线预订平台。</td></tr>
+    <tr><td>日报</td><td>Daily Report</td><td>门店每日经营数据的汇总报表，包含间夜数、营收、出租率等核心指标。</td></tr>
+  </table>
+</div>
+
+<!-- 页脚 -->
+<div style="margin-top:48px; padding:20px 0; border-top:1px solid #e2e8f0; text-align:center; color:#a0aec0; font-size:13px;">
+  林夕置业酒店管理系统 · 门店店长/店员操作手册 · 文档版本 v2.0 · 最后更新：2026年5月
+</div>
+
+</main>
+
+<script>
+// 导航高亮
+document.addEventListener('DOMContentLoaded', function() {
+  var links = document.querySelectorAll('.sidebar nav a[href^="#"]');
+  var sections = [];
+  links.forEach(function(link) {
+    var id = link.getAttribute('href').substring(1);
+    var el = document.getElementById(id);
+    if (el) sections.push({ el: el, link: link });
+  });
+  function updateActive() {
+    var scrollTop = window.scrollY + 100;
+    var current = null;
+    sections.forEach(function(s) {
+      if (s.el.offsetTop <= scrollTop) current = s;
+    });
+    links.forEach(function(l) { l.classList.remove('active'); });
+    if (current) current.link.classList.add('active');
+  }
+  window.addEventListener('scroll', updateActive);
+  updateActive();
+});
+</script>
+
+</body>
+</html>
