@@ -36,6 +36,7 @@ test-*.cjs
 
 # Data backup files
 data/linxi.db.bak.*
+!data/linxi.db.bak.20260525-product
 
 # E2E test artifacts
 *.png
