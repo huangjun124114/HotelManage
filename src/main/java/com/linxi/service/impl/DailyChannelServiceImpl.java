@@ -72,14 +72,6 @@ public class DailyChannelServiceImpl implements DailyChannelService {
         );
     }
 
-    @Override
-    public DailyChannel getByStoreAndDate(Long storeId, String reportDate) {
-        return dailyChannelMapper.selectOne(
-                new LambdaQueryWrapper<DailyChannel>()
-                        .eq(DailyChannel::getStoreId, storeId)
-                        .eq(DailyChannel::getReportDate, reportDate)
-        );
-    }
 
     private BigDecimal toDecimal(Object val) {
         if (val == null) return null;

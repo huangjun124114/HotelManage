@@ -16,8 +16,4 @@ public interface DailyExtensionService {
      */
     DailyExtension getByReportId(Long reportId);
 
-    /**
-     * 获取门店某日的弹性域
-     */
-    DailyExtension getByStoreAndDate(Long storeId, String reportDate);
 }

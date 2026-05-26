@@ -44,21 +44,6 @@ public class StoreController {
         );
         return Result.success(pageResult);
     }
-
-    @GetMapping("/list")
-    public Result<List<Store>> listAll() {
-        // 数据范围过滤
-        List<Long> storeIds = SecurityUtils.getCurrentUserStoreIds();
-        List<Store> allStores = storeService.listAll();
-        if (storeIds != null) {
-            // 非总部人员：只返回绑定的门店
-            allStores = allStores.stream()
-                    .filter(s -> storeIds.contains(s.getId()))
-                    .collect(Collectors.toList());
-        }
-        return Result.success(allStores);
-    }
-
     @GetMapping("/options")
     public Result<List<Map<String, Object>>> getOptions() {
         // 数据范围过滤

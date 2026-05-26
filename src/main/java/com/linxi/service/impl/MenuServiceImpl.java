@@ -48,16 +48,6 @@ public class MenuServiceImpl implements MenuService {
         return buildTree(allMenus, 0L);
     }
 
-    @Override
-    public List<SysMenu> getMenuTree() {
-        List<SysMenu> allMenus = sysMenuMapper.selectList(
-                new LambdaQueryWrapper<SysMenu>()
-                        .eq(SysMenu::getVisible, 1)
-                        .eq(SysMenu::getStatus, 1)
-                        .orderByAsc(SysMenu::getSortNo)
-        );
-        return buildTree(allMenus, 0L);
-    }
 
     @Override
     public List<SysMenu> getUserMenus(Long userId) {

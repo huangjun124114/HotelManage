@@ -95,12 +95,4 @@ public class DailyExtensionServiceImpl implements DailyExtensionService {
         );
     }
 
-    @Override
-    public DailyExtension getByStoreAndDate(Long storeId, String reportDate) {
-        return dailyExtensionMapper.selectOne(
-                new LambdaQueryWrapper<DailyExtension>()
-                        .eq(DailyExtension::getStoreId, storeId)
-                        .eq(DailyExtension::getReportDate, reportDate)
-        );
-    }
 }

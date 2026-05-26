@@ -27,13 +27,6 @@ public class SysConfigController {
         PageResult<SysConfig> result = sysConfigService.pageResult(page, size, configKey);
         return Result.success(result);
     }
-
-    @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
-    public Result<SysConfig> getById(@PathVariable Long id) {
-        return Result.success(sysConfigService.getById(id));
-    }
-
     @PostMapping
     @PreAuthorize("hasRole('USER')")
     public Result<Void> save(@RequestBody SysConfig config) {
@@ -47,12 +40,4 @@ public class SysConfigController {
         config.setId(id);
         sysConfigService.updateById(config);
         return Result.success();
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
-    public Result<Void> delete(@PathVariable Long id) {
-        sysConfigService.removeById(id);
-        return Result.success();
-    }
-}
+    }}

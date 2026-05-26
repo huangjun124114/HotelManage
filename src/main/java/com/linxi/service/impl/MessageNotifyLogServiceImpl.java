@@ -69,13 +69,6 @@ public class MessageNotifyLogServiceImpl implements MessageNotifyLogService {
         return message;
     }
 
-    @Override
-    public List<MessageNotifyLog> sendBatchMessages(List<MessageNotifyLog> messages) {
-        for (MessageNotifyLog msg : messages) {
-            sendMessage(msg);
-        }
-        return messages;
-    }
 
     @Override
     public List<MessageNotifyLog> getRecentUnread(Long userId, int limit) {

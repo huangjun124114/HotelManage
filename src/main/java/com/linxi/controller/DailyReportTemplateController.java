@@ -42,12 +42,6 @@ public class DailyReportTemplateController {
         );
         return Result.success(pageResult);
     }
-
-    @GetMapping("/{id}")
-    public Result<DailyReportTemplate> getById(@PathVariable Long id) {
-        return Result.success(dailyReportTemplateMapper.selectById(id));
-    }
-
     @GetMapping("/{id}/fields")
     public Result<List<DailyReportField>> getFields(@PathVariable Long id) {
         List<DailyReportField> fields = dailyReportFieldMapper.selectList(
@@ -58,40 +52,6 @@ public class DailyReportTemplateController {
         );
         return Result.success(fields);
     }
-
-    @PostMapping
-    @PreAuthorize("hasAnyAuthority('system:template', 'ROLE_SUPER_ADMIN')")
-    @OperationLog(module = "日报模板", type = "CREATE", description = "新增日报模板")
-    public Result<Void> save(@RequestBody DailyReportTemplate template) {
-        template.setCreateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
-        template.setUpdateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
-        if (template.getStatus() == null) template.setStatus(1);
-        dailyReportTemplateMapper.insert(template);
-        return Result.success();
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('system:template', 'ROLE_SUPER_ADMIN')")
-    @OperationLog(module = "日报模板", type = "UPDATE", description = "编辑日报模板")
-    public Result<Void> update(@PathVariable Long id, @RequestBody DailyReportTemplate template) {
-        template.setId(id);
-        template.setUpdateTime(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
-        dailyReportTemplateMapper.updateById(template);
-        return Result.success();
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('system:template', 'ROLE_SUPER_ADMIN')")
-    @OperationLog(module = "日报模板", type = "DELETE", description = "删除日报模板")
-    public Result<Void> delete(@PathVariable Long id) {
-        // 删除模板下的字段
-        dailyReportFieldMapper.delete(
-                new LambdaQueryWrapper<DailyReportField>().eq(DailyReportField::getTemplateId, id)
-        );
-        dailyReportTemplateMapper.deleteById(id);
-        return Result.success();
-    }
-
     @PutMapping("/fields/{fieldId}")
     @PreAuthorize("hasAnyAuthority('system:template', 'ROLE_SUPER_ADMIN')")
     public Result<Void> updateField(@PathVariable Long fieldId, @RequestBody DailyReportField field) {

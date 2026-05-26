@@ -80,29 +80,4 @@ public class UserController {
     public Result<Void> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
         userService.updateStatus(id, status);
         return Result.success();
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN')")
-    @OperationLog(module = "用户管理", type = "DELETE", description = "删除用户")
-    public Result<Void> delete(@PathVariable Long id) {
-        userService.delete(id);
-        return Result.success();
-    }
-
-    @PutMapping("/{id}/roles")
-    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN')")
-    @OperationLog(module = "用户管理", type = "UPDATE", description = "分配角色")
-    public Result<Void> assignRoles(@PathVariable Long id, @RequestBody List<Long> roleIds) {
-        userService.assignRoles(id, roleIds);
-        return Result.success();
-    }
-
-    @PutMapping("/{id}/stores")
-    @PreAuthorize("hasAnyAuthority('system:user', 'ROLE_SUPER_ADMIN')")
-    @OperationLog(module = "用户管理", type = "UPDATE", description = "分配门店")
-    public Result<Void> assignStores(@PathVariable Long id, @RequestBody List<Long> storeIds) {
-        userService.assignStores(id, storeIds);
-        return Result.success();
-    }
-}
+    }}

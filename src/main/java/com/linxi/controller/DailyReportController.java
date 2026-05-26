@@ -56,15 +56,6 @@ public class DailyReportController {
         return Result.success(result);
     }
 
-    @GetMapping("/draft")
-    @PreAuthorize("hasAnyAuthority('report:manage', 'ROLE_SUPER_ADMIN', 'ROLE_CEO', 'ROLE_STORE_MANAGER', 'ROLE_STORE_STAFF')")
-    public Result<Map<String, Object>> draft(@RequestParam Long storeId,
-                                              @RequestParam String reportDate) {
-        validateStoreAccess(storeId);
-        Map<String, Object> result = dailyReportService.getDetail(storeId, reportDate);
-        return Result.success(result);
-    }
-
     @PostMapping("/draft")
     @PreAuthorize("hasAnyAuthority('report:manage', 'ROLE_SUPER_ADMIN', 'ROLE_CEO', 'ROLE_STORE_MANAGER', 'ROLE_STORE_STAFF')")
     public Result<Void> saveDraft(@RequestBody DailyReportSaveDTO dto) {

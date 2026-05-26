@@ -26,6 +26,10 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
 
+  # MVC 配置：找不到handler时抛异常（配合GlobalExceptionHandler返回404）
+  mvc:
+    throw-exception-if-no-handler-found: true
+
   # Jackson 日期格式
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
@@ -37,7 +41,7 @@ mybatis-plus:
   type-aliases-package: com.linxi.entity
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
     db-config:
       id-type: auto

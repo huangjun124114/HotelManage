@@ -6,12 +6,11 @@ dist/
 data/backup/
 !data/linxi.db
 *.db
-!linxi.db
+!data/linxi.db
+linxi.db
 
 # Logs
 *.log
-backend.log
-frontend.log
 
 # IDE
 .idea/
@@ -25,25 +24,30 @@ Thumbs.db
 # Node
 node_modules/
 
-# Python temp scripts
-check_*.py
-debug_*.py
-complete_*.py
-continue_*.py
-finish_*.py
-final_*.py
-api_test.py
+# Python temp scripts (all root-level .py are temp)
+*.py
+!deploy/*.py
 
-# Test scripts (keep e2e-test-v2.js and api-e2e-test-v2.js)
-api-e2e-test.js
-data/linxi.db.bak.*
-linxi.db
-中间产物/
-
-# E2E test temp files
-*.png
-frontend/test-*.cjs
+# Test scripts (root-level JS/CJS)
+api-e2e-test*.js
+e2e-test*.js
 test-*.cjs
+*.cjs
+
+# Data backup files
+data/linxi.db.bak.*
+
+# E2E test artifacts
+*.png
 e2e-tests/debug-*
 e2e-tests/*-report.json
 e2e-tests/*-result.json
+test-results/
+playwright-report/
+
+# Compiled artifacts
+*.class
+
+# Temp/intermediate outputs
+中间产物/
+.pytest_cache/

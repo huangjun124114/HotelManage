@@ -11,10 +11,6 @@ public interface MenuService {
      */
     List<SysMenu> getAllMenuTree();
 
-    /**
-     * 获取启用的菜单树（旧方法兼容）
-     */
-    List<SysMenu> getMenuTree();
 
     /**
      * 获取用户菜单（根据角色，过滤停用菜单）

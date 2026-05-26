@@ -33,10 +33,6 @@ public interface MessageNotifyLogService {
      */
     MessageNotifyLog sendMessage(MessageNotifyLog message);
 
-    /**
-     * 批量发送站内消息（用于一键提醒等场景）
-     */
-    List<MessageNotifyLog> sendBatchMessages(List<MessageNotifyLog> messages);
 
     /**
      * 获取最近N条未读消息

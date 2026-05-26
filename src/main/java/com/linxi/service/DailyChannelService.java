@@ -1,9 +1,6 @@
 package com.linxi.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.linxi.entity.DailyChannel;
-import com.linxi.entity.DailyExtension;
-import com.linxi.entity.ExtensionFieldDefinition;
 
 import java.util.List;
 import java.util.Map;
@@ -20,8 +17,4 @@ public interface DailyChannelService {
      */
     DailyChannel getByReportId(Long reportId);
 
-    /**
-     * 获取门店某日的渠道评价
-     */
-    DailyChannel getByStoreAndDate(Long storeId, String reportDate);
 }
